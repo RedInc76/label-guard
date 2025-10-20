@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Search, Keyboard, AlertCircle } from 'lucide-react';
+import { Camera, Search, Keyboard, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { OpenFoodFactsService } from '@/services/openFoodFactsService';
 import { ProfileService } from '@/services/profileService';
 import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { ProductInfo } from '@/types/restrictions';
+import { Capacitor } from '@capacitor/core';
 
 export const Scanner = () => {
   const navigate = useNavigate();
@@ -25,19 +26,35 @@ export const Scanner = () => {
     try {
       setIsScanning(true);
       
-      // Verificar permisos de cámara
-      const hasPermission = await CameraService.requestPermissions();
+      // Verificar si ya tenemos permisos
+      const hasPermission = await CameraService.checkPermissions();
+      
       if (!hasPermission) {
-        toast({
-          title: "Permisos requeridos",
-          description: "Se necesita acceso a la cámara para escanear códigos",
-          variant: "destructive",
-        });
-        return;
+        // Solicitar permisos
+        const granted = await CameraService.requestPermissions();
+        
+        if (!granted) {
+          toast({
+            title: "Permisos requeridos",
+            description: "Necesitamos acceso a la cámara para escanear",
+            variant: "destructive",
+            action: (
+              <Button 
+                size="sm" 
+                onClick={() => CameraService.openSettings()}
+                variant="outline"
+              >
+                Abrir Ajustes
+              </Button>
+            ),
+          });
+          return;
+        }
       }
 
-      // Escanear código de barras
+      // Escanear código de barras (ahora es real con ML Kit!)
       const barcode = await CameraService.scanBarcode();
+      
       if (barcode) {
         await searchProduct(barcode);
       } else {
@@ -49,9 +66,16 @@ export const Scanner = () => {
       }
     } catch (error) {
       console.error('Error scanning:', error);
+      
+      // Mensaje de error más específico
+      let errorMessage = "Error al escanear";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error al escanear",
-        description: error instanceof Error ? error.message : "Error desconocido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -154,11 +178,20 @@ export const Scanner = () => {
           
           <Button 
             onClick={handleScan}
-            disabled={isScanning || isSearching || activeProfiles.length === 0}
+            disabled={!Capacitor.isNativePlatform() || isScanning || isSearching || activeProfiles.length === 0}
             size="lg"
             className="w-full mb-4 bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70"
           >
-            {isScanning ? 'Escaneando...' : 'Escanear Código de Barras'}
+            {isScanning ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Escaneando...
+              </>
+            ) : !Capacitor.isNativePlatform() ? (
+              'Escaneo solo disponible en móvil'
+            ) : (
+              'Escanear Código de Barras'
+            )}
           </Button>
           
           <p className="text-sm text-muted-foreground">
@@ -220,11 +253,15 @@ export const Scanner = () => {
 
         {/* Help */}
         <Card className="p-4 bg-muted/50">
-          <h3 className="font-semibold text-foreground mb-2">💡 Consejos</h3>
+          <h3 className="font-semibold text-foreground mb-2">💡 Consejos para escanear</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Asegúrate de tener buena iluminación</li>
-            <li>• Mantén el código de barras centrado</li>
-            <li>• Si no funciona el escáner, usa ingreso manual</li>
+            <li>• Mantén el código de barras dentro del marco</li>
+            <li>• Espera a que el escáner detecte automáticamente</li>
+            <li>• Si no funciona, usa ingreso manual</li>
+            {!Capacitor.isNativePlatform() && (
+              <li className="text-warning">⚠️ El escaneo solo funciona en dispositivo móvil</li>
+            )}
           </ul>
         </Card>
       </div>

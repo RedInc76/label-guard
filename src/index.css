@@ -115,4 +115,15 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Estilos para cuando el scanner está activo (modo embedded) */
+  /* El modo modal no necesita estos estilos, pero los dejamos por compatibilidad */
+  body.barcode-scanner-active {
+    background: transparent;
+    --background: transparent;
+  }
+
+  body.barcode-scanner-active .scanner-hidden {
+    display: none !important;
+  }
 }

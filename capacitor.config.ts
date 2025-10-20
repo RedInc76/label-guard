@@ -11,6 +11,9 @@ const config: CapacitorConfig = {
   plugins: {
     Camera: {
       permissions: ['camera']
+    },
+    BarcodeScanner: {
+      // ML Kit Barcode Scanner configuration
     }
   }
 };

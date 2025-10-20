@@ -1,52 +1,81 @@
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 export class CameraService {
+  /**
+   * Escanea un código de barras usando la cámara del dispositivo
+   * Usa Google ML Kit para detección precisa y en tiempo real
+   */
   static async scanBarcode(): Promise<string | null> {
     try {
-      // En un entorno real, usarías un plugin de escáner de códigos de barras
-      // Por ahora, simularemos la captura de imagen y extracción de código
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
+      // Verificar si el dispositivo soporta escaneo
+      const { supported } = await BarcodeScanner.isSupported();
+      if (!supported) {
+        throw new Error('Tu dispositivo no soporta escaneo de códigos de barras');
+      }
+
+      // Verificar/solicitar permisos
+      const hasPermission = await this.requestPermissions();
+      if (!hasPermission) {
+        throw new Error('Se requiere permiso de cámara para escanear');
+      }
+
+      // Realizar escaneo modal (modo simple con UI nativa)
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: [
+          BarcodeFormat.Ean13,    // Códigos de productos europeos (13 dígitos)
+          BarcodeFormat.Ean8,     // Códigos de productos europeos (8 dígitos)
+          BarcodeFormat.UpcA,     // Códigos de productos americanos (12 dígitos)
+          BarcodeFormat.UpcE,     // Códigos UPC-E
+          BarcodeFormat.Code128,  // Códigos industriales
+          BarcodeFormat.Code39,   // Códigos industriales
+          BarcodeFormat.QrCode,   // Códigos QR (por si acaso)
+        ],
       });
 
-      if (image.dataUrl) {
-        // Aquí normalmente usarías una librería como QuaggaJS o ZXing
-        // para detectar el código de barras en la imagen
-        // Por simplicidad, retornaremos un código de ejemplo
-        return this.simulateBarcodeDetection();
+      // Si se detectó al menos un código, retornar el primero
+      if (barcodes && barcodes.length > 0) {
+        const barcode = barcodes[0];
+        console.log('Código detectado:', barcode.rawValue, 'Formato:', barcode.format);
+        return barcode.rawValue;
       }
 
       return null;
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      throw new Error('No se pudo acceder a la cámara');
+      console.error('Error scanning barcode:', error);
+      throw error;
     }
   }
 
+  /**
+   * Solicita permisos de cámara
+   */
   static async requestPermissions(): Promise<boolean> {
     try {
-      const permissions = await Camera.requestPermissions();
-      return permissions.camera === 'granted';
+      const { camera } = await BarcodeScanner.requestPermissions();
+      return camera === 'granted' || camera === 'limited';
     } catch (error) {
       console.error('Error requesting camera permissions:', error);
       return false;
     }
   }
 
-  // Simulación para desarrollo - en producción se reemplazaría con detección real
-  private static simulateBarcodeDetection(): string {
-    // Algunos códigos de productos reales para pruebas
-    const testBarcodes = [
-      '3017620422003', // Nutella
-      '8901030835708', // Ejemplo genérico
-      '7622210992741', // Ejemplo genérico
-      '3229820787411', // Ejemplo genérico
-      '8480000579004'  // Ejemplo genérico
-    ];
-    
-    return testBarcodes[Math.floor(Math.random() * testBarcodes.length)];
+  /**
+   * Verifica si ya tenemos permisos de cámara
+   */
+  static async checkPermissions(): Promise<boolean> {
+    try {
+      const { camera } = await BarcodeScanner.checkPermissions();
+      return camera === 'granted' || camera === 'limited';
+    } catch (error) {
+      console.error('Error checking camera permissions:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Abre la configuración de la app para que el usuario pueda dar permisos
+   */
+  static async openSettings(): Promise<void> {
+    await BarcodeScanner.openSettings();
   }
 }

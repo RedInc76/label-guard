@@ -71,3 +71,51 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## LabelGuard - Barcode Scanning Feature
+
+LabelGuard uses Google ML Kit for accurate barcode scanning on mobile devices.
+
+### Supported Barcode Formats:
+- EAN-13 (European products)
+- EAN-8 (European products)
+- UPC-A (American products)
+- UPC-E (American products)
+- QR Codes
+- Code 128, Code 39
+
+### Setup for Mobile Development:
+
+After cloning the project:
+
+```bash
+# Install dependencies
+npm install
+
+# Add iOS and/or Android platforms
+npx cap add ios
+npx cap add android
+
+# Sync Capacitor
+npx cap sync
+
+# Run on device or emulator
+npx cap run android
+# or
+npx cap run ios
+```
+
+### Camera Permissions:
+
+The app requests camera access the first time you try to scan.
+
+If you denied permissions, you can enable them in:
+- **Android**: Settings > Apps > LabelGuard > Permissions > Camera
+- **iOS**: Settings > LabelGuard > Camera
+
+### Important Notes:
+
+- Barcode scanning **only works on physical devices or emulators** (iOS/Android)
+- The web version will show "Scan only available on mobile"
+- Use manual input or test codes when testing in the browser
+- After pulling changes, run `npx cap sync` to update native platforms
