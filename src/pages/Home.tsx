@@ -36,7 +36,7 @@ export const Home = () => {
             LabelGuard
           </h1>
           <p className="text-muted-foreground text-lg">
-            Gestiona perfiles alimenticios para toda tu familia
+            Interpreta ingredientes según tus restricciones
           </p>
         </div>
 
