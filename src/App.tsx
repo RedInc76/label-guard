@@ -9,8 +9,12 @@ import { Scanner } from "./pages/Scanner";
 import { Profile } from "./pages/Profile";
 import { Results } from "./pages/Results";
 import NotFound from "./pages/NotFound";
+import { ProfileService } from "./services/profileService";
 
 const queryClient = new QueryClient();
+
+// Inicializar el servicio de perfiles y migrar datos antiguos
+ProfileService.initialize();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

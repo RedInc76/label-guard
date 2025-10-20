@@ -7,6 +7,21 @@ export interface DietaryRestriction {
   enabled: boolean;
 }
 
+export interface Profile {
+  id: string;
+  name: string;
+  isActive: boolean;
+  restrictions: DietaryRestriction[];
+  customRestrictions: string[];
+  createdAt: string;
+}
+
+export interface ProfileSystem {
+  profiles: Profile[];
+  version: string;
+}
+
+// Legacy interface for migration
 export interface UserProfile {
   restrictions: DietaryRestriction[];
   customRestrictions: string[];

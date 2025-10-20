@@ -1,183 +1,244 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2 } from 'lucide-react';
+import { Settings, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { defaultRestrictions } from '@/data/restrictions';
-import { DietaryRestriction, UserProfile } from '@/types/restrictions';
+import { ProfileService } from '@/services/profileService';
+import type { Profile as ProfileType } from '@/types/restrictions';
+import { ProfileCard } from '@/components/ProfileCard';
+import { ProfileEditorDialog } from '@/components/ProfileEditorDialog';
+import { CreateProfileDialog } from '@/components/CreateProfileDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const Profile = () => {
   const { toast } = useToast();
-  const [profile, setProfile] = useState<UserProfile>({
-    restrictions: defaultRestrictions,
-    customRestrictions: []
-  });
-  const [newCustomRestriction, setNewCustomRestriction] = useState('');
+  const [profiles, setProfiles] = useState<ProfileType[]>([]);
+  const [editingProfile, setEditingProfile] = useState<ProfileType | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('foodFreedomProfile');
-    if (savedProfile) {
-      const parsed = JSON.parse(savedProfile);
-      setProfile({
-        restrictions: defaultRestrictions.map(restriction => ({
-          ...restriction,
-          enabled: parsed.restrictions?.find((r: any) => r.id === restriction.id)?.enabled || false
-        })),
-        customRestrictions: parsed.customRestrictions || []
-      });
-    }
+    ProfileService.initialize();
+    loadProfiles();
   }, []);
 
-  const saveProfile = (updatedProfile: UserProfile) => {
-    localStorage.setItem('foodFreedomProfile', JSON.stringify(updatedProfile));
-    setProfile(updatedProfile);
-    toast({
-      title: "Perfil guardado",
-      description: "Tus restricciones han sido actualizadas",
-    });
+  const loadProfiles = () => {
+    setProfiles(ProfileService.getProfiles());
   };
 
-  const toggleRestriction = (restrictionId: string) => {
-    const updatedRestrictions = profile.restrictions.map(restriction =>
-      restriction.id === restrictionId
-        ? { ...restriction, enabled: !restriction.enabled }
-        : restriction
-    );
-    saveProfile({ ...profile, restrictions: updatedRestrictions });
-  };
-
-  const addCustomRestriction = () => {
-    if (newCustomRestriction.trim()) {
-      const updatedCustomRestrictions = [...profile.customRestrictions, newCustomRestriction.trim()];
-      saveProfile({ ...profile, customRestrictions: updatedCustomRestrictions });
-      setNewCustomRestriction('');
+  const handleCreateProfile = (name: string) => {
+    try {
+      const newProfile = ProfileService.createProfile(name);
+      loadProfiles();
+      toast({
+        title: "Perfil creado",
+        description: `El perfil "${newProfile.name}" ha sido creado exitosamente`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo crear el perfil",
+        variant: "destructive",
+      });
     }
   };
 
-  const removeCustomRestriction = (index: number) => {
-    const updatedCustomRestrictions = profile.customRestrictions.filter((_, i) => i !== index);
-    saveProfile({ ...profile, customRestrictions: updatedCustomRestrictions });
+  const handleToggleActive = (id: string) => {
+    try {
+      const isActive = ProfileService.toggleProfileActive(id);
+      const profile = ProfileService.getProfile(id);
+      loadProfiles();
+      toast({
+        title: isActive ? "Perfil activado" : "Perfil desactivado",
+        description: `El perfil "${profile?.name}" ha sido ${isActive ? 'activado' : 'desactivado'}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo actualizar el perfil",
+        variant: "destructive",
+      });
+    }
   };
 
-  const categories = {
-    allergens: 'Alérgenos',
-    dietary: 'Dieta',
-    health: 'Salud',
-    religious: 'Religioso'
+  const handleEditProfile = (id: string) => {
+    const profile = ProfileService.getProfile(id);
+    if (profile) {
+      setEditingProfile(profile);
+    }
   };
 
-  const enabledCount = profile.restrictions.filter(r => r.enabled).length + profile.customRestrictions.length;
+  const handleSaveProfile = (profile: ProfileType) => {
+    try {
+      ProfileService.updateProfile(profile.id, {
+        name: profile.name,
+        restrictions: profile.restrictions,
+        customRestrictions: profile.customRestrictions,
+      });
+      loadProfiles();
+      toast({
+        title: "Perfil actualizado",
+        description: `Los cambios en "${profile.name}" han sido guardados`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo guardar el perfil",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProfile = (id: string) => {
+    setProfileToDelete(id);
+  };
+
+  const confirmDeleteProfile = () => {
+    if (!profileToDelete) return;
+    
+    try {
+      const profile = ProfileService.getProfile(profileToDelete);
+      ProfileService.deleteProfile(profileToDelete);
+      loadProfiles();
+      toast({
+        title: "Perfil eliminado",
+        description: `El perfil "${profile?.name}" ha sido eliminado`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo eliminar el perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setProfileToDelete(null);
+    }
+  };
+
+  const activeProfilesCount = profiles.filter(p => p.isActive).length;
+  const canCreateMore = ProfileService.canCreateProfile();
+  const maxProfiles = ProfileService.getMaxProfiles();
 
   return (
     <div className="min-h-screen p-6">
-      <div className="max-w-md mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center pt-4">
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
             <Settings className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Mi Perfil</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Perfiles</h1>
           <p className="text-muted-foreground">
-            {enabledCount > 0 
-              ? `${enabledCount} restricción${enabledCount > 1 ? 'es' : ''} activa${enabledCount > 1 ? 's' : ''}`
-              : 'Define tus restricciones alimenticias'
-            }
+            {profiles.length}/{maxProfiles} perfiles creados
+            {activeProfilesCount > 0 && ` • ${activeProfilesCount} activo${activeProfilesCount > 1 ? 's' : ''}`}
           </p>
         </div>
 
-        {/* Restrictions by Category */}
-        {Object.entries(categories).map(([categoryKey, categoryName]) => {
-          const categoryRestrictions = profile.restrictions.filter(r => r.category === categoryKey);
-          
-          return (
-            <Card key={categoryKey} className="p-4 shadow-soft">
-              <h3 className="font-semibold text-foreground mb-3">{categoryName}</h3>
-              <div className="space-y-3">
-                {categoryRestrictions.map((restriction) => (
-                  <div key={restriction.id} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-foreground">{restriction.name}</h4>
-                        {restriction.enabled && (
-                          <Badge variant="secondary" className="text-xs">Activo</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{restriction.description}</p>
-                    </div>
-                    <Switch
-                      checked={restriction.enabled}
-                      onCheckedChange={() => toggleRestriction(restriction.id)}
-                      className="ml-4"
-                    />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          );
-        })}
+        {/* Alert si no hay perfiles activos */}
+        {activeProfilesCount === 0 && profiles.length > 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No hay perfiles activos. Activa al menos un perfil para poder escanear productos.
+            </AlertDescription>
+          </Alert>
+        )}
 
-        {/* Custom Restrictions */}
-        <Card className="p-4 shadow-soft">
-          <h3 className="font-semibold text-foreground mb-3">Restricciones Personalizadas</h3>
-          
-          {/* Add new custom restriction */}
-          <div className="flex gap-2 mb-4">
-            <Input
-              placeholder="Ej: Sin conservantes, Sin colorantes..."
-              value={newCustomRestriction}
-              onChange={(e) => setNewCustomRestriction(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addCustomRestriction()}
+        {/* Botón crear perfil */}
+        <Button
+          onClick={() => setIsCreateDialogOpen(true)}
+          disabled={!canCreateMore}
+          className="w-full"
+          size="lg"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          {canCreateMore 
+            ? 'Crear Nuevo Perfil' 
+            : `Máximo ${maxProfiles} perfiles alcanzado`
+          }
+        </Button>
+
+        {/* Lista de perfiles */}
+        <div className="space-y-3">
+          {profiles.map((profile) => (
+            <ProfileCard
+              key={profile.id}
+              profile={profile}
+              onToggleActive={handleToggleActive}
+              onEdit={handleEditProfile}
+              onDelete={handleDeleteProfile}
             />
-            <Button 
-              onClick={addCustomRestriction}
-              size="icon"
-              disabled={!newCustomRestriction.trim()}
-            >
-              <Plus className="w-4 h-4" />
+          ))}
+        </div>
+
+        {profiles.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">
+              No hay perfiles creados aún
+            </p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="w-5 h-5 mr-2" />
+              Crear Primer Perfil
             </Button>
           </div>
+        )}
 
-          {/* Custom restrictions list */}
-          {profile.customRestrictions.length > 0 && (
-            <div className="space-y-2">
-              {profile.customRestrictions.map((restriction, index) => (
-                <div key={index} className="flex items-center justify-between bg-muted p-2 rounded-lg">
-                  <span className="text-sm font-medium">{restriction}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeCustomRestriction(index)}
-                    className="h-6 w-6 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {profile.customRestrictions.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No hay restricciones personalizadas
-            </p>
-          )}
-        </Card>
-
-        {/* Summary */}
-        {enabledCount > 0 && (
-          <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+        {/* Información adicional */}
+        {activeProfilesCount > 0 && (
+          <div className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 rounded-lg">
             <div className="text-center">
-              <h3 className="font-semibold text-foreground mb-2">Perfil Configurado</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                {activeProfilesCount === 1 ? 'Perfil Listo' : 'Perfiles Listos'}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Tu perfil está listo. ¡Ya puedes escanear productos!
+                Los productos se verificarán contra {activeProfilesCount === 1 ? 'este perfil' : `estos ${activeProfilesCount} perfiles`}. 
+                Activa o desactiva perfiles según necesites.
               </p>
             </div>
-          </Card>
+          </div>
         )}
       </div>
+
+      {/* Diálogos */}
+      <CreateProfileDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onCreate={handleCreateProfile}
+      />
+
+      <ProfileEditorDialog
+        profile={editingProfile}
+        isOpen={editingProfile !== null}
+        onClose={() => setEditingProfile(null)}
+        onSave={handleSaveProfile}
+      />
+
+      <AlertDialog open={profileToDelete !== null} onOpenChange={() => setProfileToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar perfil?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El perfil "{ProfileService.getProfile(profileToDelete || '')?.name}" 
+              será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProfile} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

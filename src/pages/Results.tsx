@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ProductInfo, UserProfile, AnalysisResult } from '@/types/restrictions';
+import { ProductInfo, AnalysisResult } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
+import { ProfileService } from '@/services/profileService';
 
 export const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const product = location.state?.product as ProductInfo;
 
@@ -22,21 +22,27 @@ export const Results = () => {
       return;
     }
 
-    // Cargar perfil del usuario
-    const savedProfile = localStorage.getItem('foodFreedomProfile');
-    if (savedProfile) {
-      const userProfile = JSON.parse(savedProfile);
-      setProfile(userProfile);
-      
-      // Realizar análisis
-      const result = AnalysisService.analyzeProduct(product, userProfile);
+    // Inicializar servicio de perfiles
+    ProfileService.initialize();
+
+    // Verificar que haya perfiles activos
+    const activeProfiles = ProfileService.getActiveProfiles();
+    if (activeProfiles.length === 0) {
+      navigate('/profile');
+      return;
+    }
+
+    try {
+      // Realizar análisis con todos los perfiles activos
+      const result = AnalysisService.analyzeProductForActiveProfiles(product);
       setAnalysis(result);
-    } else {
+    } catch (error) {
+      console.error('Error analyzing product:', error);
       navigate('/profile');
     }
   }, [product, navigate]);
 
-  if (!product || !analysis || !profile) {
+  if (!product || !analysis) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -72,6 +78,8 @@ export const Results = () => {
     }
   };
 
+  const activeProfiles = ProfileService.getActiveProfiles();
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto space-y-6">
@@ -86,6 +94,15 @@ export const Results = () => {
           </Button>
           <h1 className="text-xl font-bold text-foreground">Análisis del Producto</h1>
         </div>
+
+        {/* Active profiles info */}
+        <Card className="p-3 bg-primary/5 border-primary/20">
+          <p className="text-sm text-center text-muted-foreground">
+            Analizando para <span className="font-semibold text-foreground">
+              {activeProfiles.length} perfil{activeProfiles.length > 1 ? 'es' : ''}
+            </span>
+          </p>
+        </Card>
 
         {/* Product Info */}
         <Card className="p-4 shadow-soft">
@@ -132,7 +149,7 @@ export const Results = () => {
             <div className="mb-4">{getResultIcon()}</div>
             
             <h2 className="text-xl font-bold text-foreground mb-2">
-              {analysis.isCompatible ? '✅ Producto Compatible' : '❌ Producto No Compatible'}
+              {analysis.isCompatible ? '✅ PRODUCTO APTO' : '❌ PRODUCTO NO APTO'}
             </h2>
             
             <div className="mb-4">
@@ -150,8 +167,8 @@ export const Results = () => {
 
             <p className="text-sm text-muted-foreground">
               {analysis.isCompatible 
-                ? 'Este producto cumple con todas tus restricciones alimenticias'
-                : 'Este producto contiene ingredientes que no son compatibles con tu perfil'
+                ? 'Este producto cumple con todas las restricciones de tus perfiles activos'
+                : 'Este producto contiene ingredientes que no son compatibles con tus perfiles activos'
               }
             </p>
           </div>
@@ -224,7 +241,7 @@ export const Results = () => {
             onClick={() => navigate('/profile')}
             className="w-full"
           >
-            Editar Perfil
+            Ver Perfiles
           </Button>
         </div>
       </div>

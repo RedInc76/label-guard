@@ -1,6 +1,53 @@
-import { ProductInfo, AnalysisResult, UserProfile } from '@/types/restrictions';
+import { ProductInfo, AnalysisResult, UserProfile, Profile, DietaryRestriction } from '@/types/restrictions';
+import { ProfileService } from './profileService';
 
 export class AnalysisService {
+  // Nuevo método principal para análisis con múltiples perfiles
+  static analyzeProductForActiveProfiles(product: ProductInfo): AnalysisResult {
+    const activeProfiles = ProfileService.getActiveProfiles();
+    
+    if (activeProfiles.length === 0) {
+      throw new Error('No hay perfiles activos. Activa al menos un perfil para escanear.');
+    }
+
+    // Combinar restricciones de todos los perfiles activos
+    const combined = this.combineAllRestrictions(activeProfiles);
+    
+    return this.analyzeProduct(product, combined);
+  }
+
+  // Método helper: combinar restricciones de múltiples perfiles
+  private static combineAllRestrictions(profiles: Profile[]): UserProfile {
+    const allRestrictions: DietaryRestriction[] = [];
+    const allCustom: string[] = [];
+    const restrictionMap = new Map<string, DietaryRestriction>();
+    
+    profiles.forEach(profile => {
+      // Agregar restricciones activas
+      profile.restrictions
+        .filter(r => r.enabled)
+        .forEach(r => {
+          if (!restrictionMap.has(r.id)) {
+            restrictionMap.set(r.id, r);
+          }
+        });
+      
+      // Agregar restricciones personalizadas únicas
+      profile.customRestrictions.forEach(custom => {
+        const normalized = custom.toLowerCase().trim();
+        if (!allCustom.some(existing => existing.toLowerCase() === normalized)) {
+          allCustom.push(custom);
+        }
+      });
+    });
+    
+    return {
+      restrictions: Array.from(restrictionMap.values()),
+      customRestrictions: allCustom
+    };
+  }
+
+  // Método original para compatibilidad
   static analyzeProduct(product: ProductInfo, profile: UserProfile): AnalysisResult {
     const violations: AnalysisResult['violations'] = [];
     const warnings: string[] = [];

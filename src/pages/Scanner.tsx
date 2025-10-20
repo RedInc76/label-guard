@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Search, Keyboard } from 'lucide-react';
+import { Camera, Search, Keyboard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { CameraService } from '@/services/cameraService';
 import { OpenFoodFactsService } from '@/services/openFoodFactsService';
+import { ProfileService } from '@/services/profileService';
+import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { ProductInfo } from '@/types/restrictions';
 
 export const Scanner = () => {
@@ -15,6 +18,8 @@ export const Scanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+
+  const activeProfiles = ProfileService.getActiveProfiles();
 
   const handleScan = async () => {
     try {
@@ -68,6 +73,17 @@ export const Scanner = () => {
   };
 
   const searchProduct = async (barcode: string) => {
+    // Validar que haya perfiles activos
+    if (activeProfiles.length === 0) {
+      toast({
+        title: "Sin perfiles activos",
+        description: "Activa al menos un perfil para escanear productos",
+        variant: "destructive",
+      });
+      navigate('/profile');
+      return;
+    }
+
     try {
       setIsSearching(true);
       
@@ -115,6 +131,19 @@ export const Scanner = () => {
           </p>
         </div>
 
+        {/* Active Profiles Badge */}
+        <ActiveProfilesBadge profiles={activeProfiles} />
+
+        {/* Warning if no active profiles */}
+        {activeProfiles.length === 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No hay perfiles activos. Ve a Perfiles y activa al menos uno para poder escanear.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Scan Button */}
         <Card className="p-6 text-center shadow-soft">
           <div className="mb-4">
@@ -125,7 +154,7 @@ export const Scanner = () => {
           
           <Button 
             onClick={handleScan}
-            disabled={isScanning || isSearching}
+            disabled={isScanning || isSearching || activeProfiles.length === 0}
             size="lg"
             className="w-full mb-4 bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70"
           >
@@ -154,7 +183,7 @@ export const Scanner = () => {
             />
             <Button 
               onClick={handleManualSearch}
-              disabled={isScanning || isSearching || !manualCode.trim()}
+              disabled={isScanning || isSearching || !manualCode.trim() || activeProfiles.length === 0}
               size="icon"
             >
               <Search className="w-4 h-4" />
@@ -180,7 +209,7 @@ export const Scanner = () => {
                   setManualCode(item.code);
                   searchProduct(item.code);
                 }}
-                disabled={isScanning || isSearching}
+                disabled={isScanning || isSearching || activeProfiles.length === 0}
               >
                 <span className="font-mono text-xs">{item.code}</span>
                 <span className="text-xs text-muted-foreground">{item.name}</span>

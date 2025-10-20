@@ -9,7 +9,7 @@ export const Navigation = () => {
   const navItems = [
     { icon: Home, label: 'Inicio', path: '/' },
     { icon: ScanLine, label: 'Escanear', path: '/scanner' },
-    { icon: User, label: 'Perfil', path: '/profile' },
+    { icon: User, label: 'Perfiles', path: '/profile' },
   ];
 
   return (

@@ -9,8 +9,8 @@ export const Home = () => {
   const features = [
     {
       icon: Shield,
-      title: 'Perfil Personalizado',
-      description: 'Define tus restricciones alimenticias específicas'
+      title: 'Múltiples Perfiles',
+      description: 'Crea perfiles para cada miembro de tu familia'
     },
     {
       icon: ScanLine,
@@ -19,8 +19,8 @@ export const Home = () => {
     },
     {
       icon: Zap,
-      title: 'Análisis Inteligente',
-      description: 'Obtén resultados precisos y detallados'
+      title: 'Análisis Combinado',
+      description: 'Verifica productos para todos tus perfiles activos'
     }
   ];
 
@@ -33,10 +33,10 @@ export const Home = () => {
             <Shield className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Food Freedom
+            LabelGuard
           </h1>
           <p className="text-muted-foreground text-lg">
-            Tu compañero para una alimentación segura
+            Gestiona perfiles alimenticios para toda tu familia
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export const Home = () => {
             onClick={() => navigate('/profile')}
           >
             <User className="w-6 h-6" />
-            <span>Mi Perfil</span>
+            <span>Perfiles</span>
           </Button>
         </div>
 
@@ -94,13 +94,13 @@ export const Home = () => {
               ¡Comienza ahora!
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Configura tu perfil y empieza a escanear productos
+              Crea perfiles para tu familia y comienza a escanear productos
             </p>
             <Button 
               onClick={() => navigate('/profile')}
               className="w-full bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70"
             >
-              Configurar Perfil
+              Configurar Perfiles
             </Button>
           </div>
         </Card>
