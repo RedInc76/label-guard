@@ -16,11 +16,13 @@ const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 c
 
 export const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, isPremium } = useAuth();
+  const { signIn, signUp, isPremium, resendConfirmationEmail } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   // Redirect if already logged in
   if (isPremium) {
@@ -60,11 +62,22 @@ export const Auth = () => {
       });
       navigate('/scanner');
     } catch (error: any) {
-      toast({
-        title: "Error al iniciar sesión",
-        description: error.message || "Verifica tus credenciales",
-        variant: "destructive",
-      });
+      // Check if it's an email confirmation error
+      if (error.message?.includes('confirma tu email')) {
+        setShowEmailVerification(true);
+        setRegisteredEmail(email);
+        toast({
+          title: "Email no confirmado",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error al iniciar sesión",
+          description: error.message || "Verifica tus credenciales",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -76,12 +89,22 @@ export const Auth = () => {
     
     setLoading(true);
     try {
-      await signUp(email, password);
-      toast({
-        title: "¡Cuenta creada! 🎉",
-        description: "Ya tienes acceso a todas las funciones premium",
-      });
-      navigate('/scanner');
+      const { needsEmailConfirmation } = await signUp(email, password);
+      
+      if (needsEmailConfirmation) {
+        setShowEmailVerification(true);
+        setRegisteredEmail(email);
+        toast({
+          title: "📧 Revisa tu correo",
+          description: "Te enviamos un link de confirmación",
+        });
+      } else {
+        toast({
+          title: "¡Cuenta creada! 🎉",
+          description: "Ya tienes acceso a todas las funciones premium",
+        });
+        navigate('/scanner');
+      }
     } catch (error: any) {
       let errorMessage = "No se pudo crear la cuenta";
       if (error.message?.includes('already registered')) {
@@ -96,6 +119,78 @@ export const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleResendEmail = async () => {
+    setLoading(true);
+    try {
+      await resendConfirmationEmail(registeredEmail);
+      toast({
+        title: "Email reenviado",
+        description: "Revisa tu bandeja de entrada",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "No se pudo reenviar el email",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show email verification message if needed
+  if (showEmailVerification) {
+    return (
+      <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <Card className="w-full">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">📧</span>
+            </div>
+            <CardTitle>Confirma tu email</CardTitle>
+            <CardDescription>
+              Te enviamos un link de confirmación a
+            </CardDescription>
+            <p className="font-semibold text-foreground mt-2">{registeredEmail}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                <strong>Pasos a seguir:</strong>
+                <ol className="list-decimal list-inside mt-2 space-y-1">
+                  <li>Revisa tu bandeja de entrada</li>
+                  <li>Haz clic en el link de confirmación</li>
+                  <li>Regresa aquí para iniciar sesión</li>
+                </ol>
+                <p className="text-xs text-muted-foreground mt-3">
+                  💡 Revisa también la carpeta de spam
+                </p>
+              </AlertDescription>
+            </Alert>
+            
+            <Button 
+              onClick={handleResendEmail} 
+              variant="outline" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Reenviar email
+            </Button>
+            
+            <Button 
+              onClick={() => setShowEmailVerification(false)} 
+              variant="ghost" 
+              className="w-full"
+            >
+              Volver
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">

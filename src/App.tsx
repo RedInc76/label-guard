@@ -11,6 +11,7 @@ import { Scanner } from "./pages/Scanner";
 import { Profile } from "./pages/Profile";
 import { Results } from "./pages/Results";
 import { Auth } from "./pages/Auth";
+import { EmailConfirmed } from "./pages/EmailConfirmed";
 import { PhotoAnalysis } from "./pages/PhotoAnalysis";
 import { History } from "./pages/History";
 import { Favorites } from "./pages/Favorites";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/results" element={<Results />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/photo-analysis" element={<ProtectedRoute><PhotoAnalysis /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />

@@ -9,9 +9,10 @@ interface AuthContextType {
   session: Session | null;
   isPremium: boolean;
   isGuest: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -57,9 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/email-confirmed`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -69,17 +70,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
 
-      // Migrate local profile to cloud after signup
-      const localProfile = localStorage.getItem('localProfile');
-      if (localProfile) {
-        setTimeout(async () => {
-          await ProfileService.migrateLocalToCloud();
-          toast({
-            title: "¡Bienvenido a PREMIUM! 🎉",
-            description: "Tu perfil local ha sido sincronizado",
-          });
-        }, 100);
+      // Check if email confirmation is needed
+      const needsEmailConfirmation = data.user && !data.session;
+
+      // Migrate local profile to cloud after signup (only if confirmed immediately)
+      if (data.session) {
+        const localProfile = localStorage.getItem('localProfile');
+        if (localProfile) {
+          setTimeout(async () => {
+            await ProfileService.migrateLocalToCloud();
+            toast({
+              title: "¡Bienvenido a PREMIUM! 🎉",
+              description: "Tu perfil local ha sido sincronizado",
+            });
+          }, 100);
+        }
       }
+
+      return { needsEmailConfirmation: !!needsEmailConfirmation };
     } catch (error: any) {
       console.error('Sign up error:', error);
       throw error;
@@ -88,14 +96,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          throw new Error('Por favor confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
+        }
+        throw error;
+      }
+
+      // Check if user needs email confirmation
+      if (!data.session) {
+        throw new Error('Por favor confirma tu email antes de iniciar sesión.');
+      }
     } catch (error: any) {
       console.error('Sign in error:', error);
+      throw error;
+    }
+  };
+
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/email-confirmed`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Resend confirmation error:', error);
       throw error;
     }
   };
@@ -123,6 +158,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signUp,
         signIn,
         signOut,
+        resendConfirmationEmail,
         loading,
       }}
     >
