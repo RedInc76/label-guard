@@ -41,9 +41,9 @@ export const Profile = () => {
     setProfiles(ProfileService.getProfiles());
   };
 
-  const handleCreateProfile = (name: string) => {
+  const handleCreateProfile = async (name: string) => {
     try {
-      const newProfile = ProfileService.createProfile(name);
+      const newProfile = await ProfileService.createProfile(name);
       loadProfiles();
       toast({
         title: "Perfil creado",
@@ -131,7 +131,11 @@ export const Profile = () => {
   };
 
   const activeProfilesCount = profiles.filter(p => p.isActive).length;
-  const canCreateMore = ProfileService.canCreateProfile();
+  const [canCreateMore, setCanCreateMore] = useState(true);
+
+  useEffect(() => {
+    ProfileService.canCreateProfile().then(setCanCreateMore);
+  }, [profiles]);
 
   return (
     <div className="min-h-screen p-6">

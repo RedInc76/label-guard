@@ -17,7 +17,7 @@ export class ProfileService {
       this.migrateOldData();
       const profiles = this.getProfiles();
       if (profiles.length === 0) {
-        this.createDefaultProfile();
+        await this.createDefaultProfile();
       }
     } else {
       // PREMIUM MODE: cargar desde Supabase
@@ -160,11 +160,13 @@ export class ProfileService {
     return premium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
   }
 
-  static createProfile(name: string): Profile {
+  static async createProfile(name: string): Promise<Profile> {
+    const isPremium = await this.isPremium();
     const profiles = this.getProfiles();
     
-    if (profiles.length >= this.MAX_PROFILES_FREE) {
-      throw new Error(`Regístrate para crear más perfiles`);
+    const maxProfiles = isPremium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
+    if (profiles.length >= maxProfiles) {
+      throw new Error(isPremium ? `Máximo ${maxProfiles} perfiles alcanzado` : `Regístrate para crear más perfiles`);
     }
 
     if (!name.trim()) {
@@ -175,13 +177,16 @@ export class ProfileService {
       throw new Error('Ya existe un perfil con ese nombre');
     }
 
+    // Premium users get ALL restrictions, free users get only allergens
+    const availableRestrictions = isPremium 
+      ? defaultRestrictions 
+      : defaultRestrictions.filter(r => r.isFree === true);
+
     const newProfile: Profile = {
       id: crypto.randomUUID(),
       name: name.trim(),
       isActive: false,
-      restrictions: defaultRestrictions
-        .filter(r => r.isFree === true)
-        .map(r => ({ ...r, enabled: false })),
+      restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
       customRestrictions: [],
       createdAt: new Date().toISOString()
     };
@@ -252,8 +257,10 @@ export class ProfileService {
     return profile.isActive;
   }
 
-  static canCreateProfile(): boolean {
-    return this.getProfiles().length < this.MAX_PROFILES_FREE;
+  static async canCreateProfile(): Promise<boolean> {
+    const isPremium = await this.isPremium();
+    const maxProfiles = isPremium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
+    return this.getProfiles().length < maxProfiles;
   }
 
   private static saveProfiles(profiles: Profile[]): void {
@@ -264,14 +271,19 @@ export class ProfileService {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(system));
   }
 
-  private static createDefaultProfile(): void {
+  private static async createDefaultProfile(): Promise<void> {
+    const isPremium = await this.isPremium();
+    
+    // Premium users get ALL restrictions, free users get only allergens
+    const availableRestrictions = isPremium 
+      ? defaultRestrictions 
+      : defaultRestrictions.filter(r => r.isFree === true);
+
     const defaultProfile: Profile = {
       id: crypto.randomUUID(),
       name: 'Mi Perfil',
       isActive: true,
-      restrictions: defaultRestrictions
-        .filter(r => r.isFree === true)
-        .map(r => ({ ...r, enabled: false })),
+      restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
       customRestrictions: [],
       createdAt: new Date().toISOString()
     };
