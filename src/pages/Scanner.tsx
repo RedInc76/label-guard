@@ -6,16 +6,19 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { CameraService } from '@/services/cameraService';
 import { OpenFoodFactsService } from '@/services/openFoodFactsService';
 import { ProfileService } from '@/services/profileService';
 import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
+import { UpgradeBanner } from '@/components/UpgradeBanner';
 import { ProductInfo } from '@/types/restrictions';
 import { Capacitor } from '@capacitor/core';
 
 export const Scanner = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isPremium } = useAuth();
   const [isScanning, setIsScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -117,11 +120,16 @@ export const Scanner = () => {
         // Navegar a resultados con la información del producto
         navigate('/results', { state: { product } });
       } else {
-        toast({
-          title: "Producto no encontrado",
-          description: "No se encontró información para este código",
-          variant: "destructive",
-        });
+        // Premium: ofrecer análisis por foto
+        if (isPremium) {
+          navigate('/photo-analysis');
+        } else {
+          toast({
+            title: "Producto no encontrado",
+            description: "Regístrate para analizar productos con IA",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('Error searching product:', error);
@@ -154,6 +162,9 @@ export const Scanner = () => {
             Escanea o ingresa el código de barras del producto
           </p>
         </div>
+
+        {/* Upgrade Banner for FREE users */}
+        <UpgradeBanner />
 
         {/* Active Profiles Badge */}
         <ActiveProfilesBadge profiles={activeProfiles} />

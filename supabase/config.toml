@@ -1,1 +1,4 @@
 project_id = "icmhwdrchtvoqldhdwze"
+
+[functions.analyze-product-photo]
+verify_jwt = false

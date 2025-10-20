@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,10 @@ import { Progress } from '@/components/ui/progress';
 import { ProductInfo, AnalysisResult } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
 import { ProfileService } from '@/services/profileService';
+import { HistoryService } from '@/services/historyService';
+import { FavoritesService } from '@/services/favoritesService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 export const Results = () => {
   const location = useLocation();
@@ -25,25 +29,53 @@ export const Results = () => {
       return;
     }
 
-    // Inicializar servicio de perfiles
-    ProfileService.initialize();
-
-    // Verificar que haya perfiles activos
     const activeProfiles = ProfileService.getActiveProfiles();
     if (activeProfiles.length === 0) {
       navigate('/profile');
       return;
     }
 
-    try {
-      // Realizar análisis con todos los perfiles activos
-      const result = AnalysisService.analyzeProductForActiveProfiles(product);
-      setAnalysis(result);
-    } catch (error) {
-      console.error('Error analyzing product:', error);
-      navigate('/profile');
+    const performAnalysis = async () => {
+      try {
+        const result = location.state?.analysis || AnalysisService.analyzeProductForActiveProfiles(product);
+        setAnalysis(result);
+
+        // Save to history if premium and not from history
+        if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
+          const historyId = await HistoryService.saveToHistory(
+            product,
+            result,
+            location.state?.analysisType || 'barcode',
+            location.state?.photoUrls
+          );
+          if (historyId) {
+            setScanHistoryId(historyId);
+            const fav = await FavoritesService.isFavorite(historyId);
+            setIsFavorite(fav);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error analyzing product:', error);
+        navigate('/profile');
+      }
+    };
+
+    performAnalysis();
+  }, [product, navigate, isPremium, location.state]);
+
+  const handleToggleFavorite = async () => {
+    if (!scanHistoryId) return;
+    
+    if (isFavorite) {
+      await FavoritesService.removeFromFavorites(scanHistoryId);
+      setIsFavorite(false);
+      toast({ title: "Eliminado de favoritos" });
+    } else {
+      await FavoritesService.addToFavorites(scanHistoryId);
+      setIsFavorite(true);
+      toast({ title: "Agregado a favoritos ⭐" });
     }
-  }, [product, navigate]);
+  };
 
   if (!product || !analysis) {
     return (
@@ -232,20 +264,28 @@ export const Results = () => {
         )}
 
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/scanner')}
-            className="w-full"
-          >
-            Escanear Otro
-          </Button>
-          <Button 
-            onClick={() => navigate('/profile')}
-            className="w-full"
-          >
-            Ver Perfiles
-          </Button>
+        <div className="space-y-3">
+          {isPremium && scanHistoryId && (
+            <Button onClick={handleToggleFavorite} variant="outline" className="w-full">
+              <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+              {isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            </Button>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/scanner')}
+              className="w-full"
+            >
+              Escanear Otro
+            </Button>
+            <Button 
+              onClick={() => navigate('/profile')}
+              className="w-full"
+            >
+              Ver Perfiles
+            </Button>
+          </div>
         </div>
       </div>
     </div>

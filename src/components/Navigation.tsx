@@ -1,35 +1,55 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ScanLine, Home } from 'lucide-react';
+import { User, ScanLine, Home, History, Star, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isPremium, signOut } = useAuth();
 
   const navItems = [
-    { icon: Home, label: 'Inicio', path: '/' },
-    { icon: ScanLine, label: 'Escanear', path: '/scanner' },
-    { icon: User, label: 'Perfiles', path: '/profile' },
+    { icon: Home, label: 'Inicio', path: '/', showAlways: true },
+    { icon: ScanLine, label: 'Escanear', path: '/scanner', showAlways: true },
+    { icon: User, label: 'Perfiles', path: '/profile', showAlways: true },
+    { icon: History, label: 'Historial', path: '/history', showAlways: false },
+    { icon: Star, label: 'Favoritos', path: '/favorites', showAlways: false },
   ];
 
+  const visibleItems = navItems.filter(item => item.showAlways || isPremium);
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-strong">
-      <div className="flex justify-around items-center py-2">
-        {navItems.map(({ icon: Icon, label, path }) => (
-          <button
-            key={path}
-            onClick={() => navigate(path)}
-            className={cn(
-              "flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200",
-              location.pathname === path
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-strong z-50">
+      <div className="flex justify-between items-center py-2 px-2">
+        <div className="flex justify-around items-center flex-1">
+          {visibleItems.map(({ icon: Icon, label, path }) => (
+            <button
+              key={path}
+              onClick={() => navigate(path)}
+              className={cn(
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200",
+                location.pathname === path
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon size={20} />
+              <span className="text-xs font-medium">{label}</span>
+            </button>
+          ))}
+        </div>
+        {isPremium && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => signOut()} 
+            className="h-12 mr-1"
+            title="Cerrar sesión"
           >
-            <Icon size={20} />
-            <span className="text-xs font-medium">{label}</span>
-          </button>
-        ))}
+            <LogOut className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </nav>
   );

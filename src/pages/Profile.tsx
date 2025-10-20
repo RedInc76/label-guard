@@ -25,10 +25,16 @@ export const Profile = () => {
   const [editingProfile, setEditingProfile] = useState<ProfileType | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [maxProfiles, setMaxProfiles] = useState(1);
 
   useEffect(() => {
-    ProfileService.initialize();
-    loadProfiles();
+    const initializeProfiles = async () => {
+      await ProfileService.initialize();
+      loadProfiles();
+      const max = await ProfileService.getMaxProfiles();
+      setMaxProfiles(max);
+    };
+    initializeProfiles();
   }, []);
 
   const loadProfiles = () => {
@@ -126,7 +132,6 @@ export const Profile = () => {
 
   const activeProfilesCount = profiles.filter(p => p.isActive).length;
   const canCreateMore = ProfileService.canCreateProfile();
-  const maxProfiles = ProfileService.getMaxProfiles();
 
   return (
     <div className="min-h-screen p-6">
