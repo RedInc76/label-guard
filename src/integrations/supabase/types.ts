@@ -14,7 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          barcode: string | null
+          brands: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          product_name: string
+          scan_history_id: string | null
+          user_id: string
+        }
+        Insert: {
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          product_name: string
+          scan_history_id?: string | null
+          user_id: string
+        }
+        Update: {
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          product_name?: string
+          scan_history_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_scan_history_id_fkey"
+            columns: ["scan_history_id"]
+            isOneToOne: false
+            referencedRelation: "scan_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_custom_restrictions: {
+        Row: {
+          created_at: string | null
+          id: string
+          profile_id: string
+          restriction_text: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          restriction_text: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          restriction_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_custom_restrictions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_restrictions: {
+        Row: {
+          enabled: boolean | null
+          id: string
+          profile_id: string
+          restriction_id: string
+        }
+        Insert: {
+          enabled?: boolean | null
+          id?: string
+          profile_id: string
+          restriction_id: string
+        }
+        Update: {
+          enabled?: boolean | null
+          id?: string
+          profile_id?: string
+          restriction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_restrictions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scan_history: {
+        Row: {
+          active_profiles_snapshot: Json
+          allergens: string | null
+          analysis_type: string
+          back_photo_url: string | null
+          barcode: string | null
+          brands: string | null
+          created_at: string | null
+          front_photo_url: string | null
+          id: string
+          image_url: string | null
+          ingredients_text: string | null
+          is_compatible: boolean
+          product_name: string
+          score: number
+          user_id: string
+          violations: Json | null
+          warnings: Json | null
+        }
+        Insert: {
+          active_profiles_snapshot: Json
+          allergens?: string | null
+          analysis_type: string
+          back_photo_url?: string | null
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          front_photo_url?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients_text?: string | null
+          is_compatible: boolean
+          product_name: string
+          score: number
+          user_id: string
+          violations?: Json | null
+          warnings?: Json | null
+        }
+        Update: {
+          active_profiles_snapshot?: Json
+          allergens?: string | null
+          analysis_type?: string
+          back_photo_url?: string | null
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          front_photo_url?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients_text?: string | null
+          is_compatible?: boolean
+          product_name?: string
+          score?: number
+          user_id?: string
+          violations?: Json | null
+          warnings?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
