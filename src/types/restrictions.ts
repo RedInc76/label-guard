@@ -5,6 +5,7 @@ export interface DietaryRestriction {
   category: 'allergens' | 'dietary' | 'health' | 'religious';
   keywords: string[];
   enabled: boolean;
+  isFree?: boolean; // true for FREE mode restrictions (allergens only)
 }
 
 export interface Profile {

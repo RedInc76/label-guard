@@ -12,7 +12,10 @@ import { ProfileService } from '@/services/profileService';
 export const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isPremium } = useAuth();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [scanHistoryId, setScanHistoryId] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const product = location.state?.product as ProductInfo;
 

@@ -1,14 +1,15 @@
 import { DietaryRestriction } from '@/types/restrictions';
 
 export const defaultRestrictions: DietaryRestriction[] = [
-  // Alérgenos
+  // Alérgenos (FREE)
   {
     id: 'gluten',
     name: 'Sin Gluten',
     description: 'Evita trigo, cebada, centeno y productos con gluten',
     category: 'allergens',
     keywords: ['gluten', 'wheat', 'barley', 'rye', 'triticale', 'trigo', 'cebada', 'centeno'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'lactose',
@@ -16,7 +17,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita productos lácteos y derivados',
     category: 'allergens',
     keywords: ['lactose', 'milk', 'dairy', 'lactosa', 'leche', 'lácteo'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'nuts',
@@ -24,7 +26,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita almendras, nueces, avellanas, etc.',
     category: 'allergens',
     keywords: ['nuts', 'almond', 'walnut', 'hazelnut', 'cashew', 'pistachio', 'frutos secos', 'almendra', 'nuez'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'soy',
@@ -32,7 +35,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita soja y productos derivados',
     category: 'allergens',
     keywords: ['soy', 'soja', 'soybean', 'lecithin'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'egg',
@@ -40,7 +44,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita huevos y productos con huevo',
     category: 'allergens',
     keywords: ['egg', 'eggs', 'albumin', 'huevo', 'albúmina', 'ovoproteína', 'ovo'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'fish',
@@ -48,7 +53,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita pescado y derivados',
     category: 'allergens',
     keywords: ['fish', 'anchovy', 'salmon', 'tuna', 'cod', 'pescado', 'atún', 'salmón', 'anchoa', 'bacalao'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'shellfish',
@@ -56,7 +62,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita mariscos y crustáceos',
     category: 'allergens',
     keywords: ['shellfish', 'shrimp', 'crab', 'lobster', 'prawn', 'marisco', 'camarón', 'cangrejo', 'langosta', 'gamba'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'celery',
@@ -64,7 +71,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita apio y productos con apio',
     category: 'allergens',
     keywords: ['celery', 'celeriac', 'apio'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'mustard',
@@ -72,7 +80,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita mostaza y productos con mostaza',
     category: 'allergens',
     keywords: ['mustard', 'mostaza'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'sesame',
@@ -80,7 +89,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita sésamo y productos derivados',
     category: 'allergens',
     keywords: ['sesame', 'tahini', 'sésamo', 'ajonjolí'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   {
     id: 'sulfites',
@@ -88,17 +98,19 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita sulfitos y conservantes con azufre',
     category: 'allergens',
     keywords: ['sulfite', 'sulfur dioxide', 'metabisulfite', 'sulfito', 'dióxido de azufre', 'E220', 'E221', 'E222'],
-    enabled: false
+    enabled: false,
+    isFree: true
   },
   
-  // Dietas
+  // Dietas (PREMIUM)
   {
     id: 'vegetarian',
     name: 'Vegetariano',
     description: 'No contiene carne ni pescado',
     category: 'dietary',
     keywords: ['meat', 'beef', 'pork', 'chicken', 'fish', 'seafood', 'carne', 'pollo', 'cerdo', 'pescado'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'vegan',
@@ -106,7 +118,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'No contiene productos de origen animal',
     category: 'dietary',
     keywords: ['meat', 'dairy', 'egg', 'honey', 'gelatin', 'carne', 'lácteo', 'huevo', 'miel', 'gelatina'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'keto',
@@ -114,7 +127,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita carbohidratos y azúcares',
     category: 'dietary',
     keywords: ['sugar', 'bread', 'pasta', 'rice', 'potato', 'flour', 'azúcar', 'pan', 'pasta', 'arroz', 'patata', 'harina'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'paleo',
@@ -122,7 +136,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita granos, lácteos y alimentos procesados',
     category: 'dietary',
     keywords: ['grain', 'dairy', 'legume', 'processed', 'grano', 'lácteo', 'legumbre', 'procesado', 'cereal'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_added_sugar',
@@ -130,17 +145,19 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita azúcares agregados artificialmente',
     category: 'dietary',
     keywords: ['added sugar', 'high fructose corn syrup', 'syrup', 'azúcar añadido', 'jarabe de maíz', 'jarabe'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   
-  // Salud
+  // Salud (PREMIUM)
   {
     id: 'low_sugar',
     name: 'Bajo en Azúcar',
     description: 'Limita el contenido de azúcar',
     category: 'health',
     keywords: ['sugar', 'glucose', 'fructose', 'sucrose', 'azúcar', 'glucosa', 'fructosa', 'sacarosa'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'low_sodium',
@@ -148,7 +165,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Limita el contenido de sal',
     category: 'health',
     keywords: ['sodium', 'salt', 'sodio', 'sal'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'low_saturated_fat',
@@ -156,7 +174,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Limita grasas saturadas para salud cardiovascular',
     category: 'health',
     keywords: ['saturated fat', 'palm oil', 'coconut oil', 'grasa saturada', 'aceite de palma', 'aceite de coco'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_trans_fat',
@@ -164,7 +183,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita grasas trans y aceites hidrogenados',
     category: 'health',
     keywords: ['trans fat', 'partially hydrogenated', 'grasa trans', 'hidrogenado', 'hydrogenated oil'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_preservatives',
@@ -172,7 +192,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita conservantes artificiales',
     category: 'health',
     keywords: ['preservative', 'E200', 'E201', 'E202', 'benzoate', 'sorbate', 'conservante', 'benzoato', 'sorbato'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_artificial_colors',
@@ -180,7 +201,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita colorantes artificiales y sintéticos',
     category: 'health',
     keywords: ['artificial color', 'E100', 'E102', 'tartrazine', 'colorante artificial', 'tartrazina', 'colorante sintético'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_artificial_sweeteners',
@@ -188,7 +210,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita edulcorantes artificiales',
     category: 'health',
     keywords: ['aspartame', 'sucralose', 'saccharin', 'acesulfame', 'edulcorante artificial', 'E950', 'E951'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_alcohol',
@@ -196,17 +219,19 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita bebidas y productos con alcohol',
     category: 'health',
     keywords: ['alcohol', 'ethanol', 'ethyl alcohol', 'alcoholic', 'etanol', 'bebida alcohólica'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   
-  // Religioso
+  // Religioso (PREMIUM)
   {
     id: 'halal',
     name: 'Halal',
     description: 'Cumple con los requisitos halal',
     category: 'religious',
     keywords: ['pork', 'alcohol', 'cerdo', 'alcohol'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'kosher',
@@ -214,7 +239,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Cumple con los requisitos kosher',
     category: 'religious',
     keywords: ['pork', 'shellfish', 'cerdo', 'mariscos'],
-    enabled: false
+    enabled: false,
+    isFree: false
   },
   {
     id: 'no_pork',
@@ -222,6 +248,7 @@ export const defaultRestrictions: DietaryRestriction[] = [
     description: 'Evita carne de cerdo y derivados',
     category: 'religious',
     keywords: ['pork', 'pig', 'bacon', 'ham', 'lard', 'cerdo', 'tocino', 'jamón', 'manteca', 'panceta'],
-    enabled: false
+    enabled: false,
+    isFree: false
   }
 ];

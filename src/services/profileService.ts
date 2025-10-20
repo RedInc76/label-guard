@@ -1,17 +1,121 @@
 import { Profile, ProfileSystem, DietaryRestriction, UserProfile } from '@/types/restrictions';
 import { defaultRestrictions } from '@/data/restrictions';
+import { supabase } from '@/integrations/supabase/client';
 
 export class ProfileService {
   private static STORAGE_KEY = 'labelGuardProfiles';
   private static LEGACY_KEY = 'foodFreedomProfile';
-  private static MAX_PROFILES = 5;
+  private static MAX_PROFILES_FREE = 1;
+  private static MAX_PROFILES_PREMIUM = 5;
   private static VERSION = '2.0';
 
-  static initialize(): void {
-    this.migrateOldData();
-    const profiles = this.getProfiles();
-    if (profiles.length === 0) {
-      this.createDefaultProfile();
+  static async initialize(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      // FREE MODE: inicializar localStorage
+      this.migrateOldData();
+      const profiles = this.getProfiles();
+      if (profiles.length === 0) {
+        this.createDefaultProfile();
+      }
+    } else {
+      // PREMIUM MODE: cargar desde Supabase
+      await this.initializePremiumMode();
+    }
+  }
+
+  static async initializePremiumMode(): Promise<void> {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*');
+    
+    // If no profiles in Supabase but has local data, migrate it
+    if (!profiles || profiles.length === 0) {
+      const localProfiles = this.getProfiles();
+      if (localProfiles.length > 0) {
+        await this.migrateLocalToCloud();
+      } else {
+        // Create default profile in cloud
+        await this.createCloudProfile('Mi Perfil');
+      }
+    }
+  }
+
+  static async migrateLocalToCloud(): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const localProfiles = this.getProfiles();
+      
+      for (const profile of localProfiles) {
+        // Create profile in Supabase
+        const { data: newProfile, error } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            name: profile.name,
+            is_active: profile.isActive,
+          })
+          .select()
+          .single();
+
+        if (error || !newProfile) {
+          console.error('Error creating profile:', error);
+          continue;
+        }
+
+        // Insert restrictions
+        const restrictionsToInsert = profile.restrictions
+          .filter(r => r.enabled)
+          .map(r => ({
+            profile_id: newProfile.id,
+            restriction_id: r.id,
+            enabled: true,
+          }));
+
+        if (restrictionsToInsert.length > 0) {
+          await supabase
+            .from('profile_restrictions')
+            .insert(restrictionsToInsert);
+        }
+
+        // Insert custom restrictions
+        const customToInsert = profile.customRestrictions.map(text => ({
+          profile_id: newProfile.id,
+          restriction_text: text,
+        }));
+
+        if (customToInsert.length > 0) {
+          await supabase
+            .from('profile_custom_restrictions')
+            .insert(customToInsert);
+        }
+      }
+
+      // Clear local storage after successful migration
+      localStorage.removeItem(this.STORAGE_KEY);
+      console.log('✅ Profiles migrated to cloud successfully');
+    } catch (error) {
+      console.error('❌ Error migrating to cloud:', error);
+    }
+  }
+
+  static async createCloudProfile(name: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        user_id: user.id,
+        name: name.trim(),
+        is_active: true,
+      });
+
+    if (error) {
+      console.error('Error creating cloud profile:', error);
     }
   }
 
@@ -36,11 +140,31 @@ export class ProfileService {
     return this.getProfiles().find(p => p.id === id);
   }
 
+  static async isPremium(): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user;
+  }
+
+  static async getAvailableRestrictions(): Promise<DietaryRestriction[]> {
+    const premium = await this.isPremium();
+    if (premium) {
+      return defaultRestrictions; // All 26 restrictions
+    } else {
+      // Only allergens (11 restrictions with isFree: true)
+      return defaultRestrictions.filter(r => r.isFree === true);
+    }
+  }
+
+  static async getMaxProfiles(): Promise<number> {
+    const premium = await this.isPremium();
+    return premium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
+  }
+
   static createProfile(name: string): Profile {
     const profiles = this.getProfiles();
     
-    if (profiles.length >= this.MAX_PROFILES) {
-      throw new Error(`Máximo ${this.MAX_PROFILES} perfiles permitidos`);
+    if (profiles.length >= this.MAX_PROFILES_FREE) {
+      throw new Error(`Regístrate para crear más perfiles`);
     }
 
     if (!name.trim()) {
@@ -55,7 +179,9 @@ export class ProfileService {
       id: crypto.randomUUID(),
       name: name.trim(),
       isActive: false,
-      restrictions: defaultRestrictions.map(r => ({ ...r, enabled: false })),
+      restrictions: defaultRestrictions
+        .filter(r => r.isFree === true)
+        .map(r => ({ ...r, enabled: false })),
       customRestrictions: [],
       createdAt: new Date().toISOString()
     };
@@ -127,11 +253,7 @@ export class ProfileService {
   }
 
   static canCreateProfile(): boolean {
-    return this.getProfiles().length < this.MAX_PROFILES;
-  }
-
-  static getMaxProfiles(): number {
-    return this.MAX_PROFILES;
+    return this.getProfiles().length < this.MAX_PROFILES_FREE;
   }
 
   private static saveProfiles(profiles: Profile[]): void {
@@ -147,7 +269,9 @@ export class ProfileService {
       id: crypto.randomUUID(),
       name: 'Mi Perfil',
       isActive: true,
-      restrictions: defaultRestrictions.map(r => ({ ...r, enabled: false })),
+      restrictions: defaultRestrictions
+        .filter(r => r.isFree === true)
+        .map(r => ({ ...r, enabled: false })),
       customRestrictions: [],
       createdAt: new Date().toISOString()
     };
@@ -167,7 +291,9 @@ export class ProfileService {
           id: crypto.randomUUID(),
           name: 'Mi Perfil',
           isActive: true,
-          restrictions: oldProfile.restrictions || defaultRestrictions.map(r => ({ ...r, enabled: false })),
+          restrictions: oldProfile.restrictions || defaultRestrictions
+            .filter(r => r.isFree === true)
+            .map(r => ({ ...r, enabled: false })),
           customRestrictions: oldProfile.customRestrictions || [],
           createdAt: new Date().toISOString()
         };
