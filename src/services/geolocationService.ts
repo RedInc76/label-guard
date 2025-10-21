@@ -80,9 +80,15 @@ export class GeolocationService {
       
       window.open(url, '_system');
     } else {
-      // En web, usar Google Maps
+      // En web, usar click programático en elemento <a> para mejor compatibilidad con CSP
       const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-      window.open(url, '_blank');
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 
