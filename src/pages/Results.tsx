@@ -49,14 +49,33 @@ export const Results = () => {
           // Save to history if premium and not from history
           if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
             // Capturar ubicación antes de guardar
-            const currentLocation = await GeolocationService.getCurrentLocation();
+            toast({
+              title: "📍 Capturando ubicación...",
+              description: "Esto ayuda a recordar dónde compraste el producto",
+              duration: 2000,
+            });
+            
+            const locationResult = await GeolocationService.getCurrentLocation();
+            
+            // Log para debugging
+            if (!locationResult.success) {
+              console.warn('[Results] No se pudo capturar ubicación:', locationResult.error);
+              toast({
+                title: "⚠️ Ubicación no disponible",
+                description: locationResult.error || "No se pudo obtener tu ubicación",
+                variant: "destructive",
+                duration: 3000,
+              });
+            } else {
+              console.log('[Results] Ubicación capturada OK:', locationResult.location);
+            }
             
             const historyId = await HistoryService.saveToHistory(
               product,
               result,
               location.state?.analysisType || 'barcode',
               location.state?.photoUrls,
-              currentLocation
+              locationResult.location || null
             );
             if (historyId) {
               setScanHistoryId(historyId);

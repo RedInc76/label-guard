@@ -6,42 +6,91 @@ export interface Location {
   accuracy?: number;
 }
 
+export interface LocationResult {
+  success: boolean;
+  location?: Location;
+  error?: string;
+  permissionState?: PermissionState;
+}
+
 export class GeolocationService {
   /**
    * Capturar ubicación actual del dispositivo
    * Funciona en web (HTML5 Geolocation) y nativo (Capacitor Geolocation)
    */
-  static async getCurrentLocation(): Promise<Location | null> {
+  static async getCurrentLocation(): Promise<LocationResult> {
+    console.log('[Geolocation] Iniciando captura de ubicación...');
+    
     try {
-      // Verificar si Geolocation está disponible
+      // 1. Verificar soporte
       if (!('geolocation' in navigator)) {
-        console.warn('Geolocation not supported');
-        return null;
+        console.error('[Geolocation] API no disponible en este dispositivo');
+        return { success: false, error: 'Geolocation API no disponible' };
       }
 
-      // Solicitar ubicación con timeout de 10 segundos
+      // 2. Verificar permisos previos
+      let permissionState: PermissionState | undefined;
+      try {
+        const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+        permissionState = permission.state;
+        console.log('[Geolocation] Estado de permisos:', permissionState);
+        
+        if (permissionState === 'denied') {
+          return { 
+            success: false, 
+            error: 'Permisos de ubicación denegados',
+            permissionState 
+          };
+        }
+      } catch (e) {
+        console.log('[Geolocation] No se pudo verificar permisos (normal en algunos navegadores)');
+      }
+
+      // 3. Solicitar ubicación
+      console.log('[Geolocation] Solicitando ubicación al dispositivo...');
+      
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
+          (pos) => {
+            console.log('[Geolocation] ✅ Ubicación obtenida:', {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            });
+            resolve(pos);
+          },
+          (err) => {
+            console.error('[Geolocation] ❌ Error al obtener ubicación:', err.code, err.message);
+            reject(err);
+          },
           {
-            enableHighAccuracy: true,
-            timeout: 10000, // 10 segundos
-            maximumAge: 60000 // Cache de 1 minuto
+            enableHighAccuracy: false, // false = más rápido, menos batería
+            timeout: 30000, // 30 segundos (móviles son lentos)
+            maximumAge: 30000 // Cache de 30 segundos
           }
         );
       });
 
-      return {
+      const result = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
       };
-    } catch (error) {
-      console.warn('Error getting location:', error);
-      // No lanzar error, solo retornar null
-      // La ubicación es opcional, no debe bloquear el escaneo
-      return null;
+
+      console.log('[Geolocation] ✅ Ubicación capturada exitosamente');
+      return { success: true, location: result, permissionState };
+      
+    } catch (error: any) {
+      const errorMessage = error.code 
+        ? `Error ${error.code}: ${error.message}`
+        : 'Error desconocido al obtener ubicación';
+      
+      console.error('[Geolocation] ❌ Captura falló:', errorMessage);
+      
+      return { 
+        success: false, 
+        error: errorMessage
+      };
     }
   }
 
