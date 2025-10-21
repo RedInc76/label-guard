@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 export interface Location {
   latitude: number;
@@ -22,68 +23,91 @@ export class GeolocationService {
     console.log('[Geolocation] Iniciando captura de ubicación...');
     
     try {
-      // 1. Verificar soporte
-      if (!('geolocation' in navigator)) {
-        console.error('[Geolocation] API no disponible en este dispositivo');
-        return { success: false, error: 'Geolocation API no disponible' };
-      }
-
-      // 2. Verificar permisos previos
-      let permissionState: PermissionState | undefined;
-      try {
-        const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-        permissionState = permission.state;
-        console.log('[Geolocation] Estado de permisos:', permissionState);
+      if (Capacitor.isNativePlatform()) {
+        // USAR PLUGIN NATIVO EN MÓVIL
+        console.log('[Geolocation] Usando plugin nativo de Capacitor');
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          timeout: 30000,
+          maximumAge: 30000
+        });
         
-        if (permissionState === 'denied') {
-          return { 
-            success: false, 
-            error: 'Permisos de ubicación denegados',
-            permissionState 
-          };
-        }
-      } catch (e) {
-        console.log('[Geolocation] No se pudo verificar permisos (normal en algunos navegadores)');
-      }
-
-      // 3. Solicitar ubicación
-      console.log('[Geolocation] Solicitando ubicación al dispositivo...');
-      
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            console.log('[Geolocation] ✅ Ubicación obtenida:', {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy
-            });
-            resolve(pos);
-          },
-          (err) => {
-            console.error('[Geolocation] ❌ Error al obtener ubicación:', err.code, err.message);
-            reject(err);
-          },
-          {
-            enableHighAccuracy: false, // false = más rápido, menos batería
-            timeout: 30000, // 30 segundos (móviles son lentos)
-            maximumAge: 30000 // Cache de 30 segundos
+        console.log('[Geolocation] ✅ Ubicación obtenida (nativo):', {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
+        
+        return {
+          success: true,
+          location: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
           }
-        );
-      });
+        };
+      } else {
+        // WEB: Usar HTML5 Geolocation
+        console.log('[Geolocation] Usando HTML5 Geolocation API');
+        
+        if (!('geolocation' in navigator)) {
+          console.error('[Geolocation] API no disponible en este dispositivo');
+          return { success: false, error: 'Geolocation API no disponible' };
+        }
 
-      const result = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      };
+        let permissionState: PermissionState | undefined;
+        try {
+          const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          permissionState = permission.state;
+          console.log('[Geolocation] Estado de permisos:', permissionState);
+          
+          if (permissionState === 'denied') {
+            return { 
+              success: false, 
+              error: 'Permisos de ubicación denegados',
+              permissionState 
+            };
+          }
+        } catch (e) {
+          console.log('[Geolocation] No se pudo verificar permisos (normal en algunos navegadores)');
+        }
 
-      console.log('[Geolocation] ✅ Ubicación capturada exitosamente');
-      return { success: true, location: result, permissionState };
-      
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              console.log('[Geolocation] ✅ Ubicación obtenida:', {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                accuracy: pos.coords.accuracy
+              });
+              resolve(pos);
+            },
+            (err) => {
+              console.error('[Geolocation] ❌ Error al obtener ubicación:', err.code, err.message);
+              reject(err);
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 30000,
+              maximumAge: 30000
+            }
+          );
+        });
+
+        return {
+          success: true,
+          location: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          },
+          permissionState
+        };
+      }
     } catch (error: any) {
       const errorMessage = error.code 
         ? `Error ${error.code}: ${error.message}`
-        : 'Error desconocido al obtener ubicación';
+        : error.message || 'Error desconocido al obtener ubicación';
       
       console.error('[Geolocation] ❌ Captura falló:', errorMessage);
       
@@ -99,14 +123,41 @@ export class GeolocationService {
    */
   static async checkPermissions(): Promise<boolean> {
     try {
-      if (!('permissions' in navigator)) {
-        return false;
-      }
+      if (Capacitor.isNativePlatform()) {
+        // USAR PLUGIN NATIVO
+        const permission = await Geolocation.checkPermissions();
+        return permission.location === 'granted';
+      } else {
+        // WEB: Navigator permissions
+        if (!('permissions' in navigator)) {
+          return false;
+        }
 
-      const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-      return result.state === 'granted';
+        const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+        return result.state === 'granted';
+      }
     } catch (error) {
-      // Si no podemos verificar, asumimos que no hay permisos
+      console.error('[Geolocation] Error checking permissions:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Solicitar permisos de ubicación (solo nativo)
+   */
+  static async requestPermissions(): Promise<boolean> {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        console.log('[Geolocation] Solicitando permisos nativos...');
+        const permission = await Geolocation.requestPermissions();
+        const granted = permission.location === 'granted';
+        console.log('[Geolocation] Permisos:', granted ? 'CONCEDIDOS' : 'DENEGADOS');
+        return granted;
+      }
+      // En web, los permisos se solicitan automáticamente al llamar getCurrentPosition
+      return false;
+    } catch (error) {
+      console.error('[Geolocation] Error requesting permissions:', error);
       return false;
     }
   }

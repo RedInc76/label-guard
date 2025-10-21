@@ -14,6 +14,9 @@ const config: CapacitorConfig = {
     },
     BarcodeScanner: {
       // ML Kit Barcode Scanner configuration
+    },
+    Geolocation: {
+      permissions: ['location']
     }
   }
 };

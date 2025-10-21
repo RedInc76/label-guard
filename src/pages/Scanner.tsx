@@ -199,7 +199,10 @@ export const Scanner = () => {
         )}
 
         {/* Active Profiles Badge */}
-        <ActiveProfilesBadge profiles={activeProfiles} />
+            <ActiveProfilesBadge 
+              profiles={activeProfiles}
+              onNavigateToProfiles={() => navigate('/profile')}
+            />
 
         {/* Warning if no active profiles */}
         {activeProfiles.length === 0 && (

@@ -17,8 +17,8 @@ export class PermissionsService {
       // Primero solicitar cámara (más crítico)
       const cameraGranted = await CameraService.requestPermissions();
       
-      // Luego solicitar ubicación (opcional)
-      const locationGranted = await GeolocationService.checkPermissions();
+      // Luego solicitar ubicación explícitamente
+      const locationGranted = await GeolocationService.requestPermissions();
       
       return {
         camera: cameraGranted,

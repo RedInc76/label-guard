@@ -18,6 +18,7 @@ import { History } from "./pages/History";
 import { Favorites } from "./pages/Favorites";
 import { Terms } from "./pages/Terms";
 import { Permissions } from "./pages/Permissions";
+import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
               <Route path="/permissions" element={<Permissions />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
