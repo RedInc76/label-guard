@@ -39,30 +39,25 @@ export const Scanner = () => {
     try {
       setIsScanning(true);
       
-      // Verificar si ya tenemos permisos
+      // Solo verificar si tenemos permisos (ya fueron solicitados en el onboarding)
       const hasPermission = await CameraService.checkPermissions();
       
       if (!hasPermission) {
-        // Solicitar permisos
-        const granted = await CameraService.requestPermissions();
-        
-        if (!granted) {
-          toast({
-            title: "Permisos requeridos",
-            description: "Necesitamos acceso a la cámara para escanear",
-            variant: "destructive",
-            action: (
-              <Button 
-                size="sm" 
-                onClick={() => CameraService.openSettings()}
-                variant="outline"
-              >
-                Abrir Ajustes
-              </Button>
-            ),
-          });
-          return;
-        }
+        toast({
+          title: "Permiso de cámara requerido",
+          description: "Ve a Configuración → Permisos para habilitar la cámara",
+          variant: "destructive",
+          action: (
+            <Button 
+              size="sm" 
+              onClick={() => navigate('/permissions')}
+              variant="outline"
+            >
+              Ir a Permisos
+            </Button>
+          ),
+        });
+        return;
       }
 
       // Escanear código de barras (ahora es real con ML Kit!)

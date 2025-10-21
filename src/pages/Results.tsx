@@ -48,26 +48,14 @@ export const Results = () => {
 
           // Save to history if premium and not from history
           if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
-            // Capturar ubicación antes de guardar
-            toast({
-              title: "📍 Capturando ubicación...",
-              description: "Esto ayuda a recordar dónde compraste el producto",
-              duration: 2000,
-            });
-            
+            // Intentar capturar ubicación silenciosamente
             const locationResult = await GeolocationService.getCurrentLocation();
             
-            // Log para debugging
+            // Log para debugging (sin toast, para no molestar al usuario)
             if (!locationResult.success) {
-              console.warn('[Results] No se pudo capturar ubicación:', locationResult.error);
-              toast({
-                title: "⚠️ Ubicación no disponible",
-                description: locationResult.error || "No se pudo obtener tu ubicación",
-                variant: "destructive",
-                duration: 3000,
-              });
+              console.warn('[Results] Ubicación no capturada:', locationResult.error);
             } else {
-              console.log('[Results] Ubicación capturada OK:', locationResult.location);
+              console.log('[Results] Ubicación capturada:', locationResult.location);
             }
             
             const historyId = await HistoryService.saveToHistory(

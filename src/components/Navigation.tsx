@@ -1,8 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ScanLine, Home, History, Star, LogOut } from 'lucide-react';
+import { User, ScanLine, Home, History, Star, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { Capacitor } from '@capacitor/core';
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export const Navigation = () => {
     { icon: User, label: 'Perfiles', path: '/profile', showAlways: true },
     { icon: History, label: 'Historial', path: '/history', showAlways: false },
     { icon: Star, label: 'Favoritos', path: '/favorites', showAlways: false },
+    { icon: Settings, label: 'Permisos', path: '/permissions', showAlways: Capacitor.isNativePlatform() },
   ];
 
   const visibleItems = navItems.filter(item => item.showAlways || isPremium);
