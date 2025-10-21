@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, History, Star, Lock, ChevronRight } from 'lucide-react';
+import { User, History, Star, Lock, ChevronRight, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
+import { InitialDisclaimerDialog } from '@/components/InitialDisclaimerDialog';
+import { APP_VERSION } from '@/config/app';
 
 export const Settings = () => {
   const navigate = useNavigate();
   const { isPremium } = useAuth();
   const isNative = Capacitor.isNativePlatform();
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const settingsOptions = [
     {
@@ -39,7 +43,7 @@ export const Settings = () => {
       label: 'Permisos',
       description: 'Gestiona permisos de cámara y ubicación',
       path: '/permissions',
-      showAlways: false,
+      showAlways: true,
       onlyNative: true,
       badge: 'Móvil',
     },
@@ -103,7 +107,29 @@ export const Settings = () => {
             </p>
           </Card>
         )}
+
+        {/* Terms and Version Section */}
+        <div className="space-y-3 pt-4 border-t border-border/50">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => setShowDisclaimer(true)}
+          >
+            <FileText className="w-4 h-4" />
+            Ver Términos y Condiciones
+          </Button>
+          
+          <p className="text-center text-xs text-muted-foreground">
+            v {APP_VERSION}
+          </p>
+        </div>
       </div>
+
+      {/* Disclaimer Dialog */}
+      <InitialDisclaimerDialog 
+        isOpen={showDisclaimer} 
+        onOpenChange={setShowDisclaimer}
+      />
     </div>
   );
 };

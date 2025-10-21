@@ -4,16 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ShieldAlert } from 'lucide-react';
 
-export const InitialDisclaimerDialog = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface InitialDisclaimerDialogProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const InitialDisclaimerDialog = ({ 
+  isOpen: controlledIsOpen, 
+  onOpenChange: controlledOnOpenChange 
+}: InitialDisclaimerDialogProps = {}) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   
-  useEffect(() => {
-    const hideDisclaimer = localStorage.getItem('hideInitialDisclaimer');
-    if (hideDisclaimer !== 'true') {
-      setIsOpen(true);
+  // Use controlled props if provided, otherwise use internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (controlledOnOpenChange) {
+      controlledOnOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
     }
-  }, []);
+  };
+  
+  useEffect(() => {
+    // Only check localStorage if not externally controlled
+    if (controlledIsOpen === undefined) {
+      const hideDisclaimer = localStorage.getItem('hideInitialDisclaimer');
+      if (hideDisclaimer !== 'true') {
+        setInternalIsOpen(true);
+      }
+    }
+  }, [controlledIsOpen]);
   
   const handleAccept = () => {
     if (dontShowAgain) {
