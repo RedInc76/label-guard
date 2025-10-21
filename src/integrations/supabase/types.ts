@@ -154,6 +154,8 @@ export type Database = {
           image_url: string | null
           ingredients_text: string | null
           is_compatible: boolean
+          latitude: number | null
+          longitude: number | null
           product_name: string
           score: number
           user_id: string
@@ -173,6 +175,8 @@ export type Database = {
           image_url?: string | null
           ingredients_text?: string | null
           is_compatible: boolean
+          latitude?: number | null
+          longitude?: number | null
           product_name: string
           score: number
           user_id: string
@@ -192,6 +196,8 @@ export type Database = {
           image_url?: string | null
           ingredients_text?: string | null
           is_compatible?: boolean
+          latitude?: number | null
+          longitude?: number | null
           product_name?: string
           score?: number
           user_id?: string

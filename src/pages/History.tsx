@@ -5,7 +5,8 @@ import { FavoritesService } from '@/services/favoritesService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star, Trash2, Camera, Barcode } from 'lucide-react';
+import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin } from 'lucide-react';
+import { GeolocationService } from '@/services/geolocationService';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -63,6 +64,25 @@ export const History = () => {
         title: "Eliminado del historial",
       });
     }
+  };
+
+  const handleOpenLocation = (item: ScanHistoryItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!item.latitude || !item.longitude) {
+      toast({
+        title: "Ubicación no disponible",
+        description: "Este escaneo no tiene datos de ubicación",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    GeolocationService.openInMaps(
+      item.latitude,
+      item.longitude,
+      item.product_name
+    );
   };
 
   const handleViewDetails = (item: ScanHistoryItem) => {
@@ -207,9 +227,25 @@ export const History = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(item.created_at), "d 'de' MMMM, HH:mm", { locale: es })}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(item.created_at), "d 'de' MMMM, HH:mm", { locale: es })}
+                        </p>
+                        
+                        {/* Botón de ubicación */}
+                        {item.latitude && item.longitude && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleOpenLocation(item, e)}
+                            title="Ver ubicación en mapa"
+                            className="h-7 w-7 p-0"
+                          >
+                            <MapPin className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        )}
+                      </div>
+                      
                       <Button
                         variant="ghost"
                         size="sm"

@@ -18,6 +18,8 @@ export interface ScanHistoryItem {
   active_profiles_snapshot: any;
   front_photo_url: string | null;
   back_photo_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
 }
 
@@ -26,7 +28,8 @@ export class HistoryService {
     product: ProductInfo,
     analysis: AnalysisResult,
     analysisType: 'barcode' | 'ai_photo' = 'barcode',
-    photoUrls?: { front?: string; back?: string }
+    photoUrls?: { front?: string; back?: string },
+    location?: { latitude: number; longitude: number } | null
   ): Promise<string | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -53,11 +56,13 @@ export class HistoryService {
             id: p.id,
             name: p.name
           })),
-          front_photo_url: photoUrls?.front || null,
-          back_photo_url: photoUrls?.back || null,
-        })
-        .select()
-        .single();
+        front_photo_url: photoUrls?.front || null,
+        back_photo_url: photoUrls?.back || null,
+        latitude: location?.latitude || null,
+        longitude: location?.longitude || null,
+      })
+      .select()
+      .single();
       
       if (error) {
         console.error('Error saving to history:', error);

@@ -10,6 +10,7 @@ import { AnalysisService } from '@/services/analysisService';
 import { ProfileService } from '@/services/profileService';
 import { HistoryService } from '@/services/historyService';
 import { FavoritesService } from '@/services/favoritesService';
+import { GeolocationService } from '@/services/geolocationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
@@ -47,11 +48,15 @@ export const Results = () => {
 
           // Save to history if premium and not from history
           if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
+            // Capturar ubicación antes de guardar
+            const currentLocation = await GeolocationService.getCurrentLocation();
+            
             const historyId = await HistoryService.saveToHistory(
               product,
               result,
               location.state?.analysisType || 'barcode',
-              location.state?.photoUrls
+              location.state?.photoUrls,
+              currentLocation
             );
             if (historyId) {
               setScanHistoryId(historyId);
