@@ -100,7 +100,7 @@ export const PhotoAnalysis = () => {
         };
         
         // Analyze product against restrictions
-        const result = AnalysisService.analyzeProductForActiveProfiles(product);
+        const result = await AnalysisService.analyzeProductForActiveProfiles(product);
         
         // Navigate to results
         navigate('/results', {

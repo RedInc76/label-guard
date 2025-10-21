@@ -137,6 +137,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // CRÍTICO: Limpiar localStorage de perfiles antes de cerrar sesión
+      localStorage.removeItem('labelGuardProfiles');
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error: any) {

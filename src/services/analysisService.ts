@@ -2,9 +2,9 @@ import { ProductInfo, AnalysisResult, UserProfile, Profile, DietaryRestriction }
 import { ProfileService } from './profileService';
 
 export class AnalysisService {
-  // Nuevo método principal para análisis con múltiples perfiles
-  static analyzeProductForActiveProfiles(product: ProductInfo): AnalysisResult {
-    const activeProfiles = ProfileService.getActiveProfiles();
+  // Nuevo método principal para análisis con múltiples perfiles (ahora async)
+  static async analyzeProductForActiveProfiles(product: ProductInfo): Promise<AnalysisResult> {
+    const activeProfiles = await ProfileService.getActiveProfiles();
     
     if (activeProfiles.length === 0) {
       throw new Error('No hay perfiles activos. Activa al menos un perfil para escanear.');

@@ -32,7 +32,7 @@ export class HistoryService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null; // Solo PREMIUM guarda historial
       
-      const activeProfiles = ProfileService.getActiveProfiles();
+      const activeProfiles = await ProfileService.getActiveProfiles();
       
       const { data, error } = await supabase
         .from('scan_history')

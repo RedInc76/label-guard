@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ProductInfo, AnalysisResult } from '@/types/restrictions';
+import type { ProductInfo, AnalysisResult, Profile } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
 import { ProfileService } from '@/services/profileService';
 import { HistoryService } from '@/services/historyService';
@@ -21,47 +21,54 @@ export const Results = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [scanHistoryId, setScanHistoryId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [activeProfiles, setActiveProfiles] = useState<Profile[]>([]);
 
   const product = location.state?.product as ProductInfo;
 
   useEffect(() => {
-    if (!product) {
-      navigate('/scanner');
-      return;
-    }
-
-    const activeProfiles = ProfileService.getActiveProfiles();
-    if (activeProfiles.length === 0) {
-      navigate('/profile');
-      return;
-    }
-
-    const performAnalysis = async () => {
-      try {
-        const result = location.state?.analysis || AnalysisService.analyzeProductForActiveProfiles(product);
-        setAnalysis(result);
-
-        // Save to history if premium and not from history
-        if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
-          const historyId = await HistoryService.saveToHistory(
-            product,
-            result,
-            location.state?.analysisType || 'barcode',
-            location.state?.photoUrls
-          );
-          if (historyId) {
-            setScanHistoryId(historyId);
-            const fav = await FavoritesService.isFavorite(historyId);
-            setIsFavorite(fav);
-          }
-        }
-      } catch (error: any) {
-        console.error('Error analyzing product:', error);
-        navigate('/profile');
+    const loadData = async () => {
+      if (!product) {
+        navigate('/scanner');
+        return;
       }
-    };
 
-    performAnalysis();
+      const profiles = await ProfileService.getActiveProfiles();
+      if (profiles.length === 0) {
+        navigate('/profile');
+        return;
+      }
+      
+      setActiveProfiles(profiles);
+
+      const performAnalysis = async () => {
+        try {
+          const result = location.state?.analysis || await AnalysisService.analyzeProductForActiveProfiles(product);
+          setAnalysis(result);
+
+          // Save to history if premium and not from history
+          if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
+            const historyId = await HistoryService.saveToHistory(
+              product,
+              result,
+              location.state?.analysisType || 'barcode',
+              location.state?.photoUrls
+            );
+            if (historyId) {
+              setScanHistoryId(historyId);
+              const fav = await FavoritesService.isFavorite(historyId);
+              setIsFavorite(fav);
+            }
+          }
+        } catch (error: any) {
+          console.error('Error analyzing product:', error);
+          navigate('/profile');
+        }
+      };
+
+      performAnalysis();
+    };
+    
+    loadData();
   }, [product, navigate, isPremium, location.state]);
 
   const handleToggleFavorite = async () => {
@@ -113,8 +120,6 @@ export const Results = () => {
       default: return 'bg-muted text-muted-foreground';
     }
   };
-
-  const activeProfiles = ProfileService.getActiveProfiles();
 
   return (
     <div className="min-h-screen p-6">

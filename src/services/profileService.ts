@@ -15,7 +15,7 @@ export class ProfileService {
     if (!user) {
       // FREE MODE: inicializar localStorage
       this.migrateOldData();
-      const profiles = this.getProfiles();
+      const profiles = await this.getProfiles();
       if (profiles.length === 0) {
         await this.createDefaultProfile();
       }
@@ -32,13 +32,17 @@ export class ProfileService {
     
     // If no profiles in Supabase but has local data, migrate it
     if (!profiles || profiles.length === 0) {
-      const localProfiles = this.getProfiles();
-      if (localProfiles.length > 0) {
-        await this.migrateLocalToCloud();
-      } else {
-        // Create default profile in cloud
-        await this.createCloudProfile('Mi Perfil');
+      // Check local storage directly (not async getProfiles)
+      const localData = localStorage.getItem(this.STORAGE_KEY);
+      if (localData) {
+        const system: ProfileSystem = JSON.parse(localData);
+        if (system.profiles && system.profiles.length > 0) {
+          await this.migrateLocalToCloud();
+          return;
+        }
       }
+      // Create default profile in cloud
+      await this.createCloudProfile('Mi Perfil');
     }
   }
 
@@ -47,7 +51,12 @@ export class ProfileService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const localProfiles = this.getProfiles();
+      // Read directly from localStorage (not async)
+      const localData = localStorage.getItem(this.STORAGE_KEY);
+      if (!localData) return;
+      
+      const system: ProfileSystem = JSON.parse(localData);
+      const localProfiles = system.profiles || [];
       
       for (const profile of localProfiles) {
         // Create profile in Supabase
@@ -119,25 +128,74 @@ export class ProfileService {
     }
   }
 
-  static getProfiles(): Profile[] {
+  static async getProfiles(): Promise<Profile[]> {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      if (!data) return [];
+      const { data: { user } } = await supabase.auth.getUser();
       
-      const system: ProfileSystem = JSON.parse(data);
-      return system.profiles || [];
+      if (!user) {
+        // FREE MODE: usar localStorage
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        if (!data) return [];
+        const system: ProfileSystem = JSON.parse(data);
+        return system.profiles || [];
+      }
+      
+      // PREMIUM MODE: cargar desde Supabase
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          profile_restrictions (
+            restriction_id,
+            enabled
+          ),
+          profile_custom_restrictions (
+            restriction_text
+          )
+        `)
+        .order('created_at', { ascending: true });
+      
+      if (!profiles) return [];
+      
+      // Transformar datos de Supabase a formato Profile
+      return profiles.map(p => this.transformSupabaseToProfile(p));
     } catch (error) {
       console.error('Error loading profiles:', error);
       return [];
     }
   }
 
-  static getActiveProfiles(): Profile[] {
-    return this.getProfiles().filter(p => p.isActive);
+  static async getActiveProfiles(): Promise<Profile[]> {
+    const profiles = await this.getProfiles();
+    return profiles.filter(p => p.isActive);
   }
 
-  static getProfile(id: string): Profile | undefined {
-    return this.getProfiles().find(p => p.id === id);
+  static async getProfile(id: string): Promise<Profile | undefined> {
+    const profiles = await this.getProfiles();
+    return profiles.find(p => p.id === id);
+  }
+
+  private static transformSupabaseToProfile(supabaseProfile: any): Profile {
+    const availableRestrictions = defaultRestrictions;
+    
+    // Crear mapa de restricciones habilitadas
+    const enabledRestrictions = new Set(
+      supabaseProfile.profile_restrictions?.map((r: any) => r.restriction_id) || []
+    );
+    
+    return {
+      id: supabaseProfile.id,
+      name: supabaseProfile.name,
+      isActive: supabaseProfile.is_active,
+      restrictions: availableRestrictions.map(r => ({
+        ...r,
+        enabled: enabledRestrictions.has(r.id)
+      })),
+      customRestrictions: supabaseProfile.profile_custom_restrictions?.map(
+        (c: any) => c.restriction_text
+      ) || [],
+      createdAt: supabaseProfile.created_at
+    };
   }
 
   static async isPremium(): Promise<boolean> {
@@ -162,7 +220,7 @@ export class ProfileService {
 
   static async createProfile(name: string): Promise<Profile> {
     const isPremium = await this.isPremium();
-    const profiles = this.getProfiles();
+    const profiles = await this.getProfiles();
     
     const maxProfiles = isPremium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
     if (profiles.length >= maxProfiles) {
@@ -177,90 +235,215 @@ export class ProfileService {
       throw new Error('Ya existe un perfil con ese nombre');
     }
 
-    // Premium users get ALL restrictions, free users get only allergens
-    const availableRestrictions = isPremium 
-      ? defaultRestrictions 
-      : defaultRestrictions.filter(r => r.isFree === true);
+    if (isPremium) {
+      // PREMIUM: crear en Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
 
-    const newProfile: Profile = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      isActive: false,
-      restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
-      customRestrictions: [],
-      createdAt: new Date().toISOString()
-    };
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          name: name.trim(),
+          is_active: false,
+        })
+        .select()
+        .single();
 
-    profiles.push(newProfile);
-    this.saveProfiles(profiles);
-    
-    return newProfile;
+      if (error) throw error;
+      
+      // Recargar para obtener el perfil completo
+      const updatedProfiles = await this.getProfiles();
+      return updatedProfiles.find(p => p.id === data.id)!;
+    } else {
+      // FREE: crear en localStorage
+      const availableRestrictions = defaultRestrictions.filter(r => r.isFree === true);
+      const newProfile: Profile = {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        isActive: false,
+        restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
+        customRestrictions: [],
+        createdAt: new Date().toISOString()
+      };
+
+      profiles.push(newProfile);
+      this.saveProfiles(profiles);
+      return newProfile;
+    }
   }
 
-  static updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>): void {
-    const profiles = this.getProfiles();
-    const index = profiles.findIndex(p => p.id === id);
+  static async updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>): Promise<void> {
+    const isPremium = await this.isPremium();
     
-    if (index === -1) {
-      throw new Error('Perfil no encontrado');
+    if (!isPremium) {
+      // FREE: actualizar localStorage
+      const profiles = await this.getProfiles();
+      const index = profiles.findIndex(p => p.id === id);
+      
+      if (index === -1) throw new Error('Perfil no encontrado');
+      
+      if (updates.name !== undefined && updates.name.trim() === '') {
+        throw new Error('El nombre del perfil no puede estar vacío');
+      }
+
+      if (updates.name !== undefined && updates.name !== profiles[index].name) {
+        const nameExists = profiles.some((p, i) => 
+          i !== index && p.name.toLowerCase() === updates.name!.toLowerCase()
+        );
+        if (nameExists) throw new Error('Ya existe un perfil con ese nombre');
+      }
+
+      profiles[index] = {
+        ...profiles[index],
+        ...updates,
+        name: updates.name?.trim() || profiles[index].name
+      };
+
+      this.saveProfiles(profiles);
+      return;
     }
 
-    if (updates.name !== undefined && updates.name.trim() === '') {
-      throw new Error('El nombre del perfil no puede estar vacío');
-    }
+    // PREMIUM: actualizar en Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
 
-    if (updates.name !== undefined && updates.name !== profiles[index].name) {
-      const nameExists = profiles.some((p, i) => 
-        i !== index && p.name.toLowerCase() === updates.name!.toLowerCase()
+    // Validar nombre si está en updates
+    if (updates.name !== undefined) {
+      if (updates.name.trim() === '') {
+        throw new Error('El nombre del perfil no puede estar vacío');
+      }
+
+      const profiles = await this.getProfiles();
+      const nameExists = profiles.some(p => 
+        p.id !== id && p.name.toLowerCase() === updates.name!.toLowerCase()
       );
-      if (nameExists) {
-        throw new Error('Ya existe un perfil con ese nombre');
+      if (nameExists) throw new Error('Ya existe un perfil con ese nombre');
+    }
+
+    // Actualizar nombre en Supabase si cambió
+    if (updates.name !== undefined) {
+      await supabase
+        .from('profiles')
+        .update({ name: updates.name.trim() })
+        .eq('id', id)
+        .eq('user_id', user.id);
+    }
+
+    // Actualizar restricciones si cambiaron
+    if (updates.restrictions) {
+      const enabledRestrictions = updates.restrictions.filter(r => r.enabled);
+      
+      // Borrar restricciones existentes
+      await supabase
+        .from('profile_restrictions')
+        .delete()
+        .eq('profile_id', id);
+      
+      // Insertar nuevas restricciones habilitadas
+      if (enabledRestrictions.length > 0) {
+        await supabase
+          .from('profile_restrictions')
+          .insert(
+            enabledRestrictions.map(r => ({
+              profile_id: id,
+              restriction_id: r.id,
+              enabled: true
+            }))
+          );
       }
     }
 
-    profiles[index] = {
-      ...profiles[index],
-      ...updates,
-      name: updates.name?.trim() || profiles[index].name
-    };
-
-    this.saveProfiles(profiles);
+    // Actualizar restricciones personalizadas si cambiaron
+    if (updates.customRestrictions) {
+      // Borrar restricciones personalizadas existentes
+      await supabase
+        .from('profile_custom_restrictions')
+        .delete()
+        .eq('profile_id', id);
+      
+      // Insertar nuevas restricciones personalizadas
+      if (updates.customRestrictions.length > 0) {
+        await supabase
+          .from('profile_custom_restrictions')
+          .insert(
+            updates.customRestrictions.map(text => ({
+              profile_id: id,
+              restriction_text: text
+            }))
+          );
+      }
+    }
   }
 
-  static deleteProfile(id: string): void {
-    const profiles = this.getProfiles();
+  static async deleteProfile(id: string): Promise<void> {
+    const isPremium = await this.isPremium();
+    const profiles = await this.getProfiles();
     
     if (profiles.length <= 1) {
       throw new Error('Debes tener al menos un perfil');
     }
 
-    const filtered = profiles.filter(p => p.id !== id);
-    
-    if (filtered.length === 0) {
-      this.createDefaultProfile();
-    } else {
-      this.saveProfiles(filtered);
+    if (!isPremium) {
+      // FREE: eliminar de localStorage
+      const filtered = profiles.filter(p => p.id !== id);
+      if (filtered.length === 0) {
+        await this.createDefaultProfile();
+      } else {
+        this.saveProfiles(filtered);
+      }
+      return;
     }
+
+    // PREMIUM: eliminar de Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
   }
 
-  static toggleProfileActive(id: string): boolean {
-    const profiles = this.getProfiles();
+  static async toggleProfileActive(id: string): Promise<boolean> {
+    const isPremium = await this.isPremium();
+    const profiles = await this.getProfiles();
     const profile = profiles.find(p => p.id === id);
     
-    if (!profile) {
-      throw new Error('Perfil no encontrado');
+    if (!profile) throw new Error('Perfil no encontrado');
+
+    const newActiveState = !profile.isActive;
+
+    if (!isPremium) {
+      // FREE: actualizar localStorage
+      profile.isActive = newActiveState;
+      this.saveProfiles(profiles);
+      return newActiveState;
     }
 
-    profile.isActive = !profile.isActive;
-    this.saveProfiles(profiles);
+    // PREMIUM: actualizar en Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_active: newActiveState })
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
     
-    return profile.isActive;
+    return newActiveState;
   }
 
   static async canCreateProfile(): Promise<boolean> {
     const isPremium = await this.isPremium();
+    const profiles = await this.getProfiles();
     const maxProfiles = isPremium ? this.MAX_PROFILES_PREMIUM : this.MAX_PROFILES_FREE;
-    return this.getProfiles().length < maxProfiles;
+    return profiles.length < maxProfiles;
   }
 
   private static saveProfiles(profiles: Profile[]): void {

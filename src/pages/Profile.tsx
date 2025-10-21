@@ -37,8 +37,9 @@ export const Profile = () => {
     initializeProfiles();
   }, []);
 
-  const loadProfiles = () => {
-    setProfiles(ProfileService.getProfiles());
+  const loadProfiles = async () => {
+    const profiles = await ProfileService.getProfiles();
+    setProfiles(profiles);
   };
 
   const handleCreateProfile = async (name: string) => {
@@ -58,11 +59,11 @@ export const Profile = () => {
     }
   };
 
-  const handleToggleActive = (id: string) => {
+  const handleToggleActive = async (id: string) => {
     try {
-      const isActive = ProfileService.toggleProfileActive(id);
-      const profile = ProfileService.getProfile(id);
-      loadProfiles();
+      const isActive = await ProfileService.toggleProfileActive(id);
+      const profile = await ProfileService.getProfile(id);
+      await loadProfiles();
       toast({
         title: isActive ? "Perfil activado" : "Perfil desactivado",
         description: `El perfil "${profile?.name}" ha sido ${isActive ? 'activado' : 'desactivado'}`,
@@ -76,21 +77,21 @@ export const Profile = () => {
     }
   };
 
-  const handleEditProfile = (id: string) => {
-    const profile = ProfileService.getProfile(id);
+  const handleEditProfile = async (id: string) => {
+    const profile = await ProfileService.getProfile(id);
     if (profile) {
       setEditingProfile(profile);
     }
   };
 
-  const handleSaveProfile = (profile: ProfileType) => {
+  const handleSaveProfile = async (profile: ProfileType) => {
     try {
-      ProfileService.updateProfile(profile.id, {
+      await ProfileService.updateProfile(profile.id, {
         name: profile.name,
         restrictions: profile.restrictions,
         customRestrictions: profile.customRestrictions,
       });
-      loadProfiles();
+      await loadProfiles();
       toast({
         title: "Perfil actualizado",
         description: `Los cambios en "${profile.name}" han sido guardados`,
@@ -108,13 +109,13 @@ export const Profile = () => {
     setProfileToDelete(id);
   };
 
-  const confirmDeleteProfile = () => {
+  const confirmDeleteProfile = async () => {
     if (!profileToDelete) return;
     
     try {
-      const profile = ProfileService.getProfile(profileToDelete);
-      ProfileService.deleteProfile(profileToDelete);
-      loadProfiles();
+      const profile = await ProfileService.getProfile(profileToDelete);
+      await ProfileService.deleteProfile(profileToDelete);
+      await loadProfiles();
       toast({
         title: "Perfil eliminado",
         description: `El perfil "${profile?.name}" ha sido eliminado`,
@@ -236,7 +237,7 @@ export const Profile = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar perfil?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El perfil "{ProfileService.getProfile(profileToDelete || '')?.name}" 
+              Esta acción no se puede deshacer. El perfil "{profiles.find(p => p.id === profileToDelete)?.name}" 
               será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Search, Keyboard, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { OpenFoodFactsService } from '@/services/openFoodFactsService';
 import { ProfileService } from '@/services/profileService';
 import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { UpgradeBanner } from '@/components/UpgradeBanner';
-import { ProductInfo } from '@/types/restrictions';
+import type { ProductInfo, Profile } from '@/types/restrictions';
 import { Capacitor } from '@capacitor/core';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
@@ -25,8 +25,15 @@ export const Scanner = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState<string>('');
+  const [activeProfiles, setActiveProfiles] = useState<Profile[]>([]);
 
-  const activeProfiles = ProfileService.getActiveProfiles();
+  useEffect(() => {
+    const loadActiveProfiles = async () => {
+      const profiles = await ProfileService.getActiveProfiles();
+      setActiveProfiles(profiles);
+    };
+    loadActiveProfiles();
+  }, []);
 
   const handleScan = async () => {
     try {
