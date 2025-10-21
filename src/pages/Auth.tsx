@@ -199,7 +199,7 @@ export const Auth = () => {
     <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
       <div className="w-full">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="LabelGuard" className="w-20 h-20 mx-auto mb-4" />
+          <img src="/logo-192.png" alt="LabelGuard" className="w-20 h-20 mx-auto mb-4 object-contain" />
           <h1 className="text-3xl font-bold mb-2">LabelGuard</h1>
           <p className="text-muted-foreground">
             Accede a todas las funciones premium

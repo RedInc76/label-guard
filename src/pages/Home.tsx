@@ -39,7 +39,7 @@ export const Home = () => {
         {/* Header */}
         <div className="text-center pt-8">
           <div className="w-32 h-32 mx-auto mb-6">
-            <img src="/logo.svg" alt="LabelGuard" className="w-full h-full" />
+            <img src="/logo-192.png" alt="LabelGuard" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             LabelGuard
@@ -171,8 +171,8 @@ export const Home = () => {
           <>
             <Card className="p-6 bg-muted/50 border-primary/20">
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                  <img src="/logo.svg" alt="Premium" className="w-10 h-10" />
+                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center p-2">
+                  <img src="/logo-192.png" alt="Premium" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground text-lg mb-1">
