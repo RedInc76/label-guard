@@ -43,7 +43,10 @@ export const Navigation = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => signOut()} 
+            onClick={async () => {
+              await signOut();
+              navigate('/auth');
+            }} 
             className="h-12 mr-1"
             title="Cerrar sesión"
           >
