@@ -55,7 +55,7 @@ export const Home = () => {
             <Button 
               size="lg" 
               className="w-full h-14 text-lg bg-primary hover:bg-primary/90 transition-colors shadow-sm"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/auth?mode=signup')}
             >
               <UserPlus className="w-5 h-5 mr-2" />
               Crear cuenta gratis
@@ -64,7 +64,7 @@ export const Home = () => {
               variant="outline" 
               size="lg" 
               className="w-full h-12 border"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/auth?mode=login')}
             >
               <LogIn className="w-5 h-5 mr-2" />
               Iniciar sesión
@@ -149,7 +149,7 @@ export const Home = () => {
                   Únete a miles de personas que cuidan su alimentación con LabelGuard
                 </p>
                 <Button 
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/auth?mode=signup')}
                   size="lg"
                   className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
                 >

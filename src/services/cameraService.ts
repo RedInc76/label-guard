@@ -2,10 +2,57 @@ import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning
 
 export class CameraService {
   /**
+   * Verifica si el módulo de Google Barcode Scanner está disponible
+   */
+  static async isModuleAvailable(): Promise<boolean> {
+    try {
+      const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+      return available;
+    } catch (error) {
+      console.error('Error checking module availability:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Instala el módulo de Google Barcode Scanner con seguimiento de progreso
+   */
+  static async installModule(
+    onProgress?: (progress: any) => void
+  ): Promise<boolean> {
+    try {
+      let progressListener: any;
+      
+      if (onProgress) {
+        progressListener = await BarcodeScanner.addListener(
+          'googleBarcodeScannerModuleInstallProgress',
+          (event) => {
+            console.log('Installation progress:', event);
+            onProgress(event);
+          }
+        );
+      }
+
+      await BarcodeScanner.installGoogleBarcodeScannerModule();
+      
+      if (progressListener) {
+        await progressListener.remove();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error installing barcode scanner module:', error);
+      return false;
+    }
+  }
+
+  /**
    * Escanea un código de barras usando la cámara del dispositivo
    * Usa Google ML Kit para detección precisa y en tiempo real
    */
-  static async scanBarcode(): Promise<string | null> {
+  static async scanBarcode(
+    onInstallProgress?: (progress: any) => void
+  ): Promise<string | null> {
     try {
       // Verificar si el dispositivo soporta escaneo
       const { supported } = await BarcodeScanner.isSupported();
@@ -17,6 +64,21 @@ export class CameraService {
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
         throw new Error('Se requiere permiso de cámara para escanear');
+      }
+
+      // Verificar si el módulo está instalado
+      const isAvailable = await this.isModuleAvailable();
+      
+      if (!isAvailable) {
+        console.log('Módulo no disponible, solicitando instalación...');
+        
+        const installed = await this.installModule(onInstallProgress);
+        
+        if (!installed) {
+          throw new Error('Se requiere instalar el módulo de Google Barcode Scanner. Por favor intenta de nuevo.');
+        }
+        
+        console.log('Módulo instalado correctamente');
       }
 
       // Realizar escaneo modal (modo simple con UI nativa)

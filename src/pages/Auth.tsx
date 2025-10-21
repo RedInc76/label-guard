@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,8 @@ const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 c
 export const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp, isPremium, resendConfirmationEmail } = useAuth();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode') || 'login';
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -206,7 +208,7 @@ export const Auth = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue={mode} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
             <TabsTrigger value="signup">Registrarse</TabsTrigger>

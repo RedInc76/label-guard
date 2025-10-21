@@ -23,6 +23,8 @@ export const Scanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [installProgress, setInstallProgress] = useState<string>('');
 
   const activeProfiles = ProfileService.getActiveProfiles();
 
@@ -57,7 +59,18 @@ export const Scanner = () => {
       }
 
       // Escanear código de barras (ahora es real con ML Kit!)
-      const barcode = await CameraService.scanBarcode();
+      const barcode = await CameraService.scanBarcode((progress) => {
+        setIsInstalling(true);
+        
+        if (progress.state === 'DOWNLOADING') {
+          setInstallProgress(`Descargando módulo... ${progress.progress || 0}%`);
+        } else if (progress.state === 'INSTALLING') {
+          setInstallProgress('Instalando módulo...');
+        } else if (progress.state === 'COMPLETED') {
+          setInstallProgress('Instalación completada');
+          setIsInstalling(false);
+        }
+      });
       
       if (barcode) {
         await searchProduct(barcode);
@@ -84,6 +97,8 @@ export const Scanner = () => {
       });
     } finally {
       setIsScanning(false);
+      setIsInstalling(false);
+      setInstallProgress('');
     }
   };
 
@@ -170,6 +185,17 @@ export const Scanner = () => {
         {/* Upgrade Banner for FREE users */}
         <UpgradeBanner />
 
+        {/* First-time installation info */}
+        {Capacitor.isNativePlatform() && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-sm text-blue-800">
+              <strong>Primera vez:</strong> El escáner puede solicitar descargar un módulo de Google 
+              (5-10 MB). Esto solo ocurre una vez y mejora la precisión del escaneo.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Active Profiles Badge */}
         <ActiveProfilesBadge profiles={activeProfiles} />
 
@@ -197,7 +223,12 @@ export const Scanner = () => {
             size="lg"
             className="w-full mb-4"
           >
-            {isScanning ? (
+            {isInstalling ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {installProgress || 'Instalando módulo...'}
+              </>
+            ) : isScanning ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Escaneando...
@@ -270,6 +301,7 @@ export const Scanner = () => {
         <Card className="p-4 bg-muted/50">
           <h3 className="font-semibold text-foreground mb-2">💡 Consejos para escanear</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• <strong>Primera vez:</strong> Acepta la instalación del módulo de Google</li>
             <li>• Asegúrate de tener buena iluminación</li>
             <li>• Mantén el código de barras dentro del marco</li>
             <li>• Espera a que el escáner detecte automáticamente</li>
