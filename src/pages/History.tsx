@@ -233,17 +233,25 @@ export const History = () => {
                         </p>
                         
                         {/* Botón de ubicación */}
-                        {item.latitude && item.longitude && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handleOpenLocation(item, e)}
-                            title="Ver ubicación en mapa"
-                            className="h-7 w-7 p-0"
-                          >
-                            <MapPin className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        )}
+                          {item.latitude && item.longitude && (
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="sm"
+                              title="Ver ubicación en mapa"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Ver ubicación en Google Maps"
+                              >
+                                <MapPin className="h-4 w-4 text-blue-600" />
+                              </a>
+                            </Button>
+                          )}
                       </div>
                       
                       <Button
