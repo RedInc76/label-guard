@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, Shield, Sparkles, History, Star, Brain, LogIn, UserPlus } from 'lucide-react';
+import { ScanLine, Sparkles, History, Star, Brain, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -37,8 +38,8 @@ export const Home = () => {
       <div className="max-w-md mx-auto space-y-8">
         {/* Header */}
         <div className="text-center pt-8">
-          <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-strong">
-            <Shield className="w-12 h-12 text-white" />
+          <div className="w-32 h-32 mx-auto mb-6">
+            <img src="/logo.svg" alt="LabelGuard" className="w-full h-full" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             LabelGuard
@@ -53,7 +54,7 @@ export const Home = () => {
           <div className="space-y-3">
             <Button 
               size="lg" 
-              className="w-full h-14 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-soft"
+              className="w-full h-14 text-lg bg-primary hover:bg-primary/90 transition-colors shadow-sm"
               onClick={() => navigate('/auth')}
             >
               <UserPlus className="w-5 h-5 mr-2" />
@@ -62,7 +63,7 @@ export const Home = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full h-12 border-2"
+              className="w-full h-12 border"
               onClick={() => navigate('/auth')}
             >
               <LogIn className="w-5 h-5 mr-2" />
@@ -72,9 +73,9 @@ export const Home = () => {
         )}
 
         {/* Quick Scan Button */}
-        <Card className="p-6 border-2 border-primary/20 hover:border-primary/40 transition-all">
+        <Card className="p-6 border border-border hover:border-primary/30 transition-all shadow-sm">
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto bg-muted rounded-2xl flex items-center justify-center">
               <ScanLine className="w-8 h-8 text-primary" />
             </div>
             <div>
@@ -103,7 +104,7 @@ export const Home = () => {
         {isGuest && (
           <div className="space-y-4">
             <div className="text-center">
-              <Badge className="mb-3 px-4 py-1.5 bg-gradient-to-r from-accent to-primary text-white">
+              <Badge className="mb-3 px-4 py-1.5 bg-primary text-white">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Funciones Premium
               </Badge>
@@ -119,10 +120,10 @@ export const Home = () => {
               {premiumFeatures.map((feature, index) => (
                 <Card 
                   key={index} 
-                  className="p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-md bg-gradient-to-br from-background to-primary/5"
+                  className="p-4 border border-border hover:border-primary/20 hover:shadow-sm transition-all bg-card"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                       <feature.icon className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1 pt-1">
@@ -139,7 +140,7 @@ export const Home = () => {
             </div>
 
             {/* Final CTA */}
-            <Card className="p-6 bg-gradient-to-br from-primary to-accent text-white shadow-strong">
+            <Card className="p-6 bg-primary text-white shadow-sm">
               <div className="text-center space-y-4">
                 <h3 className="font-bold text-xl">
                   ¡Es gratis y toma solo 30 segundos!
@@ -157,34 +158,46 @@ export const Home = () => {
                 </Button>
               </div>
             </Card>
+            
+            {/* Legal Disclaimer */}
+            <div className="mt-8">
+              <LegalDisclaimer variant="general" compact={true} />
+            </div>
           </div>
         )}
 
         {/* Si ya está logueado, mostrar acceso directo a perfiles */}
         {isPremium && (
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center">
-                <Shield className="w-8 h-8 text-primary" />
+          <>
+            <Card className="p-6 bg-muted/50 border-primary/20">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                  <img src="/logo.svg" alt="Premium" className="w-10 h-10" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-1">
+                    Cuenta Premium activa
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Administra tus perfiles y restricciones
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => navigate('/profile')}
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                >
+                  Ver mis perfiles
+                </Button>
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground text-lg mb-1">
-                  Cuenta Premium activa
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Administra tus perfiles y restricciones
-                </p>
-              </div>
-              <Button 
-                onClick={() => navigate('/profile')}
-                variant="outline"
-                size="lg"
-                className="w-full"
-              >
-                Ver mis perfiles
-              </Button>
+            </Card>
+            
+            {/* Legal Disclaimer for premium users too */}
+            <div className="mt-6">
+              <LegalDisclaimer variant="general" compact={true} />
             </div>
-          </Card>
+          </>
         )}
       </div>
     </div>

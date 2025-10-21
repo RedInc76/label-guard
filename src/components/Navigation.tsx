@@ -20,7 +20,7 @@ export const Navigation = () => {
   const visibleItems = navItems.filter(item => item.showAlways || isPremium);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-strong z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-sm z-50">
       <div className="flex justify-between items-center py-2 px-2">
         <div className="flex justify-around items-center flex-1">
           {visibleItems.map(({ icon: Icon, label, path }) => (

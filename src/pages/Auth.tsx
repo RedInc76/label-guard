@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { Checkbox } from '@/components/ui/checkbox';
+import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 caracteres');
@@ -23,6 +25,7 @@ export const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Redirect if already logged in
   if (isPremium) {
@@ -196,8 +199,8 @@ export const Auth = () => {
     <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
       <div className="w-full">
         <div className="text-center mb-8">
-          <ShieldCheck className="w-16 h-16 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Label Guard</h1>
+          <img src="/logo.svg" alt="LabelGuard" className="w-20 h-20 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold mb-2">LabelGuard</h1>
           <p className="text-muted-foreground">
             Accede a todas las funciones premium
           </p>
@@ -311,7 +314,22 @@ export const Auth = () => {
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <div className="flex items-start gap-3">
+                    <Checkbox 
+                      id="terms" 
+                      checked={termsAccepted}
+                      onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                      required
+                    />
+                    <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                      <LegalDisclaimer variant="terms-acceptance" />
+                      <Link to="/terms" className="text-primary underline ml-1">
+                        Ver términos completos
+                      </Link>
+                    </label>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading || !termsAccepted}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Crear Cuenta Gratis 🚀
                   </Button>

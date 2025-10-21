@@ -15,6 +15,7 @@ import { EmailConfirmed } from "./pages/EmailConfirmed";
 import { PhotoAnalysis } from "./pages/PhotoAnalysis";
 import { History } from "./pages/History";
 import { Favorites } from "./pages/Favorites";
+import { Terms } from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/photo-analysis" element={<ProtectedRoute><PhotoAnalysis /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

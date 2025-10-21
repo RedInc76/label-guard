@@ -12,6 +12,7 @@ import { HistoryService } from '@/services/historyService';
 import { FavoritesService } from '@/services/favoritesService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
 export const Results = () => {
   const location = useLocation();
@@ -130,8 +131,11 @@ export const Results = () => {
           <h1 className="text-xl font-bold text-foreground">Análisis del Producto</h1>
         </div>
 
+        {/* CRITICAL: Legal Disclaimer - MUST BE FIRST */}
+        <LegalDisclaimer variant="results" compact={false} />
+
         {/* Active profiles info */}
-        <Card className="p-3 bg-primary/5 border-primary/20">
+        <Card className="p-3 bg-muted/30 border-border">
           <p className="text-sm text-center text-muted-foreground">
             Analizando para <span className="font-semibold text-foreground">
               {activeProfiles.length} perfil{activeProfiles.length > 1 ? 'es' : ''}
@@ -140,7 +144,7 @@ export const Results = () => {
         </Card>
 
         {/* Product Info */}
-        <Card className="p-4 shadow-soft">
+        <Card className="p-4 shadow-sm border">
           {product.image_url && (
             <div className="w-20 h-20 mx-auto mb-4 rounded-lg overflow-hidden bg-muted">
               <img 
@@ -179,7 +183,11 @@ export const Results = () => {
         </Card>
 
         {/* Analysis Result */}
-        <Card className={`p-6 shadow-soft bg-gradient-to-br ${getResultColor()}`}>
+        <Card className={`p-6 shadow-sm border-2 ${
+          analysis.isCompatible 
+            ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
+            : 'border-red-200 bg-red-50 dark:bg-red-950/20'
+        }`}>
           <div className="text-center">
             <div className="mb-4">{getResultIcon()}</div>
             
@@ -211,7 +219,7 @@ export const Results = () => {
 
         {/* Violations */}
         {analysis.violations.length > 0 && (
-          <Card className="p-4 shadow-soft">
+          <Card className="p-4 shadow-sm border">
             <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-destructive" />
               Restricciones Violadas
@@ -236,7 +244,7 @@ export const Results = () => {
 
         {/* Warnings */}
         {analysis.warnings.length > 0 && (
-          <Card className="p-4 shadow-soft">
+          <Card className="p-4 shadow-sm border">
             <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
               <Info className="w-4 h-4 text-warning" />
               Advertencias Adicionales
@@ -255,7 +263,7 @@ export const Results = () => {
 
         {/* Ingredients */}
         {product.ingredients_text && (
-          <Card className="p-4 shadow-soft">
+          <Card className="p-4 shadow-sm border">
             <h3 className="font-semibold text-foreground mb-3">Ingredientes</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {product.ingredients_text}

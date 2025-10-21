@@ -14,6 +14,7 @@ import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { UpgradeBanner } from '@/components/UpgradeBanner';
 import { ProductInfo } from '@/types/restrictions';
 import { Capacitor } from '@capacitor/core';
+import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
 export const Scanner = () => {
   const navigate = useNavigate();
@@ -154,14 +155,17 @@ export const Scanner = () => {
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center pt-4">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-accent to-accent/80 rounded-full flex items-center justify-center">
-            <Camera className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+            <Camera className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Escanear Producto</h1>
           <p className="text-muted-foreground">
             Escanea o ingresa el código de barras del producto
           </p>
         </div>
+
+        {/* Legal Disclaimer */}
+        <LegalDisclaimer variant="general" compact={true} />
 
         {/* Upgrade Banner for FREE users */}
         <UpgradeBanner />
@@ -180,10 +184,10 @@ export const Scanner = () => {
         )}
 
         {/* Scan Button */}
-        <Card className="p-6 text-center shadow-soft">
+        <Card className="p-6 text-center shadow-sm">
           <div className="mb-4">
-            <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-accent rounded-lg flex items-center justify-center">
-              <Camera className={`w-8 h-8 ${isScanning ? 'animate-pulse text-accent' : 'text-muted-foreground'}`} />
+            <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center">
+              <Camera className={`w-8 h-8 ${isScanning ? 'animate-pulse text-primary' : 'text-muted-foreground'}`} />
             </div>
           </div>
           
@@ -191,7 +195,7 @@ export const Scanner = () => {
             onClick={handleScan}
             disabled={!Capacitor.isNativePlatform() || isScanning || isSearching || activeProfiles.length === 0}
             size="lg"
-            className="w-full mb-4 bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70"
+            className="w-full mb-4"
           >
             {isScanning ? (
               <>
@@ -211,7 +215,7 @@ export const Scanner = () => {
         </Card>
 
         {/* Manual Input */}
-        <Card className="p-4 shadow-soft">
+        <Card className="p-4 shadow-sm">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Keyboard className="w-4 h-4" />
             Ingreso Manual
@@ -236,7 +240,7 @@ export const Scanner = () => {
         </Card>
 
         {/* Test Codes */}
-        <Card className="p-4 shadow-soft">
+        <Card className="p-4 shadow-sm">
           <h3 className="font-semibold text-foreground mb-3">Códigos de Prueba</h3>
           <p className="text-sm text-muted-foreground mb-3">
             Usa estos códigos para probar la aplicación

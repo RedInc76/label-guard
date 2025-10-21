@@ -8,46 +8,55 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 120 20% 98%;
-    --foreground: 140 10% 15%;
+    /* Backgrounds - Blanco puro para diseño minimalista */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
+    /* Cards - Blanco puro */
     --card: 0 0% 100%;
-    --card-foreground: 140 10% 15%;
+    --card-foreground: 240 10% 3.9%;
 
+    /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 140 10% 15%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 142 71% 45%;
+    /* Primary - Verde moderno profesional */
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
 
+    /* Secondary - Tonos suaves */
     --secondary: 142 30% 92%;
-    --secondary-foreground: 142 71% 25%;
+    --secondary-foreground: 142 76% 36%;
 
-    --muted: 142 20% 94%;
-    --muted-foreground: 140 10% 45%;
+    /* Muted - Gris muy claro */
+    --muted: 0 0% 96%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 200 80% 55%;
+    /* Accent - Usar el mismo verde que primary para consistencia */
+    --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* Estados */
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 142 20% 88%;
-    --input: 142 20% 92%;
-    --ring: 142 71% 45%;
+    /* Borders - Muy sutiles */
+    --border: 0 0% 89%;
+    --input: 0 0% 92%;
+    --ring: 142 76% 36%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 35%));
-    --gradient-accent: linear-gradient(135deg, hsl(200 80% 55%), hsl(200 80% 45%));
-    --gradient-bg: linear-gradient(180deg, hsl(120 20% 98%), hsl(142 30% 95%));
-    
-    --shadow-soft: 0 4px 20px hsl(142 71% 45% / 0.1);
-    --shadow-strong: 0 8px 30px hsl(142 71% 45% / 0.2);
+    /* Sombras minimalistas */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-strong: 0 4px 16px rgba(0, 0, 0, 0.08);
 
     --radius: 0.5rem;
 

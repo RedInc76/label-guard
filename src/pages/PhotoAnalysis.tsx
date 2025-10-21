@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { PhotoAnalysisService } from '@/services/photoAnalysisService';
 import { AnalysisService } from '@/services/analysisService';
 import { ProductInfo } from '@/types/restrictions';
+import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
 type Step = 'front' | 'validate' | 'back' | 'analyzing';
 
@@ -141,6 +142,9 @@ export const PhotoAnalysis = () => {
           </p>
         </div>
       </div>
+
+      {/* AI Disclaimer */}
+      <LegalDisclaimer variant="photo-analysis" compact={false} />
 
       {step === 'front' && (
         <Card>
