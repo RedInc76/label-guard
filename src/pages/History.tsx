@@ -5,7 +5,10 @@ import { FavoritesService } from '@/services/favoritesService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter } from 'lucide-react';
 import { GeolocationService } from '@/services/geolocationService';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -16,6 +19,9 @@ export const History = () => {
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'barcode' | 'ai_photo'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
 
   useEffect(() => {
     loadHistory();
@@ -115,6 +121,37 @@ export const History = () => {
     });
   };
 
+  const getFilteredHistory = () => {
+    let filtered = [...history];
+    
+    // Filtro de compatibilidad
+    if (compatibilityFilter === 'compatible') {
+      filtered = filtered.filter(item => item.is_compatible);
+    } else if (compatibilityFilter === 'incompatible') {
+      filtered = filtered.filter(item => !item.is_compatible);
+    }
+    
+    // Filtro de tipo
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.analysis_type === typeFilter);
+    }
+    
+    // Filtro de fecha
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const daysAgo = dateFilter === '7days' ? 7 : 30;
+      const cutoffDate = new Date(now.setDate(now.getDate() - daysAgo));
+      
+      filtered = filtered.filter(item => 
+        new Date(item.created_at) >= cutoffDate
+      );
+    }
+    
+    return filtered;
+  };
+
+  const filteredHistory = getFilteredHistory();
+
   if (loading) {
     return <div className="container max-w-4xl mx-auto px-4 py-6">Cargando...</div>;
   }
@@ -132,12 +169,83 @@ export const History = () => {
         <div>
           <h1 className="text-2xl font-bold">Historial de Escaneos</h1>
           <p className="text-sm text-muted-foreground">
-            {history.length} producto{history.length !== 1 ? 's' : ''} escaneado{history.length !== 1 ? 's' : ''}
+            {filteredHistory.length} de {history.length} producto{history.length !== 1 ? 's' : ''}
+            {filteredHistory.length !== history.length && ' (filtrados)'}
           </p>
         </div>
       </div>
 
-      {history.length === 0 ? (
+      {/* Sección de filtros */}
+      <Card className="p-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <h2 className="font-semibold">Filtros</h2>
+          </div>
+          
+          <div>
+            <Label className="text-sm mb-2 block">Compatibilidad</Label>
+            <Tabs value={compatibilityFilter} onValueChange={(value: any) => setCompatibilityFilter(value)}>
+              <TabsList className="grid grid-cols-3">
+                <TabsTrigger value="all">Todos</TabsTrigger>
+                <TabsTrigger value="compatible">✓ Aptos</TabsTrigger>
+                <TabsTrigger value="incompatible">✗ No Aptos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm mb-2 block">Tipo</Label>
+              <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="barcode">🔍 Escaneo</SelectItem>
+                  <SelectItem value="ai_photo">📸 IA</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label className="text-sm mb-2 block">Fecha</Label>
+              <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="7days">Últimos 7 días</SelectItem>
+                  <SelectItem value="30days">Últimos 30 días</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {filteredHistory.length} de {history.length} productos
+            </p>
+            {(compatibilityFilter !== 'all' || typeFilter !== 'all' || dateFilter !== 'all') && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setCompatibilityFilter('all');
+                  setTypeFilter('all');
+                  setDateFilter('all');
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {filteredHistory.length === 0 && history.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground text-center">
@@ -151,9 +259,28 @@ export const History = () => {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredHistory.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground text-center mb-2">
+              No se encontraron productos con los filtros seleccionados
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCompatibilityFilter('all');
+                setTypeFilter('all');
+                setDateFilter('all');
+              }}
+              className="mt-4"
+            >
+              Limpiar filtros
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-4">
-          {history.map((item) => (
+          {filteredHistory.map((item) => (
             <Card
               key={item.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
