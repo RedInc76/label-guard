@@ -1,8 +1,10 @@
-import { Info, AlertTriangle, ShieldAlert, CheckSquare } from 'lucide-react';
+import { useState } from 'react';
+import { Info, AlertTriangle, ShieldAlert, CheckSquare, ChevronDown } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface LegalDisclaimerProps {
   variant: 'general' | 'results' | 'photo-analysis' | 'terms-acceptance';
@@ -11,6 +13,8 @@ interface LegalDisclaimerProps {
 }
 
 export const LegalDisclaimer = ({ variant, compact = false, className }: LegalDisclaimerProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
   const getIcon = () => {
     switch (variant) {
       case 'general': return Info;
@@ -32,33 +36,46 @@ export const LegalDisclaimer = ({ variant, compact = false, className }: LegalDi
 
   if (variant === 'general') {
     return (
-      <Alert className={cn("border-border bg-muted/30", className)}>
-        <Info className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>ℹ️ Herramienta Informativa</strong>
-          <p className="mt-1 text-muted-foreground">
-            Esta aplicación proporciona recomendaciones basadas en bases de datos públicas 
-            y tu configuración personal de restricciones alimentarias.
-          </p>
-          <p className="mt-2 text-muted-foreground">
-            ⚠️ No sustituye el consejo médico profesional. Siempre lee la etiqueta completa del producto antes de consumir.
-          </p>
-        </AlertDescription>
-      </Alert>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className={cn("w-full", className)}>
+        <Card className="border-border bg-muted/30">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              <span className="text-sm font-semibold">ℹ️ Herramienta Informativa</span>
+            </div>
+            <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-2 text-sm text-muted-foreground">
+              <p>
+                Esta aplicación proporciona recomendaciones basadas en bases de datos públicas 
+                y tu configuración personal de restricciones alimentarias.
+              </p>
+              <p>
+                ⚠️ No sustituye el consejo médico profesional. Siempre lee la etiqueta completa del producto antes de consumir.
+              </p>
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 
   if (variant === 'results') {
     return (
-      <Card className={cn("border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20", className)}>
-        <div className="p-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-bold text-foreground text-base mb-2">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className={cn("w-full", className)}>
+        <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-yellow-100 dark:hover:bg-yellow-950/30 transition-colors">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+              <span className="font-bold text-foreground text-sm">
                 ⚠️ IMPORTANTE: Lee Esto Antes de Decidir
-              </h3>
-              
+              </span>
+            </div>
+            <ChevronDown className={cn("h-5 w-5 text-yellow-600 transition-transform flex-shrink-0", isOpen && "rotate-180")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-3">
               <div className="space-y-2 text-sm">
                 <div>
                   <p className="font-semibold text-foreground mb-1">✓ Este análisis se basa en:</p>
@@ -93,23 +110,27 @@ export const LegalDisclaimer = ({ variant, compact = false, className }: LegalDi
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </Card>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 
   if (variant === 'photo-analysis') {
     return (
-      <Card className={cn("border-2 border-orange-200 bg-orange-50 dark:bg-orange-950/20", className)}>
-        <div className="p-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-bold text-foreground text-base mb-2">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className={cn("w-full", className)}>
+        <Card className="border-2 border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-orange-100 dark:hover:bg-orange-950/30 transition-colors">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="w-5 h-5 text-orange-600 flex-shrink-0" />
+              <span className="font-bold text-foreground text-sm">
                 🤖 Análisis por Inteligencia Artificial
-              </h3>
-              
+              </span>
+            </div>
+            <ChevronDown className={cn("h-5 w-5 text-orange-600 transition-transform flex-shrink-0", isOpen && "rotate-180")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-3">
               <div className="space-y-2 text-sm">
                 <div>
                   <p className="font-semibold text-foreground mb-1">⚠️ Este método puede contener errores debido a:</p>
@@ -140,9 +161,9 @@ export const LegalDisclaimer = ({ variant, compact = false, className }: LegalDi
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </Card>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 
