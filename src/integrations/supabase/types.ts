@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analyzed_products: {
+        Row: {
+          allergens: string | null
+          back_photo_url: string | null
+          barcode: string | null
+          brands: string | null
+          created_at: string | null
+          front_photo_url: string | null
+          id: string
+          image_url: string | null
+          ingredients_text: string | null
+          last_accessed_at: string | null
+          product_name: string
+          times_accessed: number | null
+          user_id: string
+        }
+        Insert: {
+          allergens?: string | null
+          back_photo_url?: string | null
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          front_photo_url?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients_text?: string | null
+          last_accessed_at?: string | null
+          product_name: string
+          times_accessed?: number | null
+          user_id: string
+        }
+        Update: {
+          allergens?: string | null
+          back_photo_url?: string | null
+          barcode?: string | null
+          brands?: string | null
+          created_at?: string | null
+          front_photo_url?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients_text?: string | null
+          last_accessed_at?: string | null
+          product_name?: string
+          times_accessed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       application_logs: {
         Row: {
           created_at: string | null
