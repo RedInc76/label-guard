@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Camera as CameraService } from '@capacitor/camera';
 import { CameraResultType, CameraSource } from '@capacitor/camera';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ type Step = 'front' | 'validate' | 'back' | 'analyzing';
 
 export const PhotoAnalysis = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<Step>('front');
   const [frontPhoto, setFrontPhoto] = useState<string>('');
   const [backPhoto, setBackPhoto] = useState<string>('');
@@ -89,15 +90,29 @@ export const PhotoAnalysis = () => {
         const frontUrl = await PhotoAnalysisService.uploadPhoto(frontBlob, 'front');
         const backUrl = await PhotoAnalysisService.uploadPhoto(backBlob, 'back');
         
+        // Obtener barcode del state si viene del Scanner
+        const barcode = (location.state as any)?.barcode || '';
+        
         // Create product info from AI analysis
         const product: ProductInfo = {
-          code: '',
+          code: barcode,
           product_name: productName,
           brands: '',
           ingredients_text: analysis.ingredients,
           allergens: analysis.allergens,
           image_url: frontUrl,
         };
+
+        // Guardar en cache ANTES de analizar si tiene barcode
+        if (barcode) {
+          const { AIProductCacheService } = await import('@/services/aiProductCacheService');
+          await AIProductCacheService.saveAnalyzedProduct(
+            product,
+            { front: frontUrl, back: backUrl },
+            barcode
+          );
+          console.log('✅ Producto guardado en cache para futuras búsquedas');
+        }
         
         // Analyze product against restrictions
         const result = await AnalysisService.analyzeProductForActiveProfiles(product);

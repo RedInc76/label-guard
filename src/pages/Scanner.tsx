@@ -132,22 +132,50 @@ export const Scanner = () => {
     try {
       setIsSearching(true);
       
+      // PASO 1: Buscar en OpenFoodFacts API
       const product = await OpenFoodFactsService.getProduct(barcode);
       
       if (product) {
-        // Navegar a resultados con la información del producto
         navigate('/results', { state: { product } });
+        return;
+      }
+
+      // PASO 2: NO encontrado en OpenFoodFacts → Buscar en cache local
+      const { AIProductCacheService } = await import('@/services/aiProductCacheService');
+      const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
+      
+      if (cachedProduct) {
+        // Incrementar contador de accesos
+        await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
+        
+        toast({
+          title: "💾 Producto encontrado en cache",
+          description: "Analizado previamente por IA (sin costo adicional)",
+        });
+        
+        navigate('/results', { 
+          state: { 
+            product: cachedProduct,
+            analysisType: 'ai_cache',
+            fromCache: true 
+          } 
+        });
+        return;
+      }
+
+      // PASO 3: NO encontrado en ningún lado → Análisis por IA
+      if (isPremium) {
+        toast({
+          title: "Producto no encontrado",
+          description: "Analizaremos este producto con IA",
+        });
+        // Pasar el barcode al análisis por foto
+        navigate('/photo-analysis', { state: { barcode } });
       } else {
-        // Premium: ofrecer análisis por foto
-        if (isPremium) {
-          navigate('/photo-analysis');
-        } else {
-          toast({
-            title: "Producto no encontrado",
-            description: "Regístrate para analizar productos con IA",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Producto no encontrado",
+          description: "Regístrate Premium para analizar productos con IA",
+        });
       }
     } catch (error) {
       console.error('Error searching product:', error);

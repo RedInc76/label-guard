@@ -294,6 +294,11 @@ export const History = () => {
                         src={item.image_url || item.front_photo_url || ''}
                         alt={item.product_name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Image failed to load:', item.image_url || item.front_photo_url);
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                        loading="lazy"
                       />
                     ) : (
                       <Camera className="w-8 h-8 text-muted-foreground" />
@@ -343,6 +348,10 @@ export const History = () => {
                           <>
                             <Camera className="h-3 w-3" />
                             IA
+                          </>
+                        ) : item.analysis_type === 'ai_cache' ? (
+                          <>
+                            💾 Cache IA
                           </>
                         ) : (
                           <>

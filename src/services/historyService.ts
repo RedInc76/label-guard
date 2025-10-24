@@ -15,7 +15,7 @@ export interface ScanHistoryItem {
   warnings: any;
   ingredients_text: string | null;
   allergens: string | null;
-  analysis_type: 'barcode' | 'ai_photo';
+  analysis_type: 'barcode' | 'ai_photo' | 'ai_cache';
   active_profiles_snapshot: any;
   front_photo_url: string | null;
   back_photo_url: string | null;
@@ -28,7 +28,7 @@ export class HistoryService {
   static async saveToHistory(
     product: ProductInfo,
     analysis: AnalysisResult,
-    analysisType: 'barcode' | 'ai_photo' = 'barcode',
+    analysisType: 'barcode' | 'ai_photo' | 'ai_cache' = 'barcode',
     photoUrls?: { front?: string; back?: string },
     location?: { latitude: number; longitude: number } | null
   ): Promise<string | null> {
