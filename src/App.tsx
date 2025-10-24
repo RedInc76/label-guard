@@ -3,10 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import { Layout } from "./components/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PermissionsOnboarding } from "./components/PermissionsOnboarding";
+import { loggingService } from "./services/loggingService";
 import { Home } from "./pages/Home";
 import { Scanner } from "./pages/Scanner";
 import { Profile } from "./pages/Profile";
@@ -23,10 +25,46 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ErrorLogger = () => {
+  useEffect(() => {
+    // Global error handler for unhandled errors
+    const handleError = (event: ErrorEvent) => {
+      loggingService.logError(
+        `Unhandled error: ${event.message}`,
+        {
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error
+        }
+      );
+    };
+
+    // Global handler for unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      loggingService.logError(
+        `Unhandled promise rejection: ${event.reason}`,
+        event.reason
+      );
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
+        <ErrorLogger />
         <Toaster />
         <Sonner />
         <PermissionsOnboarding />

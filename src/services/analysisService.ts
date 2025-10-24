@@ -1,19 +1,39 @@
 import { ProductInfo, AnalysisResult, UserProfile, Profile, DietaryRestriction } from '@/types/restrictions';
 import { ProfileService } from './profileService';
+import { loggingService } from './loggingService';
 
 export class AnalysisService {
   // Nuevo método principal para análisis con múltiples perfiles (ahora async)
   static async analyzeProductForActiveProfiles(product: ProductInfo): Promise<AnalysisResult> {
-    const activeProfiles = await ProfileService.getActiveProfiles();
-    
-    if (activeProfiles.length === 0) {
-      throw new Error('No hay perfiles activos. Activa al menos un perfil para escanear.');
-    }
+    try {
+      const activeProfiles = await ProfileService.getActiveProfiles();
+      
+      if (activeProfiles.length === 0) {
+        const error = new Error('No hay perfiles activos. Activa al menos un perfil para escanear.');
+        loggingService.logError('No active profiles for analysis', error);
+        throw error;
+      }
 
-    // Combinar restricciones de todos los perfiles activos
-    const combined = this.combineAllRestrictions(activeProfiles);
-    
-    return this.analyzeProduct(product, combined);
+      // Combinar restricciones de todos los perfiles activos
+      const combined = this.combineAllRestrictions(activeProfiles);
+      
+      const result = this.analyzeProduct(product, combined);
+      
+      // Log successful analysis
+      loggingService.logAnalysis('product-analysis', {
+        productName: product.product_name,
+        barcode: product.code,
+        isCompatible: result.isCompatible,
+        violationsCount: result.violations.length,
+        score: result.score,
+        activeProfilesCount: activeProfiles.length
+      });
+      
+      return result;
+    } catch (error) {
+      loggingService.logError('Error analyzing product', error);
+      throw error;
+    }
   }
 
   // Método helper: combinar restricciones de múltiples perfiles

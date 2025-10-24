@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileService } from '@/services/profileService';
+import { loggingService } from '@/services/loggingService';
 import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -30,11 +31,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Initialize profile service when auth state changes
+        // Initialize profile service and reset logging cache when auth state changes
         if (session?.user) {
           setTimeout(() => {
             ProfileService.initialize();
+            loggingService.resetCache();
           }, 0);
+        } else {
+          loggingService.resetCache();
         }
       }
     );
@@ -139,11 +143,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // CRÍTICO: Limpiar localStorage de perfiles antes de cerrar sesión
       localStorage.removeItem('labelGuardProfiles');
+      loggingService.resetCache();
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error: any) {
       console.error('Sign out error:', error);
+      loggingService.logError('Sign out error', error);
       throw error;
     }
   };

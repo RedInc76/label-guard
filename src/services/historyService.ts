@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ProductInfo, AnalysisResult } from '@/types/restrictions';
 import { ProfileService } from './profileService';
+import { loggingService } from './loggingService';
 
 export interface ScanHistoryItem {
   id: string;
@@ -66,12 +67,21 @@ export class HistoryService {
       
       if (error) {
         console.error('Error saving to history:', error);
+        loggingService.logError('Error saving scan to history', error);
         return null;
       }
+      
+      loggingService.logAction('scan-saved-to-history', {
+        scanId: data?.id,
+        productName: product.product_name,
+        analysisType,
+        hasLocation: !!location
+      });
       
       return data?.id || null;
     } catch (error) {
       console.error('Error in saveToHistory:', error);
+      loggingService.logError('Exception in saveToHistory', error);
       return null;
     }
   }
@@ -85,9 +95,16 @@ export class HistoryService {
         .limit(limit);
       
       if (error) throw error;
+      
+      loggingService.logAction('history-fetched', {
+        itemsCount: data?.length || 0,
+        limit
+      });
+      
       return (data as any[]) || [];
     } catch (error) {
       console.error('Error getting history:', error);
+      loggingService.logError('Error fetching history', error);
       return [];
     }
   }
@@ -99,9 +116,16 @@ export class HistoryService {
         .delete()
         .eq('id', id);
       
+      if (!error) {
+        loggingService.logAction('history-item-deleted', { historyId: id });
+      } else {
+        loggingService.logError('Error deleting history item', error);
+      }
+      
       return !error;
     } catch (error) {
       console.error('Error deleting history item:', error);
+      loggingService.logError('Exception deleting history item', error);
       return false;
     }
   }
