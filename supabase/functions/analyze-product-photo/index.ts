@@ -1,9 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+interface AnalysisRequest {
+  image: string;
+  type: 'front' | 'back';
+}
+
+const RATE_LIMIT_WINDOW_HOURS = 1;
+const MAX_ANALYSES_PER_WINDOW = 20;
+const MAX_IMAGE_SIZE_MB = 5;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024 * 4/3; // base64 is ~33% larger
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,7 +23,117 @@ serve(async (req) => {
   }
 
   try {
-    const { image, type } = await req.json();
+    // 1. VERIFY AUTHENTICATION
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Missing Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+    
+    if (authError || !user) {
+      console.error('Authentication failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated request from user: ${user.id}`);
+
+    // 2. VALIDATE INPUT
+    const body = await req.json() as AnalysisRequest;
+    
+    if (!body.image || typeof body.image !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input: image must be a base64 string' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!body.type || !['front', 'back'].includes(body.type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input: type must be "front" or "back"' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate base64 format and size
+    const base64Pattern = /^data:image\/(png|jpeg|jpg|webp);base64,/;
+    if (!base64Pattern.test(body.image)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid image format. Must be base64 encoded image (PNG, JPEG, WEBP)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (body.image.length > MAX_IMAGE_SIZE_BYTES) {
+      return new Response(
+        JSON.stringify({ error: `Image too large. Maximum size is ${MAX_IMAGE_SIZE_MB}MB` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 3. CHECK RATE LIMIT
+    const windowStart = new Date();
+    windowStart.setHours(windowStart.getHours() - RATE_LIMIT_WINDOW_HOURS);
+
+    // Get current usage in the window
+    const { data: rateLimitData, error: rateLimitError } = await supabase
+      .from('ai_analysis_rate_limit')
+      .select('analysis_count')
+      .eq('user_id', user.id)
+      .gte('window_start', windowStart.toISOString())
+      .maybeSingle();
+
+    if (rateLimitError && rateLimitError.code !== 'PGRST116') {
+      console.error('Rate limit check error:', rateLimitError);
+      throw rateLimitError;
+    }
+
+    const currentCount = rateLimitData?.analysis_count || 0;
+
+    if (currentCount >= MAX_ANALYSES_PER_WINDOW) {
+      console.warn(`Rate limit exceeded for user ${user.id}: ${currentCount}/${MAX_ANALYSES_PER_WINDOW}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Rate limit exceeded. Maximum ${MAX_ANALYSES_PER_WINDOW} analyses per hour. Please try again later.`,
+          retryAfter: 3600 - Math.floor((Date.now() - new Date(windowStart).getTime()) / 1000)
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 4. UPDATE RATE LIMIT COUNTER
+    if (rateLimitData) {
+      await supabase
+        .from('ai_analysis_rate_limit')
+        .update({ analysis_count: currentCount + 1 })
+        .eq('user_id', user.id)
+        .gte('window_start', windowStart.toISOString());
+    } else {
+      await supabase
+        .from('ai_analysis_rate_limit')
+        .insert({ 
+          user_id: user.id, 
+          analysis_count: 1,
+          window_start: new Date().toISOString()
+        });
+    }
+
+    // Clean up old rate limit records
+    await supabase.rpc('cleanup_rate_limits');
+
+    // 5. PROCEED WITH AI ANALYSIS
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -19,7 +141,7 @@ serve(async (req) => {
     }
 
     let prompt = '';
-    if (type === 'front') {
+    if (body.type === 'front') {
       prompt = `Analiza esta imagen del frente de un producto alimenticio.
       Extrae SOLO el nombre del producto (no la marca, solo el nombre del producto).
       Si hay un nombre claro, devuélvelo. Si no hay nombre visible, devuelve "Producto sin nombre".
@@ -39,7 +161,7 @@ serve(async (req) => {
       }`;
     }
     
-    console.log('Calling Lovable AI with type:', type);
+    console.log(`Calling Lovable AI for user ${user.id}, type: ${body.type}, usage: ${currentCount + 1}/${MAX_ANALYSES_PER_WINDOW}`);
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -54,7 +176,7 @@ serve(async (req) => {
             role: 'user',
             content: [
               { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: image } }
+              { type: 'image_url', image_url: { url: body.image } }
             ]
           }
         ],
@@ -83,7 +205,7 @@ serve(async (req) => {
     }
     
     const data = await response.json();
-    console.log('AI response received');
+    console.log('AI response received successfully');
     
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
@@ -98,7 +220,7 @@ serve(async (req) => {
     }
     
     const result = JSON.parse(jsonStr);
-    console.log('Analysis complete:', type);
+    console.log(`Analysis complete for user ${user.id}, type: ${body.type}`);
     
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

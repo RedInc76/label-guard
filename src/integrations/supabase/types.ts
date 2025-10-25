@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analysis_rate_limit: {
+        Row: {
+          analysis_count: number
+          created_at: string
+          id: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          analysis_count?: number
+          created_at?: string
+          id?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          analysis_count?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       ai_analyzed_products: {
         Row: {
           allergens: string | null
@@ -154,6 +178,33 @@ export type Database = {
           expires_at?: string
           id?: string
           verified?: boolean | null
+        }
+        Relationships: []
+      }
+      otp_rate_limit: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          email: string
+          id: string
+          ip_address: string
+          window_start: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          email: string
+          id?: string
+          ip_address: string
+          window_start?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -388,6 +439,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
