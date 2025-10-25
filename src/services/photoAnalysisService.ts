@@ -54,11 +54,13 @@ export class PhotoAnalysisService {
       
       if (uploadError) throw uploadError;
       
-      const { data } = supabase.storage
+      const { data, error: signedUrlError } = await supabase.storage
         .from('product-photos')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
       
-      return data.publicUrl;
+      if (signedUrlError) throw signedUrlError;
+      
+      return data.signedUrl;
     } catch (error) {
       console.error('Error uploading photo:', error);
       throw error;
