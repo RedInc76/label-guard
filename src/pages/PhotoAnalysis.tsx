@@ -114,6 +114,10 @@ export const PhotoAnalysis = () => {
           console.log('✅ Producto guardado en cache para futuras búsquedas');
         }
         
+        // Track AI analysis
+        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
+        await UsageAnalyticsService.trackAIAnalysis(productName, barcode || undefined);
+        
         // Analyze product against restrictions
         const result = await AnalysisService.analyzeProductForActiveProfiles(product);
         

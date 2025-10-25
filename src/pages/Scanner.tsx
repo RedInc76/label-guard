@@ -136,6 +136,10 @@ export const Scanner = () => {
       const product = await OpenFoodFactsService.getProduct(barcode);
       
       if (product) {
+        // Track OpenFoodFacts usage
+        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
+        await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, barcode);
+        
         navigate('/results', { state: { product } });
         return;
       }
@@ -147,6 +151,10 @@ export const Scanner = () => {
       if (cachedProduct) {
         // Incrementar contador de accesos
         await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
+        
+        // Track cache hit
+        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
+        await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, barcode);
         
         toast({
           title: "💾 Producto encontrado en cache",
