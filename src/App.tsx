@@ -76,10 +76,13 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/results" element={<Results />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/photo-analysis" element={<ProtectedRoute><PhotoAnalysis /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
               <Route path="/permissions" element={<Permissions />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/terms" element={<Terms />} />

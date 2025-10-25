@@ -2,3 +2,6 @@ project_id = "icmhwdrchtvoqldhdwze"
 
 [functions.analyze-product-photo]
 verify_jwt = false
+
+[functions.send-otp]
+verify_jwt = false

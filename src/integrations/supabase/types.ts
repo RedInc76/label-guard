@@ -130,6 +130,33 @@ export type Database = {
           },
         ]
       }
+      otp_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          verified: boolean | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          verified?: boolean | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       profile_custom_restrictions: {
         Row: {
           created_at: string | null
@@ -278,6 +305,36 @@ export type Database = {
           user_id?: string
           violations?: Json | null
           warnings?: Json | null
+        }
+        Relationships: []
+      }
+      usage_analytics: {
+        Row: {
+          barcode: string | null
+          cost_usd: number | null
+          created_at: string | null
+          event_type: string
+          id: string
+          product_name: string
+          user_id: string
+        }
+        Insert: {
+          barcode?: string | null
+          cost_usd?: number | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          product_name: string
+          user_id: string
+        }
+        Update: {
+          barcode?: string | null
+          cost_usd?: number | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          product_name?: string
+          user_id?: string
         }
         Relationships: []
       }

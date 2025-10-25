@@ -11,9 +11,14 @@ interface AuthContextType {
   isPremium: boolean;
   isGuest: boolean;
   signUp: (email: string, password: string) => Promise<{ needsEmailConfirmation: boolean }>;
+  signUpWithOTP: (email: string, password: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
+  resendOTP: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -139,6 +144,97 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signUpWithOTP = async (email: string, password: string) => {
+    try {
+      // Create user without auto-confirm
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Send OTP via edge function
+      const { error: otpError } = await supabase.functions.invoke('send-otp', {
+        body: { email },
+      });
+
+      if (otpError) throw otpError;
+    } catch (error: any) {
+      console.error('Sign up with OTP error:', error);
+      throw error;
+    }
+  };
+
+  const verifyOTP = async (email: string, otp: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+
+      if (error) throw error;
+
+      // Migrate local profile after successful verification
+      const localProfile = localStorage.getItem('localProfile');
+      if (localProfile) {
+        setTimeout(async () => {
+          await ProfileService.migrateLocalToCloud();
+          toast({
+            title: "¡Bienvenido a PREMIUM! 🎉",
+            description: "Tu perfil local ha sido sincronizado",
+          });
+        }, 100);
+      }
+    } catch (error: any) {
+      console.error('Verify OTP error:', error);
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/scanner`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      throw error;
+    }
+  };
+
+  const resendOTP = async (email: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-otp', {
+        body: { email },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       // CRÍTICO: Limpiar localStorage de perfiles antes de cerrar sesión
@@ -165,9 +261,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isPremium,
         isGuest,
         signUp,
+        signUpWithOTP,
+        verifyOTP,
         signIn,
+        signInWithGoogle,
         signOut,
         resendConfirmationEmail,
+        resendOTP,
+        resetPassword,
         loading,
       }}
     >
