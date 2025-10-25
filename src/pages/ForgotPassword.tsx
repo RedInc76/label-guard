@@ -46,9 +46,15 @@ export default function ForgotPassword() {
         description: 'Revisa tu bandeja de entrada para restablecer tu contraseña',
       });
     } catch (error: any) {
+      let errorMessage = error.message || 'No se pudo enviar el email de recuperación';
+      
+      if (error.message?.includes('rate_limit') || error.message?.includes('Email rate limit exceeded')) {
+        errorMessage = 'Por favor espera unos minutos antes de intentar de nuevo';
+      }
+      
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo enviar el email de recuperación',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

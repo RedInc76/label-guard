@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Lock } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { loggingService } from '@/services/loggingService';
 import { z } from 'zod';
 
 const passwordSchema = z
@@ -24,21 +25,60 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [validSession, setValidSession] = useState(false);
+  const [processingRecovery, setProcessingRecovery] = useState(false);
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let mounted = true;
+    
+    const checkRecoverySession = async () => {
+      // Verificar si la URL contiene un hash de recovery
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const hasRecoveryToken = hashParams.get('type') === 'recovery';
+      
+      loggingService.logAction('Password recovery - checking session', {
+        hasHash: !!window.location.hash,
+        hashType: hashParams.get('type'),
+        hasRecoveryToken
+      });
+      
+      if (hasRecoveryToken) {
+        setProcessingRecovery(true);
+        // Dar tiempo al SDK de Supabase para procesar el token
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      // Ahora sí verificar la sesión
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (!mounted) return;
+      
+      loggingService.logAction('Password recovery - session check result', {
+        hasSession: !!session,
+        hasError: !!error
+      });
+      
       if (session) {
         setValidSession(true);
+        setProcessingRecovery(false);
       } else {
-        toast({
-          title: 'Sesión inválida',
-          description: 'El enlace de recuperación ha expirado o es inválido',
-          variant: 'destructive',
-        });
-        navigate('/forgot-password');
+        // Solo redirigir si no estamos procesando recovery
+        if (!hasRecoveryToken) {
+          toast({
+            title: 'Sesión inválida',
+            description: 'El enlace de recuperación ha expirado o es inválido',
+            variant: 'destructive',
+          });
+          navigate('/forgot-password');
+        } else {
+          // Si hay token pero no sesión, esperar un poco más
+          setTimeout(() => checkRecoverySession(), 500);
+        }
       }
-    });
+    };
+    
+    checkRecoverySession();
+    
+    return () => { mounted = false; };
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,6 +129,17 @@ export default function ResetPassword() {
       setLoading(false);
     }
   };
+
+  if (processingRecovery) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verificando enlace de recuperación...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!validSession) {
     return (
