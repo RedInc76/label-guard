@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, History, Star, Lock, ChevronRight, FileText } from 'lucide-react';
+import { User, History, Star, Lock, ChevronRight, FileText, BarChart3, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Capacitor } from '@capacitor/core';
 import { InitialDisclaimerDialog } from '@/components/InitialDisclaimerDialog';
 import { APP_VERSION } from '@/config/app';
@@ -11,6 +12,7 @@ import { APP_VERSION } from '@/config/app';
 export const Settings = () => {
   const navigate = useNavigate();
   const { isPremium } = useAuth();
+  const { isAdmin, checking } = useAdminCheck();
   const isNative = Capacitor.isNativePlatform();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -39,6 +41,15 @@ export const Settings = () => {
       badge: 'Premium',
     },
     {
+      icon: BarChart3,
+      label: 'Dashboard Admin',
+      description: 'Estadísticas y análisis de uso',
+      path: '/admin',
+      showAlways: false,
+      requiresAdmin: true,
+      badge: 'Admin',
+    },
+    {
       icon: Lock,
       label: 'Permisos',
       description: 'Gestiona permisos de cámara y ubicación',
@@ -51,9 +62,17 @@ export const Settings = () => {
 
   const visibleOptions = settingsOptions.filter(
     (option) =>
-      (option.showAlways || isPremium) &&
+      (option.showAlways || isPremium || (option.requiresAdmin && isAdmin)) &&
       (!option.onlyNative || isNative)
   );
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
