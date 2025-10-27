@@ -116,7 +116,7 @@ export const History = () => {
         photoUrls: item.front_photo_url && item.back_photo_url 
           ? { front: item.front_photo_url, back: item.back_photo_url }
           : undefined,
-        fromHistory: true,
+        fromHistory: true
       }
     });
   };

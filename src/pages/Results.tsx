@@ -133,6 +133,12 @@ export const Results = () => {
     }
   };
 
+  const backDestination = location.state?.fromHistory 
+    ? '/history' 
+    : location.state?.fromFavorites 
+      ? '/favorites' 
+      : '/scanner';
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto space-y-6">
@@ -141,7 +147,7 @@ export const Results = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/scanner')}
+            onClick={() => navigate(backDestination)}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
