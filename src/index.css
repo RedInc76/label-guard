@@ -1,3 +1,4 @@
+/* Updated: 2025-01-27 - Color refresh v2 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,8 +11,8 @@ All colors MUST be HSL.
   :root {
     /* Backgrounds - Blanco puro con profundidad */
     --background: 0 0% 100%;
-    --background-subtle: 142 30% 98%;
-    --background-muted: 142 20% 95%;
+    --background-subtle: 142 40% 97%;
+    --background-muted: 142 30% 93%;
     --foreground: 240 10% 3.9%;
 
     /* Cards - Blanco puro con mejores sombras */
@@ -22,11 +23,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    /* Primary - Verde vibrante y saturado */
-    --primary: 142 71% 45%;
-    --primary-hover: 142 71% 40%;
-    --primary-light: 142 71% 92%;
-    --primary-dark: 142 71% 25%;
+    /* Primary - Verde MÁS vibrante y saturado */
+    --primary: 142 76% 48%;
+    --primary-hover: 142 76% 42%;
+    --primary-light: 142 76% 90%;
+    --primary-dark: 142 76% 28%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Tonos suaves */
@@ -151,15 +152,15 @@ All colors MUST be HSL.
     @apply fixed bottom-0 left-0 right-0 z-50;
     height: 72px;
     background: linear-gradient(180deg, 
-      hsla(0, 0%, 100%, 0.98) 0%, 
-      hsla(142, 71%, 96%, 0.95) 100%
+      hsla(0, 0%, 100%, 1) 0%, 
+      hsla(142, 76%, 92%, 1) 100%
     );
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
     box-shadow: 
-      0 -4px 24px rgba(34, 197, 94, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    border-top: 1px solid hsla(142, 40%, 90%, 0.5);
+      0 -4px 32px rgba(34, 197, 94, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-top: 2px solid hsla(142, 60%, 80%, 0.8);
   }
 
   .nav-container {
@@ -171,21 +172,21 @@ All colors MUST be HSL.
   /* Botones laterales */
   .nav-item {
     @apply flex flex-col items-center justify-center gap-1 p-3 rounded-xl relative;
-    color: hsl(0, 0%, 50%);
+    color: hsl(0, 0%, 45%);
     transition: all 280ms cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 60px;
   }
 
   .nav-item:hover {
-    color: hsl(142, 71%, 45%);
-    background: hsla(142, 71%, 45%, 0.08);
-    transform: scale(1.05);
+    color: hsl(142, 76%, 48%);
+    background: hsla(142, 76%, 48%, 0.15);
+    transform: scale(1.08);
   }
 
   .nav-item-active {
-    color: hsl(142, 71%, 45%);
-    background: hsla(142, 71%, 45%, 0.12);
-    font-weight: 600;
+    color: hsl(142, 76%, 48%);
+    background: hsla(142, 76%, 48%, 0.18);
+    font-weight: 700;
   }
 
   /* Indicador de página activa (dot) */
@@ -205,34 +206,51 @@ All colors MUST be HSL.
     height: 64px;
     top: -20px;
     background: linear-gradient(135deg, 
-      hsl(142, 71%, 45%) 0%, 
-      hsl(142, 71%, 38%) 100%
+      hsl(142, 76%, 48%) 0%, 
+      hsl(142, 76%, 36%) 100%
     );
     box-shadow: 
-      0 8px 24px rgba(34, 197, 94, 0.35),
-      0 4px 12px rgba(0, 0, 0, 0.15),
-      inset 0 2px 0 rgba(255, 255, 255, 0.25),
-      inset 0 -2px 8px rgba(0, 0, 0, 0.15);
+      0 12px 36px rgba(34, 197, 94, 0.55),
+      0 6px 20px rgba(0, 0, 0, 0.25),
+      inset 0 3px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -3px 10px rgba(0, 0, 0, 0.2);
   }
 
   .scan-button:hover {
     background: linear-gradient(135deg, 
-      hsl(142, 71%, 48%) 0%, 
-      hsl(142, 71%, 42%) 100%
+      hsl(142, 76%, 52%) 0%, 
+      hsl(142, 76%, 40%) 100%
     );
     box-shadow: 
-      0 10px 32px rgba(34, 197, 94, 0.45),
-      0 6px 16px rgba(0, 0, 0, 0.2),
-      inset 0 2px 0 rgba(255, 255, 255, 0.3);
-    transform: translateX(-50%) translateY(-2px);
+      0 16px 48px rgba(34, 197, 94, 0.65),
+      0 8px 24px rgba(0, 0, 0, 0.3),
+      inset 0 3px 0 rgba(255, 255, 255, 0.4);
+    transform: translateX(-50%) translateY(-4px);
   }
 
   .scan-button:active {
     transform: translateX(-50%) translateY(-2px) scale(0.96);
     box-shadow: 
-      0 6px 18px rgba(34, 197, 94, 0.3),
+      0 8px 24px rgba(34, 197, 94, 0.45),
       inset 0 2px 8px rgba(0, 0, 0, 0.2);
     animation: bounce-enhanced 0.3s ease-out;
+  }
+
+  /* Cards con bordes verdes más obvios */
+  .card {
+    border: 1px solid hsl(142, 40%, 88%);
+    box-shadow: 
+      0 3px 10px rgba(34, 197, 94, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 250ms ease-out;
+  }
+
+  .card:hover {
+    border-color: hsl(142, 60%, 70%);
+    box-shadow: 
+      0 6px 20px rgba(34, 197, 94, 0.20),
+      0 2px 6px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
   }
 }
 

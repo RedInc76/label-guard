@@ -317,56 +317,28 @@ export const Scanner = () => {
               variant="outline"
               className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
               onClick={() => {
-                setManualCode("7501000110117");
-                searchProduct("7501000110117");
+                setManualCode("7501055914821");
+                searchProduct("7501055914821");
               }}
               disabled={isScanning || isSearching || activeProfiles.length === 0}
             >
               <div className="flex flex-col w-full">
-                <span className="font-mono font-semibold">7501000110117</span>
-                <span className="text-xs text-muted-foreground">Coca-Cola 355ml</span>
+                <span className="font-mono font-semibold text-primary">7501055914821</span>
+                <span className="text-xs text-muted-foreground">Yogurth Alpura Bebible Manzana</span>
               </div>
             </Button>
             <Button
               variant="outline"
               className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
               onClick={() => {
-                setManualCode("7501055300297");
-                searchProduct("7501055300297");
+                setManualCode("7501055900039");
+                searchProduct("7501055900039");
               }}
               disabled={isScanning || isSearching || activeProfiles.length === 0}
             >
               <div className="flex flex-col w-full">
-                <span className="font-mono font-semibold">7501055300297</span>
-                <span className="text-xs text-muted-foreground">Sabritas Original</span>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
-              onClick={() => {
-                setManualCode("7501030490803");
-                searchProduct("7501030490803");
-              }}
-              disabled={isScanning || isSearching || activeProfiles.length === 0}
-            >
-              <div className="flex flex-col w-full">
-                <span className="font-mono font-semibold">7501030490803</span>
-                <span className="text-xs text-muted-foreground">Nutella 350g</span>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
-              onClick={() => {
-                setManualCode("7501055301652");
-                searchProduct("7501055301652");
-              }}
-              disabled={isScanning || isSearching || activeProfiles.length === 0}
-            >
-              <div className="flex flex-col w-full">
-                <span className="font-mono font-semibold">7501055301652</span>
-                <span className="text-xs text-muted-foreground">Doritos Nacho</span>
+                <span className="font-mono font-semibold text-primary">7501055900039</span>
+                <span className="text-xs text-muted-foreground">Leche Ultra Pasteurizada Entera Alpura</span>
               </div>
             </Button>
           </div>
