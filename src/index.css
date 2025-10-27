@@ -136,3 +136,79 @@ All colors MUST be HSL.
     display: none !important;
   }
 }
+
+/* Estilos modernos para la navegación */
+@layer components {
+  /* Barra de navegación con glassmorphism */
+  .nav-bar {
+    @apply fixed bottom-0 left-0 right-0 z-50;
+    height: 72px;
+    background: linear-gradient(180deg, 
+      hsla(0, 0%, 100%, 0.95) 0%, 
+      hsla(142, 76%, 95%, 0.95) 100%
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .nav-container {
+    @apply flex justify-between items-center px-8 h-full relative;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Botones laterales */
+  .nav-item {
+    @apply flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all duration-300 relative;
+    @apply text-muted-foreground hover:text-primary;
+    min-width: 60px;
+  }
+
+  .nav-item-active {
+    @apply text-primary bg-primary/10;
+  }
+
+  /* Indicador de página activa (dot) */
+  .nav-indicator {
+    @apply absolute -bottom-1 left-1/2 transform -translate-x-1/2;
+    @apply w-1.5 h-1.5 rounded-full bg-primary;
+  }
+
+  /* Botón central flotante */
+  .scan-button {
+    @apply absolute left-1/2 transform -translate-x-1/2;
+    @apply flex items-center justify-center rounded-full;
+    @apply transition-all duration-300 active:scale-95;
+    width: 64px;
+    height: 64px;
+    top: -20px;
+    background: linear-gradient(135deg, 
+      hsl(142, 76%, 36%) 0%, 
+      hsl(142, 76%, 32%) 100%
+    );
+    box-shadow: 
+      0 8px 24px rgba(34, 197, 94, 0.35),
+      0 4px 12px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .scan-button:hover {
+    box-shadow: 
+      0 10px 28px rgba(34, 197, 94, 0.4),
+      0 6px 16px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  .scan-button:active {
+    animation: bounce 0.3s ease-out;
+  }
+}
+
+/* Animaciones */
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}

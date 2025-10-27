@@ -92,11 +92,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'bounce': {
+					'0%, 100%': { transform: 'translateX(-50%) translateY(0)' },
+					'50%': { transform: 'translateX(-50%) translateY(-8px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce': 'bounce 0.3s ease-out'
 			}
 		}
 	},
