@@ -25,6 +25,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { Terms } from "./pages/Terms";
 import { Permissions } from "./pages/Permissions";
 import { Settings } from "./pages/Settings";
+import { Insights } from "./pages/Insights";
+import { ProductMap } from "./pages/ProductMap";
+import { Compare } from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +89,9 @@ const App = () => (
               <Route path="/photo-analysis" element={<ProtectedRoute><PhotoAnalysis /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+              <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+              <Route path="/map" element={<ProtectedRoute><ProductMap /></ProtectedRoute>} />
+              <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
               <Route path="/permissions" element={<Permissions />} />
               <Route path="/settings" element={<Settings />} />

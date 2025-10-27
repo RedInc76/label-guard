@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, History, Star, Lock, ChevronRight, FileText, BarChart3, Loader2 } from 'lucide-react';
+import { User, History, Star, Lock, ChevronRight, FileText, BarChart3, Map, Loader2, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Capacitor } from '@capacitor/core';
@@ -42,6 +42,22 @@ export const Settings = () => {
     },
     {
       icon: BarChart3,
+      label: 'Insights Personales',
+      description: 'Estadísticas de tus escaneos',
+      path: '/insights',
+      showAlways: false,
+      badge: 'Premium',
+    },
+    {
+      icon: Map,
+      label: 'Mapa de Productos',
+      description: 'Visualiza dónde escaneaste',
+      path: '/map',
+      showAlways: false,
+      badge: 'Premium',
+    },
+    {
+      icon: Shield,
       label: 'Dashboard Admin',
       description: 'Estadísticas y análisis de uso',
       path: '/admin',

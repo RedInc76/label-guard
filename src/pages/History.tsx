@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter } from 'lucide-react';
+import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter, BarChart3, Map, Scale } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { GeolocationService } from '@/services/geolocationService';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -22,6 +23,8 @@ export const History = () => {
   const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'barcode' | 'ai_photo'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadHistory();
@@ -158,21 +161,62 @@ export const History = () => {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/scanner')}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Historial de Escaneos</h1>
-          <p className="text-sm text-muted-foreground">
-            {filteredHistory.length} de {history.length} producto{history.length !== 1 ? 's' : ''}
-            {filteredHistory.length !== history.length && ' (filtrados)'}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/scanner')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Historial de Escaneos</h1>
+            <p className="text-sm text-muted-foreground">
+              {filteredHistory.length} de {history.length} producto{history.length !== 1 ? 's' : ''}
+              {filteredHistory.length !== history.length && ' (filtrados)'}
+            </p>
+          </div>
         </div>
+
+        {compareMode ? (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCompareMode(false);
+                setSelectedForCompare(new Set());
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={selectedForCompare.size < 2 || selectedForCompare.size > 3}
+              onClick={() => {
+                navigate('/compare', {
+                  state: { productIds: Array.from(selectedForCompare) }
+                });
+              }}
+            >
+              Comparar ({selectedForCompare.size})
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/insights')}>
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Insights
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/map')}>
+              <Map className="mr-2 h-4 w-4" />
+              Mapa
+            </Button>
+            <Button variant="outline" onClick={() => setCompareMode(true)}>
+              <Scale className="mr-2 h-4 w-4" />
+              Comparar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Sección de filtros */}
@@ -288,6 +332,23 @@ export const History = () => {
             >
               <CardContent className="p-4">
                 <div className="flex gap-4">
+                  {compareMode && (
+                    <div className="flex items-center mr-2">
+                      <Checkbox
+                        checked={selectedForCompare.has(item.id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedForCompare);
+                          if (checked && selectedForCompare.size < 3) {
+                            newSet.add(item.id);
+                          } else {
+                            newSet.delete(item.id);
+                          }
+                          setSelectedForCompare(newSet);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
                   <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                     {item.image_url || item.front_photo_url ? (
                       <img

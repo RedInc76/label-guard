@@ -4,13 +4,16 @@ import { FavoritesService } from '@/services/favoritesService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star, Camera, Barcode } from 'lucide-react';
+import { ArrowLeft, Star, Camera, Barcode, Scale } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 
 export const Favorites = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadFavorites();
@@ -70,20 +73,51 @@ export const Favorites = () => {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/scanner')}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Productos Favoritos</h1>
-          <p className="text-sm text-muted-foreground">
-            {favorites.length} producto{favorites.length !== 1 ? 's' : ''} favorito{favorites.length !== 1 ? 's' : ''}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/scanner')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Productos Favoritos</h1>
+            <p className="text-sm text-muted-foreground">
+              {favorites.length} producto{favorites.length !== 1 ? 's' : ''} favorito{favorites.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
+
+        {compareMode ? (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCompareMode(false);
+                setSelectedForCompare(new Set());
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={selectedForCompare.size < 2 || selectedForCompare.size > 3}
+              onClick={() => {
+                navigate('/compare', {
+                  state: { productIds: Array.from(selectedForCompare) }
+                });
+              }}
+            >
+              Comparar ({selectedForCompare.size})
+            </Button>
+          </div>
+        ) : (
+          <Button variant="outline" onClick={() => setCompareMode(true)}>
+            <Scale className="mr-2 h-4 w-4" />
+            Comparar
+          </Button>
+        )}
       </div>
 
       {favorites.length === 0 ? (
@@ -108,10 +142,27 @@ export const Favorites = () => {
             return (
               <Card
                 key={item.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleViewDetails(item)}
+                className="cursor-pointer hover:shadow-md transition-shadow relative"
+                onClick={() => !compareMode && handleViewDetails(item)}
               >
                 <CardContent className="p-4">
+                  {compareMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Checkbox
+                        checked={selectedForCompare.has(item.scan_history_id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedForCompare);
+                          if (checked && selectedForCompare.size < 3) {
+                            newSet.add(item.scan_history_id);
+                          } else {
+                            newSet.delete(item.scan_history_id);
+                          }
+                          setSelectedForCompare(newSet);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-col gap-3">
                     <div className="w-full h-32 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                       {item.image_url || scan?.front_photo_url ? (

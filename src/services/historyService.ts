@@ -129,4 +129,165 @@ export class HistoryService {
       return false;
     }
   }
+
+  static async getInsightsData(days: number = 30): Promise<any> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      // Obtener todos los escaneos del período
+      const { data: scans } = await supabase
+        .from('scan_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
+
+      // Obtener analytics de uso
+      const { data: analytics } = await supabase
+        .from('usage_analytics')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString());
+
+      // Calcular métricas
+      const totalScans = scans?.length || 0;
+      const compatibleScans = scans?.filter(s => s.is_compatible).length || 0;
+      const avgScore = totalScans > 0 
+        ? scans.reduce((sum, s) => sum + s.score, 0) / totalScans 
+        : 0;
+
+      // Top productos escaneados (agrupar por product_name)
+      const productCounts: Record<string, { count: number; item: any }> = {};
+      scans?.forEach(scan => {
+        if (!productCounts[scan.product_name]) {
+          productCounts[scan.product_name] = { count: 0, item: scan };
+        }
+        productCounts[scan.product_name].count++;
+      });
+
+      const topProducts = Object.values(productCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Violaciones más frecuentes
+      const violationCounts: Record<string, number> = {};
+      scans?.forEach(scan => {
+        if (Array.isArray(scan.violations)) {
+          scan.violations.forEach((v: any) => {
+            violationCounts[v.restriction] = (violationCounts[v.restriction] || 0) + 1;
+          });
+        }
+      });
+
+      const topViolations = Object.entries(violationCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      // Escaneos por día
+      const dailyScans: Record<string, number> = {};
+      scans?.forEach(scan => {
+        const date = new Date(scan.created_at).toISOString().split('T')[0];
+        dailyScans[date] = (dailyScans[date] || 0) + 1;
+      });
+
+      // Estadísticas de uso
+      const aiAnalyses = analytics?.filter(a => a.event_type === 'ai_analysis').length || 0;
+      const cacheAnalyses = analytics?.filter(a => a.event_type === 'cache_hit').length || 0;
+      const openFoodFactsAnalyses = analytics?.filter(a => a.event_type === 'openfoodfacts_search').length || 0;
+      const estimatedCost = analytics?.reduce((sum, a) => sum + (a.cost_usd || 0), 0) || 0;
+      const cacheSavings = cacheAnalyses * 0.01; // Estimación
+      const totalAnalyses = aiAnalyses + cacheAnalyses + openFoodFactsAnalyses;
+      const cacheEfficiency = totalAnalyses > 0 ? (cacheAnalyses / totalAnalyses) * 100 : 0;
+
+      return {
+        totalScans,
+        compatibleScans,
+        incompatibleScans: totalScans - compatibleScans,
+        compatibilityRate: totalScans > 0 ? (compatibleScans / totalScans) * 100 : 0,
+        avgScore,
+        topProducts,
+        topViolations,
+        dailyScans,
+        usageStats: {
+          totalAnalyses,
+          aiAnalyses,
+          cacheAnalyses,
+          openFoodFactsAnalyses,
+          estimatedCost,
+          cacheSavings,
+          cacheEfficiency,
+        },
+      };
+    } catch (error) {
+      console.error('Error getting insights data:', error);
+      loggingService.logError('Error fetching insights', error);
+      throw error;
+    }
+  }
+
+  static async getScansWithLocation(filters?: {
+    compatible?: boolean;
+    minScore?: number;
+    days?: number;
+  }): Promise<ScanHistoryItem[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      let query = supabase
+        .from('scan_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
+
+      if (filters?.compatible !== undefined) {
+        query = query.eq('is_compatible', filters.compatible);
+      }
+
+      if (filters?.minScore !== undefined) {
+        query = query.gte('score', filters.minScore);
+      }
+
+      if (filters?.days) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - filters.days);
+        query = query.gte('created_at', startDate.toISOString());
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data as any[]) || [];
+    } catch (error) {
+      console.error('Error getting scans with location:', error);
+      loggingService.logError('Error fetching location scans', error);
+      return [];
+    }
+  }
+
+  static async getMultipleScans(ids: string[]): Promise<ScanHistoryItem[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('scan_history')
+        .select('*')
+        .in('id', ids)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return (data as any[]) || [];
+    } catch (error) {
+      console.error('Error getting multiple scans:', error);
+      loggingService.logError('Error fetching multiple scans', error);
+      return [];
+    }
+  }
 }
