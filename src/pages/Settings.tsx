@@ -60,11 +60,21 @@ export const Settings = () => {
     },
   ];
 
-  const visibleOptions = settingsOptions.filter(
-    (option) =>
-      (option.showAlways || isPremium || (option.requiresAdmin && isAdmin)) &&
-      (!option.onlyNative || isNative)
-  );
+  const visibleOptions = settingsOptions.filter((option) => {
+    // Siempre mostrar opciones marcadas como showAlways
+    if (option.showAlways) return true;
+    
+    // Opciones que requieren admin: SOLO mostrar si el usuario ES admin
+    if (option.requiresAdmin) return isAdmin;
+    
+    // Opciones premium: solo mostrar si el usuario es premium
+    if (option.badge === 'Premium') return isPremium;
+    
+    // Opciones solo para nativo: ocultar si no es nativo
+    if (option.onlyNative && !isNative) return false;
+    
+    return true;
+  });
 
   if (checking) {
     return (

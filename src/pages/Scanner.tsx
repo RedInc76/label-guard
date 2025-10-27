@@ -217,16 +217,6 @@ export const Scanner = () => {
         {/* Upgrade Banner for FREE users */}
         <UpgradeBanner />
 
-        {/* First-time installation info */}
-        {Capacitor.isNativePlatform() && (
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-sm text-blue-800">
-              <strong>Primera vez:</strong> El escáner puede solicitar descargar un módulo de Google 
-              (5-10 MB). Esto solo ocurre una vez y mejora la precisión del escaneo.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Active Profiles Badge */}
             <ActiveProfilesBadge 
