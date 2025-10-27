@@ -197,12 +197,6 @@ export const Scanner = () => {
     }
   };
 
-  const testCodes = [
-    { code: '3017620422003', name: 'Nutella' },
-    { code: '8901030835708', name: 'Producto de prueba 1' },
-    { code: '7622210992741', name: 'Producto de prueba 2' }
-  ];
-
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto space-y-6">
@@ -315,26 +309,66 @@ export const Scanner = () => {
         <Card className="p-4 shadow-sm">
           <h3 className="font-semibold text-foreground mb-3">Códigos de Prueba</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            Usa estos códigos para probar la aplicación
+            Prueba con estos productos reales:
           </p>
           
           <div className="space-y-2">
-            {testCodes.map((item, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                className="w-full justify-between text-left"
-                onClick={() => {
-                  setManualCode(item.code);
-                  searchProduct(item.code);
-                }}
-                disabled={isScanning || isSearching || activeProfiles.length === 0}
-              >
-                <span className="font-mono text-xs">{item.code}</span>
-                <span className="text-xs text-muted-foreground">{item.name}</span>
-              </Button>
-            ))}
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setManualCode("7501000110117");
+                searchProduct("7501000110117");
+              }}
+              disabled={isScanning || isSearching || activeProfiles.length === 0}
+            >
+              <div className="flex flex-col w-full">
+                <span className="font-mono font-semibold">7501000110117</span>
+                <span className="text-xs text-muted-foreground">Coca-Cola 355ml</span>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setManualCode("7501055300297");
+                searchProduct("7501055300297");
+              }}
+              disabled={isScanning || isSearching || activeProfiles.length === 0}
+            >
+              <div className="flex flex-col w-full">
+                <span className="font-mono font-semibold">7501055300297</span>
+                <span className="text-xs text-muted-foreground">Sabritas Original</span>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setManualCode("7501030490803");
+                searchProduct("7501030490803");
+              }}
+              disabled={isScanning || isSearching || activeProfiles.length === 0}
+            >
+              <div className="flex flex-col w-full">
+                <span className="font-mono font-semibold">7501030490803</span>
+                <span className="text-xs text-muted-foreground">Nutella 350g</span>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setManualCode("7501055301652");
+                searchProduct("7501055301652");
+              }}
+              disabled={isScanning || isSearching || activeProfiles.length === 0}
+            >
+              <div className="flex flex-col w-full">
+                <span className="font-mono font-semibold">7501055301652</span>
+                <span className="text-xs text-muted-foreground">Doritos Nacho</span>
+              </div>
+            </Button>
           </div>
         </Card>
 

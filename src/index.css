@@ -8,11 +8,13 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Backgrounds - Blanco puro para diseño minimalista */
+    /* Backgrounds - Blanco puro con profundidad */
     --background: 0 0% 100%;
+    --background-subtle: 142 30% 98%;
+    --background-muted: 142 20% 95%;
     --foreground: 240 10% 3.9%;
 
-    /* Cards - Blanco puro */
+    /* Cards - Blanco puro con mejores sombras */
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
 
@@ -20,43 +22,48 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    /* Primary - Verde moderno profesional */
-    --primary: 142 76% 36%;
+    /* Primary - Verde vibrante y saturado */
+    --primary: 142 71% 45%;
+    --primary-hover: 142 71% 40%;
+    --primary-light: 142 71% 92%;
+    --primary-dark: 142 71% 25%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Tonos suaves */
     --secondary: 142 30% 92%;
-    --secondary-foreground: 142 76% 36%;
+    --secondary-foreground: 142 71% 45%;
 
     /* Muted - Gris muy claro */
     --muted: 0 0% 96%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    /* Accent - Usar el mismo verde que primary para consistencia */
-    --accent: 142 76% 36%;
+    /* Accent - Verde vibrante */
+    --accent: 142 71% 45%;
     --accent-foreground: 0 0% 100%;
 
     /* Estados */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Borders - Muy sutiles */
-    --border: 0 0% 89%;
+    /* Borders - Sutiles con tinte verde */
+    --border: 142 30% 90%;
+    --border-strong: 142 40% 80%;
     --input: 0 0% 92%;
-    --ring: 142 76% 36%;
+    --ring: 142 71% 45%;
 
-    /* Sombras minimalistas */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-strong: 0 4px 16px rgba(0, 0, 0, 0.08);
+    /* Sombras premium con tinte verde */
+    --shadow-sm: 0 2px 4px rgba(34, 197, 94, 0.08);
+    --shadow-md: 0 4px 12px rgba(34, 197, 94, 0.12);
+    --shadow-lg: 0 8px 24px rgba(34, 197, 94, 0.16);
+    --shadow-xl: 0 12px 32px rgba(34, 197, 94, 0.24);
+    --shadow-soft: 0 2px 8px rgba(34, 197, 94, 0.06);
+    --shadow-strong: 0 8px 24px rgba(34, 197, 94, 0.16);
 
     --radius: 0.5rem;
 
@@ -139,18 +146,20 @@ All colors MUST be HSL.
 
 /* Estilos modernos para la navegación */
 @layer components {
-  /* Barra de navegación con glassmorphism */
+  /* Barra de navegación con glassmorphism premium */
   .nav-bar {
     @apply fixed bottom-0 left-0 right-0 z-50;
     height: 72px;
     background: linear-gradient(180deg, 
-      hsla(0, 0%, 100%, 0.95) 0%, 
-      hsla(142, 76%, 95%, 0.95) 100%
+      hsla(0, 0%, 100%, 0.98) 0%, 
+      hsla(142, 71%, 96%, 0.95) 100%
     );
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06), 
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 
+      0 -4px 24px rgba(34, 197, 94, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-top: 1px solid hsla(142, 40%, 90%, 0.5);
   }
 
   .nav-container {
@@ -161,54 +170,126 @@ All colors MUST be HSL.
 
   /* Botones laterales */
   .nav-item {
-    @apply flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all duration-300 relative;
-    @apply text-muted-foreground hover:text-primary;
+    @apply flex flex-col items-center justify-center gap-1 p-3 rounded-xl relative;
+    color: hsl(0, 0%, 50%);
+    transition: all 280ms cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 60px;
   }
 
+  .nav-item:hover {
+    color: hsl(142, 71%, 45%);
+    background: hsla(142, 71%, 45%, 0.08);
+    transform: scale(1.05);
+  }
+
   .nav-item-active {
-    @apply text-primary bg-primary/10;
+    color: hsl(142, 71%, 45%);
+    background: hsla(142, 71%, 45%, 0.12);
+    font-weight: 600;
   }
 
   /* Indicador de página activa (dot) */
   .nav-indicator {
     @apply absolute -bottom-1 left-1/2 transform -translate-x-1/2;
-    @apply w-1.5 h-1.5 rounded-full bg-primary;
+    @apply w-1.5 h-1.5 rounded-full;
+    background: linear-gradient(90deg, hsl(142, 71%, 45%), hsl(142, 71%, 55%));
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
   }
 
-  /* Botón central flotante */
+  /* Botón central flotante - Efecto WOW */
   .scan-button {
     @apply absolute left-1/2 transform -translate-x-1/2;
     @apply flex items-center justify-center rounded-full;
-    @apply transition-all duration-300 active:scale-95;
+    @apply transition-all duration-300;
     width: 64px;
     height: 64px;
     top: -20px;
     background: linear-gradient(135deg, 
-      hsl(142, 76%, 36%) 0%, 
-      hsl(142, 76%, 32%) 100%
+      hsl(142, 71%, 45%) 0%, 
+      hsl(142, 71%, 38%) 100%
     );
     box-shadow: 
       0 8px 24px rgba(34, 197, 94, 0.35),
-      0 4px 12px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .scan-button:hover {
+    background: linear-gradient(135deg, 
+      hsl(142, 71%, 48%) 0%, 
+      hsl(142, 71%, 42%) 100%
+    );
     box-shadow: 
-      0 10px 28px rgba(34, 197, 94, 0.4),
-      0 6px 16px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 10px 32px rgba(34, 197, 94, 0.45),
+      0 6px 16px rgba(0, 0, 0, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.3);
     transform: translateX(-50%) translateY(-2px);
   }
 
   .scan-button:active {
-    animation: bounce 0.3s ease-out;
+    transform: translateX(-50%) translateY(-2px) scale(0.96);
+    box-shadow: 
+      0 6px 18px rgba(34, 197, 94, 0.3),
+      inset 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: bounce-enhanced 0.3s ease-out;
   }
 }
 
-/* Animaciones */
+/* Animaciones premium */
 @keyframes bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+@keyframes bounce-enhanced {
+  0%, 100% { 
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  50% { 
+    transform: translateX(-50%) translateY(-12px) scale(1.05);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive - Mobile optimizado */
+@media (max-width: 640px) {
+  .scan-button {
+    width: 68px;
+    height: 68px;
+    top: -24px;
+  }
+  
+  .nav-bar {
+    height: 76px;
+  }
+}
+
+/* Performance - Reducir animaciones si el usuario lo prefiere */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

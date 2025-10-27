@@ -8,9 +8,9 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background-subtle to-background">
       <InitialDisclaimerDialog />
-      <main className="pb-24">
+      <main className="pb-28">
         {children}
       </main>
       <Navigation />
