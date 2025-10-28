@@ -16,7 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProfileEditorDialogProps {
@@ -37,32 +38,46 @@ const SeveritySelector = ({
   disabled?: boolean;
 }) => {
   return (
-    <RadioGroup value={value} onValueChange={onChange} disabled={disabled}>
-      <div className="flex gap-2">
-        {Object.values(SEVERITY_LEVELS).map((severity) => (
-          <TooltipProvider key={severity.level}>
-            <Tooltip>
+    <TooltipProvider>
+      <RadioGroup 
+        value={value} 
+        onValueChange={(val) => onChange(val as SeverityLevel)} 
+        disabled={disabled}
+        className="max-w-full"
+      >
+        <div className="flex flex-wrap gap-2 w-full overflow-x-hidden">
+          {Object.values(SEVERITY_LEVELS).map((severity) => (
+            <Tooltip key={severity.level}>
               <TooltipTrigger asChild>
-                <label className={`
-                  flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors
-                  ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input'}
-                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent'}
-                `}>
-                  <RadioGroupItem value={severity.level} className="sr-only" />
-                  <span className="text-lg">{severity.icon}</span>
-                  <span className={`text-sm font-medium ${severity.color}`}>
+                <Label 
+                  htmlFor={`severity-${severity.level}`}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors
+                    ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input'}
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent'}
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                  `}
+                  aria-label={`Seleccionar nivel ${severity.label}`}
+                >
+                  <RadioGroupItem 
+                    id={`severity-${severity.level}`}
+                    value={severity.level} 
+                    className="sr-only" 
+                  />
+                  <span className="text-lg shrink-0">{severity.icon}</span>
+                  <span className={`text-sm font-medium whitespace-nowrap ${severity.color}`}>
                     {severity.label}
                   </span>
-                </label>
+                </Label>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs z-50" sideOffset={5}>
                 <p className="text-xs">{severity.description}</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
-    </RadioGroup>
+          ))}
+        </div>
+      </RadioGroup>
+    </TooltipProvider>
   );
 };
 
@@ -158,10 +173,18 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
               <AlertTitle className="text-yellow-800 dark:text-yellow-200">
                 Importante: Define el nivel de severidad correctamente
               </AlertTitle>
-              <AlertDescription className="text-xs text-yellow-700 dark:text-yellow-300">
-                El nivel de severidad determina qué tan estricto será el análisis de productos. 
-                <strong className="block mt-1">Nivel Severo</strong> es recomendado para alergias graves o restricciones médicas. 
-                <strong className="block mt-1">Nivel Leve</strong> tolera trazas y procesamiento cruzado.
+              <AlertDescription className="text-xs text-yellow-700 dark:text-yellow-300 space-y-2">
+                <p>El nivel de severidad determina qué tan estricto será el análisis de productos.</p>
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-yellow-800 dark:text-yellow-200 font-medium hover:underline">
+                    Ver explicación de niveles <ChevronDown className="h-3 w-3" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-1 mt-2">
+                    <div><strong>🔴 Severo:</strong> Crítico - Rechaza cualquier mención, incluso procesamiento cruzado. Recomendado para alergias graves o restricciones médicas.</div>
+                    <div><strong>🟡 Moderado:</strong> Estándar - Rechaza ingredientes directos y trazas explícitas.</div>
+                    <div><strong>🟢 Leve:</strong> Tolera trazas y menciones indirectas (ej: "puede contener").</div>
+                  </CollapsibleContent>
+                </Collapsible>
               </AlertDescription>
             </Alert>
 
@@ -190,9 +213,9 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
                   <div className="space-y-4">
                     {categoryRestrictions.map((restriction) => (
                       <div key={restriction.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center justify-between min-w-0">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h4 className="font-medium text-foreground text-sm">
                                 {restriction.name}
                               </h4>
@@ -207,12 +230,12 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
                           <Switch
                             checked={restriction.enabled}
                             onCheckedChange={() => toggleRestriction(restriction.id)}
-                            className="ml-4"
+                            className="ml-4 shrink-0"
                           />
                         </div>
                         
                         {restriction.enabled && (
-                          <div className="ml-4 pl-4 border-l-2 border-muted">
+                          <div className="ml-4 pl-4 border-l-2 border-muted w-full overflow-x-hidden min-w-0">
                             <Label className="text-xs text-muted-foreground mb-2 block">
                               Nivel de severidad
                             </Label>
