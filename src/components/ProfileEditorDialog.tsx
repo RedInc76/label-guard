@@ -15,7 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,46 +38,37 @@ const SeveritySelector = ({
   disabled?: boolean;
 }) => {
   return (
-    <TooltipProvider>
-      <RadioGroup 
-        value={value} 
-        onValueChange={(val) => onChange(val as SeverityLevel)} 
-        disabled={disabled}
-        className="max-w-full"
-      >
-        <div className="flex gap-1 w-full overflow-x-hidden">
-          {Object.values(SEVERITY_LEVELS).map((severity) => (
-            <Tooltip key={severity.level}>
-              <TooltipTrigger asChild>
-                <Label 
-                  htmlFor={`severity-${severity.level}`}
-                  className={`
-                    flex items-center gap-1 px-1.5 py-1 rounded-md border cursor-pointer transition-colors flex-1 justify-center
-                    ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input'}
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent'}
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                  `}
-                  aria-label={`Seleccionar nivel ${severity.label}`}
-                >
-                  <RadioGroupItem 
-                    id={`severity-${severity.level}`}
-                    value={severity.level} 
-                    className="sr-only" 
-                  />
-                  <span className="text-sm shrink-0">{severity.icon}</span>
-                  <span className={`text-xs font-medium whitespace-nowrap ${severity.color}`}>
-                    {severity.label}
-                  </span>
-                </Label>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs z-50" sideOffset={5}>
-                <p className="text-xs">{severity.description}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-      </RadioGroup>
-    </TooltipProvider>
+    <RadioGroup 
+      value={value} 
+      onValueChange={(val) => onChange(val as SeverityLevel)}
+      className="w-full"
+    >
+      <div className="grid grid-cols-3 gap-1 w-full">
+        {Object.values(SEVERITY_LEVELS).map((severity) => (
+          <div key={severity.level} className="relative">
+            <RadioGroupItem 
+              id={`severity-${severity.level}`}
+              value={severity.level} 
+              className="sr-only peer"
+              disabled={disabled}
+            />
+            <Label 
+              htmlFor={`severity-${severity.level}`}
+              className={`
+                flex items-center justify-center gap-0.5 px-1 py-0.5 h-7 rounded-md border cursor-pointer transition-colors w-full select-none text-[11px]
+                ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input hover:bg-accent'}
+                ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+              `}
+            >
+              <span className="text-xs shrink-0">{severity.icon}</span>
+              <span className={`font-medium whitespace-nowrap ${severity.color}`}>
+                {severity.label}
+              </span>
+            </Label>
+          </div>
+        ))}
+      </div>
+    </RadioGroup>
   );
 };
 
@@ -107,51 +98,53 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
   };
 
   const toggleRestriction = (restrictionId: string) => {
-    setEditedProfile({
-      ...editedProfile,
-      restrictions: editedProfile.restrictions.map(r =>
+    setEditedProfile(prev => ({
+      ...prev!,
+      restrictions: prev!.restrictions.map(r =>
         r.id === restrictionId ? { ...r, enabled: !r.enabled, severityLevel: r.severityLevel || 'moderado' } : r
       )
-    });
+    }));
   };
 
   const updateRestrictionSeverity = (restrictionId: string, level: SeverityLevel) => {
-    setEditedProfile({
-      ...editedProfile,
-      restrictions: editedProfile.restrictions.map(r =>
+    setEditedProfile(prev => ({
+      ...prev!,
+      restrictions: prev!.restrictions.map(r =>
         r.id === restrictionId ? { ...r, severityLevel: level } : r
       )
-    });
+    }));
   };
 
   const updateCustomRestrictionSeverity = (index: number, level: SeverityLevel) => {
-    const updated = [...editedProfile.customRestrictions];
-    updated[index] = { ...updated[index], severityLevel: level };
-    setEditedProfile({ ...editedProfile, customRestrictions: updated });
+    setEditedProfile(prev => {
+      const updated = [...prev!.customRestrictions];
+      updated[index] = { ...updated[index], severityLevel: level };
+      return { ...prev!, customRestrictions: updated };
+    });
   };
 
   const addCustomRestriction = () => {
     if (newCustomRestriction.trim()) {
-      setEditedProfile({
-        ...editedProfile,
+      setEditedProfile(prev => ({
+        ...prev!,
         customRestrictions: [
-          ...editedProfile.customRestrictions,
+          ...prev!.customRestrictions,
           {
             text: newCustomRestriction.trim(),
             severityLevel: newCustomSeverity
           }
         ]
-      });
+      }));
       setNewCustomRestriction('');
       setNewCustomSeverity('moderado');
     }
   };
 
   const removeCustomRestriction = (index: number) => {
-    setEditedProfile({
-      ...editedProfile,
-      customRestrictions: editedProfile.customRestrictions.filter((_, i) => i !== index)
-    });
+    setEditedProfile(prev => ({
+      ...prev!,
+      customRestrictions: prev!.customRestrictions.filter((_, i) => i !== index)
+    }));
   };
 
   return (
