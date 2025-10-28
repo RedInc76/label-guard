@@ -1,4 +1,4 @@
-import { Profile, ProfileSystem, DietaryRestriction, UserProfile } from '@/types/restrictions';
+import { Profile, ProfileSystem, DietaryRestriction, UserProfile, SeverityLevel } from '@/types/restrictions';
 import { defaultRestrictions } from '@/data/restrictions';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -75,13 +75,14 @@ export class ProfileService {
           continue;
         }
 
-        // Insert restrictions
+        // Insert restrictions con severidad
         const restrictionsToInsert = profile.restrictions
           .filter(r => r.enabled)
           .map(r => ({
             profile_id: newProfile.id,
             restriction_id: r.id,
             enabled: true,
+            severity_level: r.severityLevel || 'moderado'
           }));
 
         if (restrictionsToInsert.length > 0) {
@@ -90,11 +91,16 @@ export class ProfileService {
             .insert(restrictionsToInsert);
         }
 
-        // Insert custom restrictions
-        const customToInsert = profile.customRestrictions.map(text => ({
-          profile_id: newProfile.id,
-          restriction_text: text,
-        }));
+        // Insert custom restrictions con severidad
+        const customToInsert = profile.customRestrictions.map(cr => {
+          const text = typeof cr === 'string' ? cr : cr.text;
+          const severityLevel = typeof cr === 'object' ? cr.severityLevel : 'moderado';
+          return {
+            profile_id: newProfile.id,
+            restriction_text: text,
+            severity_level: severityLevel
+          };
+        });
 
         if (customToInsert.length > 0) {
           await supabase
@@ -178,9 +184,12 @@ export class ProfileService {
   private static transformSupabaseToProfile(supabaseProfile: any): Profile {
     const availableRestrictions = defaultRestrictions;
     
-    // Crear mapa de restricciones habilitadas
-    const enabledRestrictions = new Set(
-      supabaseProfile.profile_restrictions?.map((r: any) => r.restriction_id) || []
+    // Crear mapa de restricciones habilitadas con severidad
+    const restrictionsMap = new Map<string, string>(
+      (supabaseProfile.profile_restrictions || []).map((r: any) => [
+        r.restriction_id,
+        r.severity_level || 'moderado'
+      ])
     );
     
     return {
@@ -189,11 +198,15 @@ export class ProfileService {
       isActive: supabaseProfile.is_active,
       restrictions: availableRestrictions.map(r => ({
         ...r,
-        enabled: enabledRestrictions.has(r.id)
+        enabled: restrictionsMap.has(r.id),
+        severityLevel: (restrictionsMap.get(r.id) || 'moderado') as SeverityLevel
       })),
-      customRestrictions: supabaseProfile.profile_custom_restrictions?.map(
-        (c: any) => c.restriction_text
-      ) || [],
+      customRestrictions: (supabaseProfile.profile_custom_restrictions || []).map(
+        (c: any) => ({
+          text: c.restriction_text,
+          severityLevel: (c.severity_level || 'moderado') as SeverityLevel
+        })
+      ),
       createdAt: supabaseProfile.created_at
     };
   }
@@ -340,7 +353,7 @@ export class ProfileService {
         .delete()
         .eq('profile_id', id);
       
-      // Insertar nuevas restricciones habilitadas
+      // Insertar nuevas restricciones habilitadas con severidad
       if (enabledRestrictions.length > 0) {
         await supabase
           .from('profile_restrictions')
@@ -348,7 +361,8 @@ export class ProfileService {
             enabledRestrictions.map(r => ({
               profile_id: id,
               restriction_id: r.id,
-              enabled: true
+              enabled: true,
+              severity_level: r.severityLevel || 'moderado'
             }))
           );
       }
@@ -362,14 +376,15 @@ export class ProfileService {
         .delete()
         .eq('profile_id', id);
       
-      // Insertar nuevas restricciones personalizadas
+      // Insertar nuevas restricciones personalizadas con severidad
       if (updates.customRestrictions.length > 0) {
         await supabase
           .from('profile_custom_restrictions')
           .insert(
-            updates.customRestrictions.map(text => ({
+            updates.customRestrictions.map(cr => ({
               profile_id: id,
-              restriction_text: text
+              restriction_text: cr.text,
+              severity_level: cr.severityLevel
             }))
           );
       }
@@ -482,16 +497,21 @@ export class ProfileService {
       try {
         const oldProfile: UserProfile = JSON.parse(oldData);
         
-        const migratedProfile: Profile = {
-          id: crypto.randomUUID(),
-          name: 'Mi Perfil',
-          isActive: true,
-          restrictions: oldProfile.restrictions || defaultRestrictions
-            .filter(r => r.isFree === true)
-            .map(r => ({ ...r, enabled: false })),
-          customRestrictions: oldProfile.customRestrictions || [],
-          createdAt: new Date().toISOString()
-        };
+      const migratedProfile: Profile = {
+        id: crypto.randomUUID(),
+        name: 'Mi Perfil',
+        isActive: true,
+        restrictions: (oldProfile.restrictions || defaultRestrictions
+          .filter(r => r.isFree === true)
+          .map(r => ({ ...r, enabled: false }))).map(r => ({
+            ...r,
+            severityLevel: r.severityLevel || 'moderado'
+          })),
+        customRestrictions: (oldProfile.customRestrictions || []).map(cr => 
+          typeof cr === 'string' ? { text: cr, severityLevel: 'moderado' as const } : cr
+        ),
+        createdAt: new Date().toISOString()
+      };
 
         const system: ProfileSystem = {
           profiles: [migratedProfile],

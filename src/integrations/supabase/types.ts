@@ -214,18 +214,21 @@ export type Database = {
           id: string
           profile_id: string
           restriction_text: string
+          severity_level: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           profile_id: string
           restriction_text: string
+          severity_level?: string
         }
         Update: {
           created_at?: string | null
           id?: string
           profile_id?: string
           restriction_text?: string
+          severity_level?: string
         }
         Relationships: [
           {
@@ -243,18 +246,21 @@ export type Database = {
           id: string
           profile_id: string
           restriction_id: string
+          severity_level: string
         }
         Insert: {
           enabled?: boolean | null
           id?: string
           profile_id: string
           restriction_id: string
+          severity_level?: string
         }
         Update: {
           enabled?: boolean | null
           id?: string
           profile_id?: string
           restriction_id?: string
+          severity_level?: string
         }
         Relationships: [
           {

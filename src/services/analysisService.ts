@@ -1,6 +1,12 @@
-import { ProductInfo, AnalysisResult, UserProfile, Profile, DietaryRestriction } from '@/types/restrictions';
+import { ProductInfo, AnalysisResult, UserProfile, Profile, DietaryRestriction, SeverityLevel, SEVERITY_LEVELS } from '@/types/restrictions';
 import { ProfileService } from './profileService';
 import { loggingService } from './loggingService';
+
+interface IngredientContext {
+  text: string;
+  type: 'direct' | 'trace' | 'may_contain' | 'cross_contamination' | 'ambiguous';
+  confidence: 'high' | 'medium' | 'low';
+}
 
 export class AnalysisService {
   // Nuevo método principal para análisis con múltiples perfiles (ahora async)
@@ -39,7 +45,7 @@ export class AnalysisService {
   // Método helper: combinar restricciones de múltiples perfiles
   private static combineAllRestrictions(profiles: Profile[]): UserProfile {
     const allRestrictions: DietaryRestriction[] = [];
-    const allCustom: string[] = [];
+    const allCustom: Array<{ text: string; severityLevel: SeverityLevel }> = [];
     const restrictionMap = new Map<string, DietaryRestriction>();
     
     profiles.forEach(profile => {
@@ -49,14 +55,34 @@ export class AnalysisService {
         .forEach(r => {
           if (!restrictionMap.has(r.id)) {
             restrictionMap.set(r.id, r);
+          } else {
+            // Si ya existe, usar el nivel de severidad más alto
+            const existing = restrictionMap.get(r.id)!;
+            const existingSeverity = existing.severityLevel || 'moderado';
+            const newSeverity = r.severityLevel || 'moderado';
+            const severityOrder = { leve: 1, moderado: 2, severo: 3 };
+            
+            if (severityOrder[newSeverity] > severityOrder[existingSeverity]) {
+              restrictionMap.set(r.id, { ...r, severityLevel: newSeverity });
+            }
           }
         });
       
       // Agregar restricciones personalizadas únicas
       profile.customRestrictions.forEach(custom => {
-        const normalized = custom.toLowerCase().trim();
-        if (!allCustom.some(existing => existing.toLowerCase() === normalized)) {
+        const normalized = custom.text.toLowerCase().trim();
+        const existingIndex = allCustom.findIndex(existing => existing.text.toLowerCase() === normalized);
+        
+        if (existingIndex === -1) {
           allCustom.push(custom);
+        } else {
+          // Si ya existe, usar el nivel de severidad más alto
+          const existing = allCustom[existingIndex];
+          const severityOrder = { leve: 1, moderado: 2, severo: 3 };
+          
+          if (severityOrder[custom.severityLevel] > severityOrder[existing.severityLevel]) {
+            allCustom[existingIndex] = custom;
+          }
         }
       });
     });
@@ -65,6 +91,98 @@ export class AnalysisService {
       restrictions: Array.from(restrictionMap.values()),
       customRestrictions: allCustom
     };
+  }
+
+  // Detectar contexto de ingrediente en el texto del producto
+  private static detectIngredientContext(
+    productText: string, 
+    keyword: string
+  ): IngredientContext {
+    const lowerText = productText.toLowerCase();
+    const lowerKeyword = keyword.toLowerCase();
+    
+    const index = lowerText.indexOf(lowerKeyword);
+    if (index === -1) {
+      return { text: '', type: 'ambiguous', confidence: 'low' };
+    }
+    
+    // Extraer contexto (50 caracteres antes y después)
+    const start = Math.max(0, index - 50);
+    const end = Math.min(lowerText.length, index + keyword.length + 50);
+    const context = lowerText.substring(start, end);
+    
+    // Patrones de detección
+    const tracePatterns = ['trazas de', 'traces of', 'contiene trazas', 'may contain traces'];
+    const mayContainPatterns = ['puede contener', 'may contain', 'podría contener', 'posible presencia'];
+    const crossContaminationPatterns = [
+      'elaborado en', 'fabricado en', 'procesado en instalaciones', 
+      'manufactured in a facility', 'processed in a facility'
+    ];
+    
+    // Verificar patrones
+    if (tracePatterns.some(p => context.includes(p))) {
+      return { text: context, type: 'trace', confidence: 'high' };
+    }
+    
+    if (mayContainPatterns.some(p => context.includes(p))) {
+      return { text: context, type: 'may_contain', confidence: 'medium' };
+    }
+    
+    if (crossContaminationPatterns.some(p => context.includes(p))) {
+      return { text: context, type: 'cross_contamination', confidence: 'medium' };
+    }
+    
+    // Si está en la lista de ingredientes directamente
+    if (lowerText.includes('ingredientes:') && index > lowerText.indexOf('ingredientes:')) {
+      return { text: context, type: 'direct', confidence: 'high' };
+    }
+    
+    // Por defecto, asumir directo si no hay contexto claro
+    return { text: context, type: 'direct', confidence: 'medium' };
+  }
+  
+  // Determinar si una restricción viola según severidad
+  private static shouldReject(
+    context: IngredientContext,
+    severityLevel: SeverityLevel
+  ): boolean {
+    switch (severityLevel) {
+      case 'severo':
+        // Rechazar TODO: directo, trazas, puede contener, contaminación cruzada
+        return true;
+        
+      case 'moderado':
+        // Rechazar: directo y trazas explícitas
+        // Tolerar: "puede contener" y contaminación cruzada de bajo riesgo
+        return context.type === 'direct' || context.type === 'trace';
+        
+      case 'leve':
+        // Rechazar solo: ingredientes directos
+        // Tolerar: trazas, puede contener, contaminación cruzada
+        return context.type === 'direct';
+        
+      default:
+        // Por seguridad, en caso ambiguo rechazar
+        return context.confidence === 'low' ? true : context.type === 'direct';
+    }
+  }
+
+  // Helper para etiquetas de contexto
+  private static getContextLabel(type: IngredientContext['type']): string {
+    switch (type) {
+      case 'direct':
+        return 'Contiene';
+      case 'trace':
+        return 'Trazas de';
+      case 'may_contain':
+        return 'Puede contener';
+      case 'cross_contamination':
+        return 'Procesado en instalaciones con';
+      case 'ambiguous':
+        return 'Posible mención de';
+      default:
+        return 'Contiene';
+    }
   }
 
   // Método original para compatibilidad
@@ -84,29 +202,55 @@ export class AnalysisService {
       product.brands
     ].join(' ').toLowerCase();
 
-    // Verificar restricciones predefinidas
+    // Verificar restricciones predefinidas CON SEVERIDAD
     activeRestrictions.forEach(restriction => {
-      const foundKeywords = restriction.keywords.filter(keyword => 
-        productText.includes(keyword.toLowerCase())
-      );
-
-      if (foundKeywords.length > 0) {
-        violations.push({
-          restriction: restriction.name,
-          reason: `Contiene: ${foundKeywords.join(', ')}`,
-          severity: this.getSeverity(restriction.category)
-        });
-      }
+      const severityLevel = restriction.severityLevel || 'moderado';
+      
+      restriction.keywords.forEach(keyword => {
+        const context = this.detectIngredientContext(productText, keyword);
+        
+        if (context.text && this.shouldReject(context, severityLevel)) {
+          const contextLabel = this.getContextLabel(context.type);
+          
+          violations.push({
+            restriction: restriction.name,
+            reason: `${contextLabel}: ${keyword}`,
+            severity: this.getSeverity(restriction.category)
+          });
+        } else if (context.text && context.type !== 'direct') {
+          // Si no se rechaza pero hay mención indirecta, agregar warning
+          const contextLabel = this.getContextLabel(context.type);
+          warnings.push(
+            `⚠️ ${restriction.name}: ${contextLabel} de "${keyword}" (nivel ${SEVERITY_LEVELS[severityLevel].label})`
+          );
+        }
+      });
     });
 
-    // Verificar restricciones personalizadas
+    // Verificar restricciones personalizadas CON SEVERIDAD
     customRestrictions.forEach(customRestriction => {
-      if (productText.includes(customRestriction.toLowerCase())) {
+      const keyword = typeof customRestriction === 'string' 
+        ? customRestriction 
+        : customRestriction.text;
+      const severityLevel = typeof customRestriction === 'object'
+        ? customRestriction.severityLevel
+        : 'moderado';
+      
+      const context = this.detectIngredientContext(productText, keyword);
+      
+      if (context.text && this.shouldReject(context, severityLevel)) {
+        const contextLabel = this.getContextLabel(context.type);
+        
         violations.push({
-          restriction: customRestriction,
-          reason: `Contiene ingrediente restringido: ${customRestriction}`,
+          restriction: keyword,
+          reason: `${contextLabel}: ${keyword}`,
           severity: 'medium'
         });
+      } else if (context.text && context.type !== 'direct') {
+        const contextLabel = this.getContextLabel(context.type);
+        warnings.push(
+          `⚠️ Restricción personalizada "${keyword}": ${contextLabel} (nivel ${SEVERITY_LEVELS[severityLevel].label})`
+        );
       }
     });
 
