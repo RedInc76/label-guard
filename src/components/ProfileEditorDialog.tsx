@@ -45,14 +45,14 @@ const SeveritySelector = ({
         disabled={disabled}
         className="max-w-full"
       >
-        <div className="flex gap-1.5 w-full overflow-x-hidden">
+        <div className="flex gap-1 w-full overflow-x-hidden">
           {Object.values(SEVERITY_LEVELS).map((severity) => (
             <Tooltip key={severity.level}>
               <TooltipTrigger asChild>
                 <Label 
                   htmlFor={`severity-${severity.level}`}
                   className={`
-                    flex items-center gap-1.5 px-2 py-1.5 rounded-md border cursor-pointer transition-colors flex-1 justify-center
+                    flex items-center gap-1 px-1.5 py-1 rounded-md border cursor-pointer transition-colors flex-1 justify-center
                     ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input'}
                     ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent'}
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
@@ -64,7 +64,7 @@ const SeveritySelector = ({
                     value={severity.level} 
                     className="sr-only" 
                   />
-                  <span className="text-base shrink-0">{severity.icon}</span>
+                  <span className="text-sm shrink-0">{severity.icon}</span>
                   <span className={`text-xs font-medium whitespace-nowrap ${severity.color}`}>
                     {severity.label}
                   </span>
