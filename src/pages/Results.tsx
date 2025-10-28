@@ -1,10 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { ProductInfo, AnalysisResult, Profile } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
 import { ProfileService } from '@/services/profileService';
@@ -14,6 +15,25 @@ import { GeolocationService } from '@/services/geolocationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
+
+// Helper para obtener color de fondo y texto del Nutriscore
+const getNutriscoreColor = (grade: string): { bg: string; text: string; border: string } => {
+  const upperGrade = grade.toUpperCase();
+  switch (upperGrade) {
+    case 'A':
+      return { bg: '#038141', text: 'white', border: '#026835' };
+    case 'B':
+      return { bg: '#85BB2F', text: 'white', border: '#6FA022' };
+    case 'C':
+      return { bg: '#FECB02', text: '#1a1a1a', border: '#E5B602' };
+    case 'D':
+      return { bg: '#EE8100', text: 'white', border: '#D67300' };
+    case 'E':
+      return { bg: '#E63E11', text: 'white', border: '#CE360F' };
+    default:
+      return { bg: 'hsl(var(--muted))', text: 'hsl(var(--foreground))', border: 'hsl(var(--border))' };
+  }
+};
 
 export const Results = () => {
   const location = useLocation();
@@ -192,15 +212,87 @@ export const Results = () => {
           )}
 
           <div className="flex justify-center gap-2 flex-wrap">
+            {/* Nutriscore con color y popover */}
             {product.nutriscore_grade && (
-              <Badge variant="outline" className="text-xs">
-                Nutri-Score: {product.nutriscore_grade.toUpperCase()}
-              </Badge>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80"
+                    style={{
+                      backgroundColor: getNutriscoreColor(product.nutriscore_grade).bg,
+                      color: getNutriscoreColor(product.nutriscore_grade).text,
+                      borderColor: getNutriscoreColor(product.nutriscore_grade).border,
+                    }}
+                  >
+                    Nutri-Score: {product.nutriscore_grade.toUpperCase()}
+                    <HelpCircle className="w-3 h-3 ml-0.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">¿Qué es Nutri-Score?</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Sistema de etiquetado nutricional que clasifica los alimentos de la A (mejor calidad nutricional) a la E (peor calidad).
+                    </p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#038141' }}></span>
+                        <span><strong>A</strong> - Excelente calidad nutricional</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#85BB2F' }}></span>
+                        <span><strong>B</strong> - Buena calidad nutricional</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FECB02' }}></span>
+                        <span><strong>C</strong> - Calidad nutricional aceptable</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#EE8100' }}></span>
+                        <span><strong>D</strong> - Baja calidad nutricional</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E63E11' }}></span>
+                        <span><strong>E</strong> - Muy baja calidad nutricional</span>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
+
+            {/* NOVA con popover explicativo (sin colores) */}
             {product.nova_group && (
-              <Badge variant="outline" className="text-xs">
-                NOVA: {product.nova_group}
-              </Badge>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-accent">
+                    NOVA: {product.nova_group}
+                    <HelpCircle className="w-3 h-3 ml-0.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">¿Qué es NOVA?</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Sistema de clasificación que agrupa los alimentos según su grado de procesamiento industrial.
+                    </p>
+                    <div className="space-y-1.5 text-xs">
+                      <div>
+                        <strong>Grupo 1:</strong> Alimentos sin procesar o mínimamente procesados (frutas, verduras, legumbres, carnes frescas)
+                      </div>
+                      <div>
+                        <strong>Grupo 2:</strong> Ingredientes culinarios procesados (aceites, mantequilla, azúcar, sal)
+                      </div>
+                      <div>
+                        <strong>Grupo 3:</strong> Alimentos procesados (conservas, quesos, panes artesanales)
+                      </div>
+                      <div>
+                        <strong>Grupo 4:</strong> Alimentos ultraprocesados (snacks, refrescos, comidas preparadas)
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </Card>
