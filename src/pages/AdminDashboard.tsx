@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsageAnalyticsService } from '@/services/usageAnalyticsService';
-import { Loader2, TrendingUp, Users, DollarSign, Database } from 'lucide-react';
+import { Loader2, TrendingUp, Users, DollarSign, Database, BarChart3, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from '@/hooks/use-toast';
+import { LogsViewer } from '@/components/LogsViewer';
 
 const COLORS = {
   ai: '#ef4444',
@@ -63,11 +65,24 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Monitoreo de uso de IA y estadísticas globales</p>
+            <p className="text-muted-foreground">Monitoreo de uso de IA, estadísticas globales y logs de aplicación</p>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        <Tabs defaultValue="stats" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+            <TabsTrigger value="stats" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Estadísticas
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Logs
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="stats" className="space-y-6">
+            {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -209,30 +224,36 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Additional Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Métricas Adicionales</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Costo promedio por usuario:</span>
-              <span className="font-medium">${adminInsights.avgCostPerUser.toFixed(6)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total análisis IA:</span>
-              <span className="font-medium">{globalStats.totalAIAnalyses}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total cache hits:</span>
-              <span className="font-medium">{globalStats.totalCacheHits}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total OpenFoodFacts:</span>
-              <span className="font-medium">{globalStats.totalOpenFoodFacts}</span>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Additional Metrics */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Métricas Adicionales</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Costo promedio por usuario:</span>
+                  <span className="font-medium">${adminInsights.avgCostPerUser.toFixed(6)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total análisis IA:</span>
+                  <span className="font-medium">{globalStats.totalAIAnalyses}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total cache hits:</span>
+                  <span className="font-medium">{globalStats.totalCacheHits}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total OpenFoodFacts:</span>
+                  <span className="font-medium">{globalStats.totalOpenFoodFacts}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <LogsViewer embedded />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
