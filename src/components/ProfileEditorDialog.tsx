@@ -141,16 +141,17 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[95vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl h-[90vh] sm:h-[95vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>Editar Perfil</DialogTitle>
           <DialogDescription>
             Configura el nombre y restricciones para este perfil
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="pr-4" style={{ maxHeight: 'calc(95vh - 180px)' }}>
-          <div className="space-y-6 py-4">
+        <ScrollArea className="flex-1 px-6">
+          <div className="pr-4 pb-4">
+            <div className="space-y-6 py-4">
             {/* Mensaje de advertencia importante */}
             <Alert className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/20">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -291,10 +292,11 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
                 )}
               </div>
             </Card>
+            </div>
           </div>
         </ScrollArea>
 
-        <div className="flex justify-end gap-2 mt-4 sticky bottom-0 bg-background pt-4 border-t">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t shrink-0 bg-background">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
