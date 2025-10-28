@@ -106,7 +106,7 @@ export class AdminLogsService {
 
     const [
       { count: totalLogs },
-      { data: logsByType },
+      logsByType,
       { data: activeLoggers },
       { count: logsLast24h },
       { count: logsLast7d },
