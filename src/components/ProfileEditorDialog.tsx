@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
@@ -38,37 +38,31 @@ const SeveritySelector = ({
   disabled?: boolean;
 }) => {
   return (
-    <RadioGroup 
-      value={value} 
-      onValueChange={(val) => onChange(val as SeverityLevel)}
-      className="w-full"
-    >
-      <div className="grid grid-cols-3 gap-1 w-full">
-        {Object.values(SEVERITY_LEVELS).map((severity) => (
-          <div key={severity.level} className="relative">
-            <RadioGroupItem 
-              id={`severity-${severity.level}`}
-              value={severity.level} 
-              className="sr-only peer"
-              disabled={disabled}
-            />
-            <Label 
-              htmlFor={`severity-${severity.level}`}
-              className={`
-                flex items-center justify-center gap-0.5 px-1 py-0.5 h-7 rounded-md border cursor-pointer transition-colors w-full select-none text-[11px]
-                ${value === severity.level ? 'bg-primary/10 border-primary' : 'border-input hover:bg-accent'}
-                ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
-              `}
-            >
-              <span className="text-xs shrink-0">{severity.icon}</span>
-              <span className={`font-medium whitespace-nowrap ${severity.color}`}>
-                {severity.label}
-              </span>
-            </Label>
-          </div>
-        ))}
-      </div>
-    </RadioGroup>
+    <div role="radiogroup" aria-label="Nivel de severidad" className="grid grid-cols-3 gap-1 w-full">
+      {Object.values(SEVERITY_LEVELS).map((severity) => {
+        const selected = value === severity.level;
+        return (
+          <button
+            key={severity.level}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={severity.label}
+            disabled={disabled}
+            onClick={() => !disabled && onChange(severity.level)}
+            className={[
+              "flex items-center justify-center w-full rounded-md border transition-colors select-none",
+              "h-7 px-1 py-0.5 gap-0.5 text-[11px]",
+              disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "hover:bg-accent",
+              selected ? "bg-primary/10 border-primary" : "border-input",
+            ].join(" ")}
+          >
+            <span className="shrink-0 text-xs">{severity.icon}</span>
+            <span className={`whitespace-nowrap ${severity.color}`}>{severity.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 };
 
