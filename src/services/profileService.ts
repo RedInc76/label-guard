@@ -153,10 +153,12 @@ export class ProfileService {
           *,
           profile_restrictions (
             restriction_id,
-            enabled
+            enabled,
+            severity_level
           ),
           profile_custom_restrictions (
-            restriction_text
+            restriction_text,
+            severity_level
           )
         `)
         .order('created_at', { ascending: true });

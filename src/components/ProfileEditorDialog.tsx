@@ -55,7 +55,7 @@ const SeveritySelector = ({
                   </span>
                 </label>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
+              <TooltipContent side="bottom" className="max-w-xs z-50" sideOffset={5}>
                 <p className="text-xs">{severity.description}</p>
               </TooltipContent>
             </Tooltip>
@@ -141,7 +141,7 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[95vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
           <DialogDescription>
@@ -149,7 +149,7 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
+        <ScrollArea className="pr-4" style={{ maxHeight: 'calc(95vh - 180px)' }}>
           <div className="space-y-6 py-4">
             {/* Mensaje de advertencia importante */}
             <Alert className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/20">
@@ -294,7 +294,7 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
           </div>
         </ScrollArea>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-end gap-2 mt-4 sticky bottom-0 bg-background pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

@@ -61,7 +61,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6 overflow-x-hidden">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsList className="grid w-full max-w-full grid-cols-2 lg:max-w-[400px]">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Estadísticas
@@ -201,8 +201,8 @@ export default function AdminDashboard() {
             <CardDescription>Usuarios con mayor consumo de análisis por IA</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-2">Email</th>

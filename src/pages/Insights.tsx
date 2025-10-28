@@ -62,7 +62,7 @@ export const Insights = () => {
   ];
 
   return (
-    <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -94,7 +94,7 @@ export const Insights = () => {
       </div>
 
       {/* Resumen General */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -166,7 +166,7 @@ export const Insights = () => {
           <CardHeader>
             <CardTitle>Tendencia de Escaneos</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="w-full overflow-hidden">
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -196,7 +196,7 @@ export const Insights = () => {
           <CardHeader>
             <CardTitle>Compatibilidad de Productos</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="w-full overflow-hidden">
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -293,7 +293,7 @@ export const Insights = () => {
             Estadísticas de Análisis
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="w-full overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <ResponsiveContainer width="100%" height={200}>

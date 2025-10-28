@@ -160,7 +160,7 @@ export const History = () => {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
@@ -202,7 +202,7 @@ export const History = () => {
             </Button>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => navigate('/insights')}>
               <BarChart3 className="mr-2 h-4 w-4" />
               Insights
