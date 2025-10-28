@@ -3,9 +3,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 type ApplicationLog = Database['public']['Tables']['application_logs']['Row'];
 
+export type LogWithUser = ApplicationLog & {
+  user_email?: string;
+};
+
 export interface LogFilters {
   logType?: string;
   userId?: string;
+  userEmail?: string;
   searchTerm?: string;
   startDate?: string;
   endDate?: string;
@@ -14,7 +19,7 @@ export interface LogFilters {
 }
 
 export interface LogsResponse {
-  logs: ApplicationLog[];
+  logs: LogWithUser[];
   total: number;
   hasMore: boolean;
 }
@@ -79,8 +84,26 @@ export class AdminLogsService {
     
     if (error) throw error;
 
+    // Obtener emails de usuarios
+    const { data: usersData } = await supabase.rpc('get_users_for_admin');
+    const usersMap = new Map(usersData?.map(u => [u.id, u.email]) || []);
+
+    // Agregar emails a los logs
+    const logsWithEmails: LogWithUser[] = (data || []).map(log => ({
+      ...log,
+      user_email: usersMap.get(log.user_id) || 'Desconocido'
+    }));
+
+    // Filtrar por email si se especifica
+    let filteredLogs = logsWithEmails;
+    if (filters.userEmail) {
+      filteredLogs = logsWithEmails.filter(log => 
+        log.user_email?.toLowerCase().includes(filters.userEmail!.toLowerCase())
+      );
+    }
+
     return {
-      logs: data || [],
+      logs: filteredLogs,
       total: count || 0,
       hasMore: (count || 0) > offset + limit
     };
@@ -173,9 +196,9 @@ export class AdminLogsService {
   }
 
   /**
-   * Obtener usuarios con logging habilitado
+   * Obtener usuarios con logging habilitado (con emails)
    */
-  static async getUsersWithLogging(): Promise<Array<{ user_id: string }>> {
+  static async getUsersWithLogging(): Promise<Array<{ user_id: string; email: string }>> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('No autenticado');
 
@@ -186,13 +209,21 @@ export class AdminLogsService {
     
     if (!isAdmin) throw new Error('No autorizado');
 
-    const { data, error } = await supabase
+    const { data: configs, error } = await supabase
       .from('user_logging_config')
       .select('user_id')
       .eq('logging_enabled', true);
 
     if (error) throw error;
-    return data || [];
+
+    // Obtener emails
+    const { data: usersData } = await supabase.rpc('get_users_for_admin');
+    const usersMap = new Map(usersData?.map(u => [u.id, u.email]) || []);
+
+    return (configs || []).map(config => ({
+      user_id: config.user_id,
+      email: usersMap.get(config.user_id) || 'Desconocido'
+    }));
   }
 
   /**
@@ -201,10 +232,11 @@ export class AdminLogsService {
   static async exportToCsv(filters: LogFilters = {}): Promise<Blob> {
     const { logs } = await this.getLogs({ ...filters, limit: 10000 });
     
-    const headers = ['Fecha', 'Tipo', 'Usuario ID', 'Mensaje', 'Metadata'];
+    const headers = ['Fecha', 'Tipo', 'Email', 'Usuario ID', 'Mensaje', 'Metadata'];
     const rows = logs.map(log => [
       new Date(log.created_at).toISOString(),
       log.log_type,
+      log.user_email || 'Desconocido',
       log.user_id,
       (log.message || '').replace(/"/g, '""'),
       JSON.stringify(log.metadata || {}).replace(/"/g, '""')

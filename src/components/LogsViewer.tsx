@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AdminLogsService, type LogFilters, type LogStats } from '@/services/adminLogsService';
+import { AdminLogsService, type LogFilters, type LogStats, type LogWithUser } from '@/services/adminLogsService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,6 @@ import { Download, Eye, Activity, AlertCircle, Filter, RefreshCw } from 'lucide-
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
-
-type ApplicationLog = Database['public']['Tables']['application_logs']['Row'];
 
 interface LogsViewerProps {
   embedded?: boolean;
@@ -34,22 +31,33 @@ function getLogTypeBadgeVariant(logType: string): 'default' | 'destructive' | 's
 }
 
 export function LogsViewer({ embedded = false }: LogsViewerProps) {
-  const [logs, setLogs] = useState<ApplicationLog[]>([]);
+  const [logs, setLogs] = useState<LogWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState<LogFilters>({});
-  const [selectedLog, setSelectedLog] = useState<ApplicationLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<LogWithUser | null>(null);
   const [stats, setStats] = useState<LogStats | null>(null);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState('');
+  const [usersWithLogging, setUsersWithLogging] = useState<Array<{ user_id: string; email: string }>>([]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(total / pageSize);
 
   useEffect(() => {
     loadData();
+    loadUsersWithLogging();
   }, [page, filters]);
+
+  const loadUsersWithLogging = async () => {
+    try {
+      const users = await AdminLogsService.getUsersWithLogging();
+      setUsersWithLogging(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
 
   useEffect(() => {
     // Realtime subscription
@@ -62,9 +70,15 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
           schema: 'public',
           table: 'application_logs'
         },
-        (payload) => {
-          const newLog = payload.new as ApplicationLog;
-          setLogs(prev => [newLog, ...prev.slice(0, pageSize - 1)]);
+        async (payload) => {
+          const newLog = payload.new as LogWithUser;
+          
+          // Obtener el email del usuario
+          const { data: usersData } = await supabase.rpc('get_users_for_admin');
+          const userEmail = usersData?.find(u => u.id === newLog.user_id)?.email || 'Desconocido';
+          
+          const logWithEmail = { ...newLog, user_email: userEmail };
+          setLogs(prev => [logWithEmail, ...prev.slice(0, pageSize - 1)]);
           
           toast({
             title: 'Nuevo log',
@@ -244,7 +258,7 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-6">
             <div>
               <Label>Tipo de log</Label>
               <Select onValueChange={(v) => handleFilterChange('logType', v)} defaultValue="all">
@@ -261,6 +275,23 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
                   <SelectItem value="auth">Auth</SelectItem>
                   <SelectItem value="profile">Perfil</SelectItem>
                   <SelectItem value="favorite">Favorito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Usuario (Email)</Label>
+              <Select onValueChange={(v) => handleFilterChange('userEmail', v === 'all' ? undefined : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los usuarios" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los usuarios</SelectItem>
+                  {usersWithLogging.map((user) => (
+                    <SelectItem key={user.user_id} value={user.email}>
+                      {user.email}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -326,7 +357,7 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
                     <TableRow>
                       <TableHead>Fecha</TableHead>
                       <TableHead>Tipo</TableHead>
-                      <TableHead>Usuario</TableHead>
+                      <TableHead>Usuario (Email)</TableHead>
                       <TableHead>Mensaje</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
@@ -342,8 +373,13 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
                             {log.log_type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {log.user_id.substring(0, 8)}...
+                        <TableCell className="max-w-xs">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{log.user_email}</span>
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {log.user_id.substring(0, 8)}...
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell className="max-w-md truncate">
                           {log.message}
@@ -410,8 +446,11 @@ export function LogsViewer({ embedded = false }: LogsViewerProps) {
                   </div>
                 </div>
                 <div>
-                  <Label>Usuario ID</Label>
-                  <p className="font-mono text-sm mt-1">{selectedLog.user_id}</p>
+                  <Label>Usuario</Label>
+                  <div className="mt-1">
+                    <p className="text-sm font-medium">{selectedLog.user_email}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{selectedLog.user_id}</p>
+                  </div>
                 </div>
                 <div>
                   <Label>Fecha</Label>
