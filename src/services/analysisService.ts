@@ -8,6 +8,9 @@ interface IngredientContext {
   confidence: 'high' | 'medium' | 'low';
 }
 
+// Palabras que NO deben considerarse como "sal" cuando aparecen en nombres de productos
+const SALT_EXCEPTIONS = ['perrier', 'salud', 'natural', 'mineral', 'source', 'salvador', 'salada', 'ensalada'];
+
 export class AnalysisService {
   // Nuevo método principal para análisis con múltiples perfiles (ahora async)
   static async analyzeProductForActiveProfiles(product: ProductInfo): Promise<AnalysisResult> {
@@ -96,20 +99,82 @@ export class AnalysisService {
   // Detectar contexto de ingrediente en el texto del producto
   private static detectIngredientContext(
     productText: string, 
-    keyword: string
+    keyword: string,
+    product: ProductInfo,
+    restrictionId?: string
   ): IngredientContext {
     const lowerText = productText.toLowerCase();
     const lowerKeyword = keyword.toLowerCase();
     
-    const index = lowerText.indexOf(lowerKeyword);
+    // SPECIAL CASE: Para restricciones de sal, solo buscar en ingredients_text y allergens
+    // NO buscar en product_name ni brands para evitar falsos positivos
+    const isSaltRelated = restrictionId === 'low_sodium' || 
+                         lowerKeyword.includes('salt') || 
+                         lowerKeyword.includes('sodium') ||
+                         lowerKeyword.includes('sal') ||
+                         lowerKeyword.includes('sodio');
+    
+    let searchText = lowerText;
+    if (isSaltRelated) {
+      // Solo buscar en ingredientes y alérgenos
+      searchText = [product.ingredients_text, product.allergens].join(' ').toLowerCase();
+      
+      // Verificar excepciones: si la palabra aparece en el nombre del producto pero no en ingredientes
+      const productNameLower = (product.product_name || '').toLowerCase();
+      const brandsLower = (product.brands || '').toLowerCase();
+      const hasInName = productNameLower.includes(lowerKeyword) || brandsLower.includes(lowerKeyword);
+      
+      if (hasInName && !searchText.includes(lowerKeyword)) {
+        // Verificar si es una excepción conocida (ej: "SAL" en "PERRIER")
+        const isException = SALT_EXCEPTIONS.some(exc => 
+          productNameLower.includes(exc) || brandsLower.includes(exc)
+        );
+        
+        if (isException) {
+          console.log('[AnalysisService] Excepción de sal detectada:', {
+            keyword: lowerKeyword,
+            productName: product.product_name,
+            brands: product.brands,
+            reason: 'Palabra parte del nombre del producto, no un ingrediente'
+          });
+          return { text: '', type: 'ambiguous', confidence: 'low' };
+        }
+      }
+      
+      // SPECIAL CASE: Agua mineral sin ingredientes listados
+      const isWater = productNameLower.includes('water') || 
+                     productNameLower.includes('agua') ||
+                     productNameLower.includes('mineral');
+      const noIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 10;
+      
+      if (isWater && noIngredients) {
+        console.log('[AnalysisService] Agua mineral detectada sin ingredientes:', {
+          productName: product.product_name,
+          hasIngredientsText: !!product.ingredients_text,
+          ingredientsLength: product.ingredients_text?.length || 0,
+          reason: 'Sodio natural del agua mineral, no sal añadida'
+        });
+        return { text: '', type: 'ambiguous', confidence: 'low' };
+      }
+    }
+    
+    const index = searchText.indexOf(lowerKeyword);
     if (index === -1) {
       return { text: '', type: 'ambiguous', confidence: 'low' };
     }
     
     // Extraer contexto (50 caracteres antes y después)
     const start = Math.max(0, index - 50);
-    const end = Math.min(lowerText.length, index + keyword.length + 50);
-    const context = lowerText.substring(start, end);
+    const end = Math.min(searchText.length, index + keyword.length + 50);
+    const context = searchText.substring(start, end);
+    
+    console.log('[AnalysisService] Contexto detectado:', {
+      keyword: lowerKeyword,
+      restrictionId,
+      context,
+      productName: product.product_name,
+      searchInIngredientsOnly: isSaltRelated
+    });
     
     // Patrones de detección
     const tracePatterns = ['trazas de', 'traces of', 'contiene trazas', 'may contain traces'];
@@ -133,7 +198,7 @@ export class AnalysisService {
     }
     
     // Si está en la lista de ingredientes directamente
-    if (lowerText.includes('ingredientes:') && index > lowerText.indexOf('ingredientes:')) {
+    if (searchText.includes('ingredientes:') && index > searchText.indexOf('ingredientes:')) {
       return { text: context, type: 'direct', confidence: 'high' };
     }
     
@@ -207,7 +272,7 @@ export class AnalysisService {
       const severityLevel = restriction.severityLevel || 'moderado';
       
       restriction.keywords.forEach(keyword => {
-        const context = this.detectIngredientContext(productText, keyword);
+        const context = this.detectIngredientContext(productText, keyword, product, restriction.id);
         
         if (context.text && this.shouldReject(context, severityLevel)) {
           const contextLabel = this.getContextLabel(context.type);
@@ -215,7 +280,8 @@ export class AnalysisService {
           violations.push({
             restriction: restriction.name,
             reason: `${contextLabel}: ${keyword}`,
-            severity: this.getSeverity(restriction.category)
+            severity: this.getSeverity(restriction.category),
+            severityLevel: severityLevel // NUEVO: pasar el nivel de severidad real
           });
         } else if (context.text && context.type !== 'direct') {
           // Si no se rechaza pero hay mención indirecta, agregar warning
@@ -236,7 +302,7 @@ export class AnalysisService {
         ? customRestriction.severityLevel
         : 'moderado';
       
-      const context = this.detectIngredientContext(productText, keyword);
+      const context = this.detectIngredientContext(productText, keyword, product);
       
       if (context.text && this.shouldReject(context, severityLevel)) {
         const contextLabel = this.getContextLabel(context.type);
@@ -244,7 +310,8 @@ export class AnalysisService {
         violations.push({
           restriction: keyword,
           reason: `${contextLabel}: ${keyword}`,
-          severity: 'medium'
+          severity: 'medium',
+          severityLevel: severityLevel // NUEVO: pasar el nivel de severidad real
         });
       } else if (context.text && context.type !== 'direct') {
         const contextLabel = this.getContextLabel(context.type);

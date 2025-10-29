@@ -162,9 +162,9 @@ export const defaultRestrictions: DietaryRestriction[] = [
   {
     id: 'low_sodium',
     name: 'Bajo en Sodio',
-    description: 'Limita el contenido de sal',
+    description: 'Limita el contenido de sal añadida',
     category: 'health',
-    keywords: ['sodium', 'salt', 'sodio', 'sal'],
+    keywords: ['sodium chloride', 'table salt', 'sea salt', 'sal añadida', 'sal de mesa', 'cloruro de sodio', 'added salt', 'salt added', 'sal común'],
     enabled: false,
     isFree: false
   },

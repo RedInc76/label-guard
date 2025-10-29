@@ -84,6 +84,7 @@ export interface AnalysisResult {
     restriction: string;
     reason: string;
     severity: 'high' | 'medium' | 'low';
+    severityLevel?: SeverityLevel; // Nivel de severidad real del perfil
   }[];
   warnings: string[];
   score: number;

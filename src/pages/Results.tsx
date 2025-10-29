@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import type { ProductInfo, AnalysisResult, Profile } from '@/types/restrictions';
+import type { ProductInfo, AnalysisResult, Profile, SeverityLevel } from '@/types/restrictions';
+import { SEVERITY_LEVELS } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
 import { ProfileService } from '@/services/profileService';
 import { HistoryService } from '@/services/historyService';
@@ -167,6 +168,31 @@ export const Results = () => {
       case 'low': return 'bg-muted text-muted-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
+  };
+
+  const getSeverityLevelBadge = (severityLevel?: SeverityLevel) => {
+    if (!severityLevel) return null;
+    
+    const info = SEVERITY_LEVELS[severityLevel];
+    let colorClass = '';
+    
+    switch (severityLevel) {
+      case 'severo':
+        colorClass = 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-300';
+        break;
+      case 'moderado':
+        colorClass = 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300';
+        break;
+      case 'leve':
+        colorClass = 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-300';
+        break;
+    }
+    
+    return (
+      <Badge variant="outline" className={`text-xs ${colorClass}`}>
+        {info.icon} {info.label}
+      </Badge>
+    );
   };
 
   const backDestination = location.state?.fromHistory 
@@ -359,12 +385,17 @@ export const Results = () => {
             <div className="space-y-3">
               {analysis.violations.map((violation, index) => (
                 <div key={index} className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-foreground">{violation.restriction}</h4>
-                    <Badge className={`text-xs ${getSeverityColor(violation.severity)}`}>
-                      {violation.severity === 'high' ? 'Alto' : 
-                       violation.severity === 'medium' ? 'Medio' : 'Bajo'}
-                    </Badge>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h4 className="font-medium text-foreground flex-1">{violation.restriction}</h4>
+                    <div className="flex gap-2 items-center flex-shrink-0">
+                      {/* Mostrar nivel de severidad real del perfil */}
+                      {getSeverityLevelBadge(violation.severityLevel)}
+                      {/* Mantener severidad de categoría para contexto */}
+                      <Badge className={`text-xs ${getSeverityColor(violation.severity)}`}>
+                        {violation.severity === 'high' ? 'Alto' : 
+                         violation.severity === 'medium' ? 'Medio' : 'Bajo'}
+                      </Badge>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{violation.reason}</p>
                 </div>
