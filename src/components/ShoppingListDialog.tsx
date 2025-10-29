@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScanHistoryItem } from '@/services/historyService';
+import { APP_NAME } from '@/config/app';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ export const ShoppingListDialog = ({
   const [isSharing, setIsSharing] = useState(false);
 
   const generateShareableText = () => {
-    let text = `🛒 ${listName}\n\n`;
+    let text = `🛒 ${APP_NAME} - ${listName}\n\n`;
     
     selectedItems.forEach((item, index) => {
       text += `✅ ${item.product_name}\n`;
@@ -61,7 +62,7 @@ export const ShoppingListDialog = ({
         // Usar plugin de Capacitor en apps nativas
         await Share.share({
           text: text,
-          title: listName,
+          title: `${APP_NAME} - ${listName}`,
           dialogTitle: 'Compartir lista de compras',
         });
       } else {
@@ -69,7 +70,7 @@ export const ShoppingListDialog = ({
         if (navigator.share) {
           await navigator.share({
             text: text,
-            title: listName,
+            title: `${APP_NAME} - ${listName}`,
           });
         }
       }
