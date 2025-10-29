@@ -22,6 +22,9 @@ export interface ScanHistoryItem {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  nutriscore_grade: string | null;
+  nova_group: number | null;
+  ecoscore_grade: string | null;
 }
 
 export class HistoryService {
@@ -61,6 +64,9 @@ export class HistoryService {
         back_photo_url: photoUrls?.back || null,
         latitude: location?.latitude || null,
         longitude: location?.longitude || null,
+        nutriscore_grade: product.nutriscore_grade || null,
+        nova_group: product.nova_group || null,
+        ecoscore_grade: product.ecoscore_grade || null,
       })
       .select()
       .single();

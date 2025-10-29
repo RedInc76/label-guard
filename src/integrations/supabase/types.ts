@@ -308,6 +308,7 @@ export type Database = {
           barcode: string | null
           brands: string | null
           created_at: string | null
+          ecoscore_grade: string | null
           front_photo_url: string | null
           id: string
           image_url: string | null
@@ -315,6 +316,8 @@ export type Database = {
           is_compatible: boolean
           latitude: number | null
           longitude: number | null
+          nova_group: number | null
+          nutriscore_grade: string | null
           product_name: string
           score: number
           user_id: string
@@ -329,6 +332,7 @@ export type Database = {
           barcode?: string | null
           brands?: string | null
           created_at?: string | null
+          ecoscore_grade?: string | null
           front_photo_url?: string | null
           id?: string
           image_url?: string | null
@@ -336,6 +340,8 @@ export type Database = {
           is_compatible: boolean
           latitude?: number | null
           longitude?: number | null
+          nova_group?: number | null
+          nutriscore_grade?: string | null
           product_name: string
           score: number
           user_id: string
@@ -350,6 +356,7 @@ export type Database = {
           barcode?: string | null
           brands?: string | null
           created_at?: string | null
+          ecoscore_grade?: string | null
           front_photo_url?: string | null
           id?: string
           image_url?: string | null
@@ -357,6 +364,8 @@ export type Database = {
           is_compatible?: boolean
           latitude?: number | null
           longitude?: number | null
+          nova_group?: number | null
+          nutriscore_grade?: string | null
           product_name?: string
           score?: number
           user_id?: string
