@@ -140,6 +140,36 @@ export const Scanner = () => {
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
         await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, barcode);
         
+        // Validar si los ingredientes son suficientes para análisis
+        const hasInsufficientIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 30;
+        
+        if (hasInsufficientIngredients) {
+          if (isPremium) {
+            // Usuario premium: redirigir automáticamente a análisis IA
+            toast({
+              title: "Información insuficiente",
+              description: "Este producto no tiene ingredientes completos. Lo analizaremos con IA.",
+            });
+            navigate('/photo-analysis', { 
+              state: { 
+                barcode,
+                reason: 'insufficient_ingredients',
+                productName: product.product_name
+              } 
+            });
+            return;
+          } else {
+            // Usuario free: sugerir upgrade
+            toast({
+              title: "Información insuficiente",
+              description: "Este producto no tiene suficiente información en la base de datos. Actualiza a Premium para analizarlo con IA usando fotos.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        // Ingredientes suficientes: continuar con flujo normal
         navigate('/results', { state: { product } });
         return;
       }
