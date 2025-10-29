@@ -222,6 +222,42 @@ export const defaultRestrictions: DietaryRestriction[] = [
     enabled: false,
     isFree: false
   },
+  {
+    id: 'no_msg',
+    name: 'Sin Glutamato Monosódico',
+    description: 'Evita MSG y potenciadores de sabor',
+    category: 'health',
+    keywords: ['MSG', 'monosodium glutamate', 'E621', 'glutamato monosódico', 'glutamato', 'ajinomoto'],
+    enabled: false,
+    isFree: false
+  },
+  {
+    id: 'no_nitrates',
+    name: 'Sin Nitratos/Nitritos',
+    description: 'Evita conservantes en carnes procesadas',
+    category: 'health',
+    keywords: ['nitrate', 'nitrite', 'E249', 'E250', 'E251', 'E252', 'nitrato', 'nitrito', 'sodium nitrite'],
+    enabled: false,
+    isFree: false
+  },
+  {
+    id: 'no_bha_bht',
+    name: 'Sin BHA/BHT',
+    description: 'Evita antioxidantes sintéticos',
+    category: 'health',
+    keywords: ['BHA', 'BHT', 'E320', 'E321', 'butylated hydroxyanisole', 'butylated hydroxytoluene'],
+    enabled: false,
+    isFree: false
+  },
+  {
+    id: 'no_carrageenan',
+    name: 'Sin Carragenina',
+    description: 'Evita este espesante controversial',
+    category: 'health',
+    keywords: ['carrageenan', 'E407', 'carragenina', 'carragenano'],
+    enabled: false,
+    isFree: false
+  },
   
   // Religioso (PREMIUM)
   {

@@ -188,9 +188,9 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
 
             {/* Restricciones por categoría */}
             {Object.entries(categories).map(([categoryKey, categoryName]) => {
-              const categoryRestrictions = editedProfile.restrictions.filter(
-                r => r.category === categoryKey
-              );
+              const categoryRestrictions = editedProfile.restrictions
+                .filter(r => r.category === categoryKey)
+                .sort((a, b) => a.name.localeCompare(b.name, 'es'));
               
               if (categoryRestrictions.length === 0) return null;
 

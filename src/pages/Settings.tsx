@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, History, Star, Lock, ChevronRight, FileText, BarChart3, Map, Loader2, Shield } from 'lucide-react';
+import { User, History, Star, Lock, ChevronRight, FileText, BarChart3, Map, Loader2, Shield, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Capacitor } from '@capacitor/core';
@@ -64,6 +64,13 @@ export const Settings = () => {
       showAlways: false,
       requiresAdmin: true,
       badge: 'Admin',
+    },
+    {
+      icon: HelpCircle,
+      label: 'Preguntas Frecuentes',
+      description: 'Respuestas a dudas comunes',
+      path: '/faq',
+      showAlways: true,
     },
     {
       icon: Lock,

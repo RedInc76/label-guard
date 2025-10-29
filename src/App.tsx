@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
 import { PermissionsOnboarding } from "./components/PermissionsOnboarding";
+import { ScrollToTop } from "./components/ScrollToTop";
 import { loggingService } from "./services/loggingService";
 import { Home } from "./pages/Home";
 import { Scanner } from "./pages/Scanner";
@@ -28,6 +29,7 @@ import { Settings } from "./pages/Settings";
 import { Insights } from "./pages/Insights";
 import { ProductMap } from "./pages/ProductMap";
 import { Compare } from "./pages/Compare";
+import { FAQ } from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +78,7 @@ const App = () => (
         <Sonner />
         <PermissionsOnboarding />
         <BrowserRouter>
+          <ScrollToTop />
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -96,6 +99,7 @@ const App = () => (
               <Route path="/permissions" element={<Permissions />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/faq" element={<FAQ />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
