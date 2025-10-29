@@ -85,16 +85,25 @@ export const Insights = () => {
         </div>
 
         <Tabs value={period} onValueChange={(v: any) => setPeriod(v)}>
-          <TabsList>
-            <TabsTrigger value="7">7 días</TabsTrigger>
-            <TabsTrigger value="30">30 días</TabsTrigger>
-            <TabsTrigger value="90">90 días</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-[180px]">
+            <TabsTrigger value="7" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">7 días</span>
+              <span className="sm:hidden">7d</span>
+            </TabsTrigger>
+            <TabsTrigger value="30" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">30 días</span>
+              <span className="sm:hidden">30d</span>
+            </TabsTrigger>
+            <TabsTrigger value="90" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">90 días</span>
+              <span className="sm:hidden">90d</span>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {/* Resumen General */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -141,22 +150,6 @@ export const Insights = () => {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Eficiencia Cache
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-accent">
-              {insights.usageStats.cacheEfficiency.toFixed(0)}%
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ahorro: ${insights.usageStats.cacheSavings.toFixed(2)}
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Gráficos principales */}
@@ -194,7 +187,7 @@ export const Insights = () => {
         {/* Distribución de compatibilidad */}
         <Card>
           <CardHeader>
-            <CardTitle>Compatibilidad de Productos</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Compatibilidad de Productos</CardTitle>
           </CardHeader>
           <CardContent className="w-full overflow-hidden">
             <ResponsiveContainer width="100%" height={250}>
@@ -204,10 +197,11 @@ export const Insights = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name === 'Compatibles' ? 'Aptos' : 'No aptos'}: ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
+                  style={{ fontSize: '12px' }}
                 >
                   {compatibilityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -285,62 +279,96 @@ export const Insights = () => {
         </Card>
       </div>
 
-      {/* Estadísticas de uso de IA */}
+      {/* Calidad Nutricional */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Distribución Nutri-Score</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(insights.nutriscoreDistribution).length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={Object.entries(insights.nutriscoreDistribution).map(([grade, count]) => ({
+                  grade,
+                  count
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="grade" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }} 
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Sin datos de Nutri-Score disponibles
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Distribución NOVA</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(insights.novaDistribution).length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={Object.entries(insights.novaDistribution).map(([group, count]) => ({
+                  group,
+                  count
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="group" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }} 
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--accent))" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Sin datos de NOVA disponibles
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Estadísticas de Fuente de Análisis */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            Estadísticas de Análisis
+            Fuente de Análisis
           </CardTitle>
         </CardHeader>
-        <CardContent className="w-full overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={analysisTypeData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label
-                  >
-                    {analysisTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-primary/5 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Análisis con IA</p>
+              <p className="text-2xl font-bold">{insights.usageStats.aiAnalyses}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Productos analizados inteligentemente
+              </p>
             </div>
-
-            <div className="col-span-2 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-primary/5 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Análisis con IA</p>
-                  <p className="text-2xl font-bold">{insights.usageStats.aiAnalyses}</p>
-                </div>
-                <div className="p-4 bg-accent/5 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Desde Cache</p>
-                  <p className="text-2xl font-bold">{insights.usageStats.cacheAnalyses}</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">OpenFoodFacts</p>
-                  <p className="text-2xl font-bold">{insights.usageStats.openFoodFactsAnalyses}</p>
-                </div>
-                <div className="p-4 bg-green-500/10 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    Ahorro Cache
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    ${insights.usageStats.cacheSavings.toFixed(2)}
-                  </p>
-                </div>
-              </div>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">OpenFoodFacts</p>
+              <p className="text-2xl font-bold">{insights.usageStats.openFoodFactsAnalyses}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Base de datos pública
+              </p>
             </div>
           </div>
         </CardContent>

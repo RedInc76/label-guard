@@ -94,9 +94,13 @@ export class HistoryService {
   
   static async getHistory(limit = 50): Promise<ScanHistoryItem[]> {
     try {
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
       const { data, error } = await supabase
         .from('scan_history')
         .select('*')
+        .gte('created_at', ninetyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);
       
@@ -104,7 +108,8 @@ export class HistoryService {
       
       loggingService.logAction('history-fetched', {
         itemsCount: data?.length || 0,
-        limit
+        limit,
+        maxAge: '90 days'
       });
       
       return (data as any[]) || [];
@@ -201,6 +206,24 @@ export class HistoryService {
         dailyScans[date] = (dailyScans[date] || 0) + 1;
       });
 
+      // Distribución de Nutriscore
+      const nutriscoreDistribution: Record<string, number> = {};
+      scans?.forEach(scan => {
+        if (scan.nutriscore_grade) {
+          const grade = scan.nutriscore_grade.toUpperCase();
+          nutriscoreDistribution[grade] = (nutriscoreDistribution[grade] || 0) + 1;
+        }
+      });
+
+      // Distribución de NOVA
+      const novaDistribution: Record<string, number> = {};
+      scans?.forEach(scan => {
+        if (scan.nova_group) {
+          const group = `Grupo ${scan.nova_group}`;
+          novaDistribution[group] = (novaDistribution[group] || 0) + 1;
+        }
+      });
+
       // Estadísticas de uso
       const aiAnalyses = analytics?.filter(a => a.event_type === 'ai_analysis').length || 0;
       const cacheAnalyses = analytics?.filter(a => a.event_type === 'cache_hit').length || 0;
@@ -219,6 +242,8 @@ export class HistoryService {
         topProducts,
         topViolations,
         dailyScans,
+        nutriscoreDistribution,
+        novaDistribution,
         usageStats: {
           totalAnalyses,
           aiAnalyses,

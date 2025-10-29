@@ -15,6 +15,8 @@ export interface InsightsData {
     count: number;
   }[];
   dailyScans: Record<string, number>;
+  nutriscoreDistribution: Record<string, number>;
+  novaDistribution: Record<string, number>;
   usageStats: {
     totalAnalyses: number;
     aiAnalyses: number;
