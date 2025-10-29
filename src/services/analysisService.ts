@@ -8,8 +8,11 @@ interface IngredientContext {
   confidence: 'high' | 'medium' | 'low';
 }
 
-// Palabras que NO deben considerarse como "sal" cuando aparecen en nombres de productos
-const SALT_EXCEPTIONS = ['perrier', 'salud', 'natural', 'mineral', 'source', 'salvador', 'salada', 'ensalada'];
+// Palabras que NO deben considerarse como ingredientes cuando aparecen en nombres de productos
+const KEYWORD_EXCEPTIONS = [
+  'perrier', 'salud', 'natural', 'mineral', 'source', 'salvador', 'salada', 'ensalada',
+  'sugar', 'azúcar', 'free', 'sin', 'zero', 'bajo', 'low', 'light', 'diet', 'dieta', 'reduced', 'reducido'
+];
 
 export class AnalysisService {
   // Nuevo método principal para análisis con múltiples perfiles (ahora async)
@@ -106,7 +109,7 @@ export class AnalysisService {
     const lowerText = productText.toLowerCase();
     const lowerKeyword = keyword.toLowerCase();
     
-    // SPECIAL CASE: Para restricciones de sal, solo buscar en ingredients_text y allergens
+    // SPECIAL CASE: Para restricciones de sal y azúcar, solo buscar en ingredients_text y allergens
     // NO buscar en product_name ni brands para evitar falsos positivos
     const isSaltRelated = restrictionId === 'low_sodium' || 
                          lowerKeyword.includes('salt') || 
@@ -114,8 +117,14 @@ export class AnalysisService {
                          lowerKeyword.includes('sal') ||
                          lowerKeyword.includes('sodio');
     
+    const isSugarRelated = restrictionId === 'low_sugar' || 
+                          restrictionId === 'no_added_sugar' ||
+                          lowerKeyword.includes('sugar') ||
+                          lowerKeyword.includes('azúcar') ||
+                          lowerKeyword.includes('azucar');
+    
     let searchText = lowerText;
-    if (isSaltRelated) {
+    if (isSaltRelated || isSugarRelated) {
       // Solo buscar en ingredientes y alérgenos
       searchText = [product.ingredients_text, product.allergens].join(' ').toLowerCase();
       
@@ -125,20 +134,37 @@ export class AnalysisService {
       const hasInName = productNameLower.includes(lowerKeyword) || brandsLower.includes(lowerKeyword);
       
       if (hasInName && !searchText.includes(lowerKeyword)) {
-        // Verificar si es una excepción conocida (ej: "SAL" en "PERRIER")
-        const isException = SALT_EXCEPTIONS.some(exc => 
+        // Verificar si es una excepción conocida (ej: "SAL" en "PERRIER", "SUGAR" en "SUGAR FREE")
+        const isException = KEYWORD_EXCEPTIONS.some(exc => 
           productNameLower.includes(exc) || brandsLower.includes(exc)
         );
         
         if (isException) {
-          console.log('[AnalysisService] Excepción de sal detectada:', {
+          console.log('[AnalysisService] Excepción de keyword detectada:', {
             keyword: lowerKeyword,
+            restrictionId,
             productName: product.product_name,
             brands: product.brands,
             reason: 'Palabra parte del nombre del producto, no un ingrediente'
           });
           return { text: '', type: 'ambiguous', confidence: 'low' };
         }
+      }
+      
+      // SPECIAL CASE: Productos declarados "sin azúcar añadido" o "sugar free" en el nombre
+      if (isSugarRelated &&
+          (productNameLower.includes('sin azúcar') ||
+           productNameLower.includes('sin azucar') ||
+           productNameLower.includes('sugar free') ||
+           productNameLower.includes('zero sugar') ||
+           productNameLower.includes('zero') ||
+           productNameLower.includes('0%') ||
+           productNameLower.includes('light'))) {
+        console.log('🍬 [AnalysisService] Producto declarado sin/bajo azúcar en nombre:', {
+          productName: product.product_name,
+          reason: 'Producto sin azúcar añadido, no marcar violación'
+        });
+        return { text: '', type: 'ambiguous', confidence: 'low' };
       }
       
       // SPECIAL CASE: Agua mineral sin ingredientes listados
@@ -153,6 +179,22 @@ export class AnalysisService {
           hasIngredientsText: !!product.ingredients_text,
           ingredientsLength: product.ingredients_text?.length || 0,
           reason: 'Sodio natural del agua mineral, no sal añadida'
+        });
+        return { text: '', type: 'ambiguous', confidence: 'low' };
+      }
+      
+      // SPECIAL CASE: Jugos/frutas 100% naturales con azúcares naturales
+      const isNaturalProduct = productNameLower.includes('100%') ||
+                              productNameLower.includes('natural');
+      const isFruitJuice = productNameLower.includes('juice') ||
+                          productNameLower.includes('jugo') ||
+                          productNameLower.includes('fruta') ||
+                          productNameLower.includes('fruit');
+      
+      if (isSugarRelated && isNaturalProduct && isFruitJuice && noIngredients) {
+        console.log('🍊 [AnalysisService] Producto natural con azúcares naturales:', {
+          productName: product.product_name,
+          reason: 'Azúcares naturales de fruta, no azúcar añadido'
         });
         return { text: '', type: 'ambiguous', confidence: 'low' };
       }
