@@ -152,16 +152,11 @@ export const Scanner = () => {
         // Incrementar contador de accesos
         await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
         
-        // Track cache hit
+        // Track cache hit (silencioso, sin toast)
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
         await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, barcode);
         
-        toast({
-          title: "💾 Producto encontrado en cache",
-          description: "Analizado previamente por IA (sin costo adicional)",
-        });
-        
-        navigate('/results', { 
+        navigate('/results', {
           state: { 
             product: cachedProduct,
             analysisType: 'ai_cache',

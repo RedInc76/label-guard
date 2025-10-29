@@ -63,7 +63,23 @@ export const Results = () => {
 
       const performAnalysis = async () => {
         try {
-          const result = location.state?.analysis || await AnalysisService.analyzeProductForActiveProfiles(product);
+          // Solo reutilizar análisis si viene de historial/favoritos (vista previa)
+          // SIEMPRE hacer análisis nuevo para escaneos frescos (cache, OpenFoodFacts, IA)
+          const result = (location.state?.fromHistory || location.state?.fromFavorites) 
+            ? location.state?.analysis
+            : await AnalysisService.analyzeProductForActiveProfiles(product);
+          
+          // Logging para debugging
+          console.log('[Results] Analysis source:', {
+            fromCache: location.state?.fromCache,
+            fromHistory: location.state?.fromHistory,
+            fromFavorites: location.state?.fromFavorites,
+            hadPreAnalysis: !!location.state?.analysis,
+            didNewAnalysis: !location.state?.fromHistory && !location.state?.fromFavorites,
+            activeProfiles: profiles.length,
+            result: { isCompatible: result.isCompatible, score: result.score, violations: result.violations.length }
+          });
+          
           setAnalysis(result);
 
           // Save to history if premium and not from history
