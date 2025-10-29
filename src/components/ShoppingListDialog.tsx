@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Camera, Copy, Share2 } from 'lucide-react';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 
 interface ShoppingListDialogProps {
   open: boolean;
@@ -50,31 +52,44 @@ export const ShoppingListDialog = ({
 
   const handleShare = async () => {
     const text = generateShareableText();
+    const isNative = Capacitor.isNativePlatform();
     
-    if (navigator.share) {
-      try {
-        setIsSharing(true);
-        await navigator.share({
+    try {
+      setIsSharing(true);
+      
+      if (isNative) {
+        // Usar plugin de Capacitor en apps nativas
+        await Share.share({
           text: text,
           title: listName,
+          dialogTitle: 'Compartir lista de compras',
         });
-        toast({
-          title: "¡Lista compartida!",
-          description: "Se compartió exitosamente",
-        });
-        onComplete();
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Error sharing:', error);
-          toast({
-            title: "Error al compartir",
-            description: "Intenta copiar el texto en su lugar",
-            variant: "destructive",
+      } else {
+        // Usar Web Share API en navegador
+        if (navigator.share) {
+          await navigator.share({
+            text: text,
+            title: listName,
           });
         }
-      } finally {
-        setIsSharing(false);
       }
+      
+      toast({
+        title: "¡Lista compartida!",
+        description: "Se compartió exitosamente",
+      });
+      onComplete();
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Error sharing:', error);
+        toast({
+          title: "Error al compartir",
+          description: "Intenta copiar el texto en su lugar",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -98,7 +113,8 @@ export const ShoppingListDialog = ({
     }
   };
 
-  const hasShareAPI = typeof navigator !== 'undefined' && !!navigator.share;
+  const isNative = Capacitor.isNativePlatform();
+  const hasShareAPI = isNative || (typeof navigator !== 'undefined' && !!navigator.share);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
