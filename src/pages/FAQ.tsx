@@ -81,12 +81,6 @@ export const FAQ = () => {
           </Accordion>
         </Card>
 
-        {/* Help Section */}
-        <Card className="p-4 bg-primary/5 border-primary/20">
-          <p className="text-sm text-muted-foreground text-center">
-            ¿Tienes más preguntas? Contáctanos desde la sección de configuración
-          </p>
-        </Card>
       </div>
     </div>
   );
