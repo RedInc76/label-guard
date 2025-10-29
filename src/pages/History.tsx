@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter, BarChart3, Map, Scale, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter, BarChart3, Map, Scale, HelpCircle, ShoppingCart } from 'lucide-react';
+import { ShoppingListDialog } from '@/components/ShoppingListDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GeolocationService } from '@/services/geolocationService';
 import { toast } from '@/hooks/use-toast';
@@ -45,6 +46,9 @@ export const History = () => {
   const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
+  const [shopMode, setShopMode] = useState(false);
+  const [selectedForShop, setSelectedForShop] = useState<Set<string>>(new Set());
+  const [isShoppingListDialogOpen, setIsShoppingListDialogOpen] = useState(false);
 
   useEffect(() => {
     loadHistory();
@@ -194,7 +198,7 @@ export const History = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Historial de Escaneos</h1>
+            <h1 className="text-xl font-bold">Historial de Escaneos</h1>
             <p className="text-sm text-muted-foreground">
               {filteredHistory.length} de {history.length} producto{history.length !== 1 ? 's' : ''}
               {filteredHistory.length !== history.length && ' (filtrados)'}
@@ -206,6 +210,7 @@ export const History = () => {
           <div className="flex gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 setCompareMode(false);
                 setSelectedForCompare(new Set());
@@ -214,6 +219,7 @@ export const History = () => {
               Cancelar
             </Button>
             <Button
+              size="sm"
               disabled={selectedForCompare.size < 2 || selectedForCompare.size > 3}
               onClick={() => {
                 navigate('/compare', {
@@ -224,19 +230,43 @@ export const History = () => {
               Comparar ({selectedForCompare.size})
             </Button>
           </div>
+        ) : shopMode ? (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShopMode(false);
+                setSelectedForShop(new Set());
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={selectedForShop.size === 0}
+              onClick={() => setIsShoppingListDialogOpen(true)}
+            >
+              Generar Lista ({selectedForShop.size})
+            </Button>
+          </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => navigate('/insights')}>
-              <BarChart3 className="mr-2 h-4 w-4" />
+          <div className="flex flex-wrap gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => navigate('/insights')}>
+              <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
               Insights
             </Button>
-            <Button variant="outline" onClick={() => navigate('/map')}>
-              <Map className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={() => navigate('/map')}>
+              <Map className="mr-1.5 h-3.5 w-3.5" />
               Mapa
             </Button>
-            <Button variant="outline" onClick={() => setCompareMode(true)}>
-              <Scale className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={() => setCompareMode(true)}>
+              <Scale className="mr-1.5 h-3.5 w-3.5" />
               Comparar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShopMode(true)}>
+              <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+              Comprar
             </Button>
           </div>
         )}
@@ -367,6 +397,23 @@ export const History = () => {
                             newSet.delete(item.id);
                           }
                           setSelectedForCompare(newSet);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+                  {shopMode && (
+                    <div className="flex items-center mr-2">
+                      <Checkbox
+                        checked={selectedForShop.has(item.id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedForShop);
+                          if (checked) {
+                            newSet.add(item.id);
+                          } else {
+                            newSet.delete(item.id);
+                          }
+                          setSelectedForShop(newSet);
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -579,6 +626,17 @@ export const History = () => {
           ))}
         </div>
       )}
+
+      <ShoppingListDialog
+        open={isShoppingListDialogOpen}
+        onOpenChange={setIsShoppingListDialogOpen}
+        selectedItems={history.filter(item => selectedForShop.has(item.id))}
+        onComplete={() => {
+          setShopMode(false);
+          setSelectedForShop(new Set());
+          setIsShoppingListDialogOpen(false);
+        }}
+      />
     </div>
   );
 };
