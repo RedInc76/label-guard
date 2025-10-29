@@ -20,11 +20,7 @@ export interface InsightsData {
   usageStats: {
     totalAnalyses: number;
     aiAnalyses: number;
-    cacheAnalyses: number;
     openFoodFactsAnalyses: number;
-    estimatedCost: number;
-    cacheSavings: number;
-    cacheEfficiency: number;
   };
 }
 

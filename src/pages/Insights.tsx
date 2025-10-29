@@ -85,18 +85,15 @@ export const Insights = () => {
         </div>
 
         <Tabs value={period} onValueChange={(v: any) => setPeriod(v)}>
-          <TabsList className="grid grid-cols-3 w-[180px]">
-            <TabsTrigger value="7" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">7 días</span>
-              <span className="sm:hidden">7d</span>
+          <TabsList className="grid grid-cols-3 w-[200px] sm:w-[220px]">
+            <TabsTrigger value="7" className="text-xs px-2">
+              7d
             </TabsTrigger>
-            <TabsTrigger value="30" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">30 días</span>
-              <span className="sm:hidden">30d</span>
+            <TabsTrigger value="30" className="text-xs px-2">
+              30d
             </TabsTrigger>
-            <TabsTrigger value="90" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">90 días</span>
-              <span className="sm:hidden">90d</span>
+            <TabsTrigger value="90" className="text-xs px-2">
+              90d
             </TabsTrigger>
           </TabsList>
         </Tabs>

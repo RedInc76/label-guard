@@ -224,14 +224,13 @@ export class HistoryService {
         }
       });
 
-      // Estadísticas de uso
-      const aiAnalyses = analytics?.filter(a => a.event_type === 'ai_analysis').length || 0;
-      const cacheAnalyses = analytics?.filter(a => a.event_type === 'cache_hit').length || 0;
-      const openFoodFactsAnalyses = analytics?.filter(a => a.event_type === 'openfoodfacts_search').length || 0;
-      const estimatedCost = analytics?.reduce((sum, a) => sum + (a.cost_usd || 0), 0) || 0;
-      const cacheSavings = cacheAnalyses * 0.01; // Estimación
-      const totalAnalyses = aiAnalyses + cacheAnalyses + openFoodFactsAnalyses;
-      const cacheEfficiency = totalAnalyses > 0 ? (cacheAnalyses / totalAnalyses) * 100 : 0;
+      // Estadísticas de uso - contar por tipo de análisis desde scan_history
+      const aiPhotoAnalyses = scans?.filter(s => s.analysis_type === 'ai_photo').length || 0;
+      const aiCacheAnalyses = scans?.filter(s => s.analysis_type === 'ai_cache').length || 0;
+      const barcodeAnalyses = scans?.filter(s => s.analysis_type === 'barcode').length || 0;
+      
+      // IA + Cache = "Análisis con IA" para el usuario
+      const totalAIAnalyses = aiPhotoAnalyses + aiCacheAnalyses;
 
       return {
         totalScans,
@@ -245,13 +244,9 @@ export class HistoryService {
         nutriscoreDistribution,
         novaDistribution,
         usageStats: {
-          totalAnalyses,
-          aiAnalyses,
-          cacheAnalyses,
-          openFoodFactsAnalyses,
-          estimatedCost,
-          cacheSavings,
-          cacheEfficiency,
+          totalAnalyses: totalScans,
+          aiAnalyses: totalAIAnalyses,
+          openFoodFactsAnalyses: barcodeAnalyses,
         },
       };
     } catch (error) {
