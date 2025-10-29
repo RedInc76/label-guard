@@ -38,11 +38,15 @@ const faqs = [
   },
   {
     question: "¿Qué son los niveles de severidad?",
-    answer: "Los niveles de severidad determinan qué tan estricto es el análisis:\n\n🟢 Leve: Tolera trazas y menciones como 'puede contener'\n🟡 Moderado: Rechaza ingredientes directos y trazas explícitas (recomendado)\n🔴 Severo: Rechaza cualquier mención, incluso contaminación cruzada (ideal para alergias graves)"
+    answer: "Algunas restricciones permiten configurar niveles de severidad para determinar qué tan estricto es el análisis. Esto solo aplica a restricciones donde se pueden detectar trazas, derivados o contaminación cruzada:\n\n🟢 Leve: Tolera trazas y menciones como 'puede contener'\n🟡 Moderado: Rechaza ingredientes directos y trazas explícitas (recomendado)\n🔴 Severo: Rechaza cualquier mención, incluso contaminación cruzada (ideal para alergias graves)\n\n💡 Las restricciones que NO permiten niveles de severidad son binarias: el producto es apto o no es apto."
+  },
+  {
+    question: "¿Qué restricciones tienen niveles de severidad?",
+    answer: "Solo 11 restricciones permiten configurar niveles de severidad (detectan trazas y derivados):\n\n🔴 Alérgenos principales (8):\n• Sin Gluten\n• Sin Lactosa\n• Sin Frutos Secos\n• Sin Soja\n• Sin Huevo\n• Sin Pescado\n• Sin Mariscos\n• Sin Sésamo\n\n🕌 Restricciones religiosas (3):\n• Sin Cerdo\n• Halal\n• Kosher\n\n✅ Las otras 20 restricciones son binarias (apto/no apto): Si el ingrediente está presente, el producto no es apto. Esto incluye restricciones de dieta (vegano, keto, etc.) y salud (bajo en azúcar, sin conservantes, etc.)."
   },
   {
     question: "¿Cuántos perfiles puedo crear?",
-    answer: "• Modo gratuito: Puedes crear hasta 3 perfiles\n• Modo Premium: Sin límite de perfiles\n\nCada perfil puede tener múltiples restricciones activas simultáneamente."
+    answer: "• Modo invitado (sin registro): 1 perfil\n• Modo registrado (gratuito): Hasta 5 perfiles\n\nCada perfil puede tener múltiples restricciones activas simultáneamente. Los perfiles te permiten gestionar diferentes necesidades (por ejemplo: un perfil para ti, otro para tu hijo con alergias, etc.)."
   },
   {
     question: "¿Cómo funciona el análisis con IA?",

@@ -13,7 +13,7 @@ interface ProfileCardProps {
 }
 
 export const ProfileCard = ({ profile, onToggleActive, onEdit, onDelete }: ProfileCardProps) => {
-  const activeRestrictionsCount = profile.restrictions.filter(r => r.enabled).length + profile.customRestrictions.length;
+  const activeRestrictionsCount = profile.restrictions.filter(r => r.enabled).length;
 
   return (
     <Card className="p-4 transition-all hover:shadow-md">

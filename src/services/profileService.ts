@@ -91,22 +91,7 @@ export class ProfileService {
             .insert(restrictionsToInsert);
         }
 
-        // Insert custom restrictions con severidad
-        const customToInsert = profile.customRestrictions.map(cr => {
-          const text = typeof cr === 'string' ? cr : cr.text;
-          const severityLevel = typeof cr === 'object' ? cr.severityLevel : 'moderado';
-          return {
-            profile_id: newProfile.id,
-            restriction_text: text,
-            severity_level: severityLevel
-          };
-        });
-
-        if (customToInsert.length > 0) {
-          await supabase
-            .from('profile_custom_restrictions')
-            .insert(customToInsert);
-        }
+        // Custom restrictions removed in v1.8.0
       }
 
       // Clear local storage after successful migration
@@ -155,10 +140,6 @@ export class ProfileService {
             restriction_id,
             enabled,
             severity_level
-          ),
-          profile_custom_restrictions (
-            restriction_text,
-            severity_level
           )
         `)
         .order('created_at', { ascending: true });
@@ -203,12 +184,6 @@ export class ProfileService {
         enabled: restrictionsMap.has(r.id),
         severityLevel: (restrictionsMap.get(r.id) || 'moderado') as SeverityLevel
       })),
-      customRestrictions: (supabaseProfile.profile_custom_restrictions || []).map(
-        (c: any) => ({
-          text: c.restriction_text,
-          severityLevel: (c.severity_level || 'moderado') as SeverityLevel
-        })
-      ),
       createdAt: supabaseProfile.created_at
     };
   }
@@ -278,7 +253,6 @@ export class ProfileService {
         name: name.trim(),
         isActive: false,
         restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
-        customRestrictions: [],
         createdAt: new Date().toISOString()
       };
 
@@ -370,27 +344,7 @@ export class ProfileService {
       }
     }
 
-    // Actualizar restricciones personalizadas si cambiaron
-    if (updates.customRestrictions) {
-      // Borrar restricciones personalizadas existentes
-      await supabase
-        .from('profile_custom_restrictions')
-        .delete()
-        .eq('profile_id', id);
-      
-      // Insertar nuevas restricciones personalizadas con severidad
-      if (updates.customRestrictions.length > 0) {
-        await supabase
-          .from('profile_custom_restrictions')
-          .insert(
-            updates.customRestrictions.map(cr => ({
-              profile_id: id,
-              restriction_text: cr.text,
-              severity_level: cr.severityLevel
-            }))
-          );
-      }
-    }
+    // Custom restrictions removed in v1.8.0
   }
 
   static async deleteProfile(id: string): Promise<void> {
@@ -484,7 +438,6 @@ export class ProfileService {
       name: 'Mi Perfil',
       isActive: true,
       restrictions: availableRestrictions.map(r => ({ ...r, enabled: false })),
-      customRestrictions: [],
       createdAt: new Date().toISOString()
     };
 
@@ -509,9 +462,6 @@ export class ProfileService {
             ...r,
             severityLevel: r.severityLevel || 'moderado'
           })),
-        customRestrictions: (oldProfile.customRestrictions || []).map(cr => 
-          typeof cr === 'string' ? { text: cr, severityLevel: 'moderado' as const } : cr
-        ),
         createdAt: new Date().toISOString()
       };
 

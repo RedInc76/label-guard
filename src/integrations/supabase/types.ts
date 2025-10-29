@@ -208,38 +208,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profile_custom_restrictions: {
-        Row: {
-          created_at: string | null
-          id: string
-          profile_id: string
-          restriction_text: string
-          severity_level: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          profile_id: string
-          restriction_text: string
-          severity_level?: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          profile_id?: string
-          restriction_text?: string
-          severity_level?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_custom_restrictions_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profile_restrictions: {
         Row: {
           enabled: boolean | null

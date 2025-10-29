@@ -88,8 +88,7 @@ export const Profile = () => {
     try {
       await ProfileService.updateProfile(profile.id, {
         name: profile.name,
-        restrictions: profile.restrictions,
-        customRestrictions: profile.customRestrictions,
+        restrictions: profile.restrictions
       });
       await loadProfiles();
       toast({

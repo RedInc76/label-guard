@@ -50,8 +50,6 @@ export class AnalysisService {
 
   // Método helper: combinar restricciones de múltiples perfiles
   private static combineAllRestrictions(profiles: Profile[]): UserProfile {
-    const allRestrictions: DietaryRestriction[] = [];
-    const allCustom: Array<{ text: string; severityLevel: SeverityLevel }> = [];
     const restrictionMap = new Map<string, DietaryRestriction>();
     
     profiles.forEach(profile => {
@@ -73,29 +71,10 @@ export class AnalysisService {
             }
           }
         });
-      
-      // Agregar restricciones personalizadas únicas
-      profile.customRestrictions.forEach(custom => {
-        const normalized = custom.text.toLowerCase().trim();
-        const existingIndex = allCustom.findIndex(existing => existing.text.toLowerCase() === normalized);
-        
-        if (existingIndex === -1) {
-          allCustom.push(custom);
-        } else {
-          // Si ya existe, usar el nivel de severidad más alto
-          const existing = allCustom[existingIndex];
-          const severityOrder = { leve: 1, moderado: 2, severo: 3 };
-          
-          if (severityOrder[custom.severityLevel] > severityOrder[existing.severityLevel]) {
-            allCustom[existingIndex] = custom;
-          }
-        }
-      });
     });
     
     return {
-      restrictions: Array.from(restrictionMap.values()),
-      customRestrictions: allCustom
+      restrictions: Array.from(restrictionMap.values())
     };
   }
 
@@ -299,7 +278,6 @@ export class AnalysisService {
 
     // Obtener todas las restricciones activas
     const activeRestrictions = profile.restrictions.filter(r => r.enabled);
-    const customRestrictions = profile.customRestrictions;
 
     // Combinar todo el texto para análisis
     const productText = [
@@ -309,58 +287,44 @@ export class AnalysisService {
       product.brands
     ].join(' ').toLowerCase();
 
-    // Verificar restricciones predefinidas CON SEVERIDAD
+    // Verificar restricciones predefinidas
     activeRestrictions.forEach(restriction => {
+      // Check if restriction supports severity levels
+      const supportsSeverity = restriction.supportsSeverity === true;
       const severityLevel = restriction.severityLevel || 'moderado';
       
       restriction.keywords.forEach(keyword => {
         const context = this.detectIngredientContext(productText, keyword, product, restriction.id);
         
-        if (context.text && this.shouldReject(context, severityLevel)) {
-          const contextLabel = this.getContextLabel(context.type);
-          
-          violations.push({
-            restriction: restriction.name,
-            reason: `${contextLabel}: ${keyword}`,
-            severity: this.getSeverity(restriction.category),
-            severityLevel: severityLevel // NUEVO: pasar el nivel de severidad real
-          });
-        } else if (context.text && context.type !== 'direct') {
-          // Si no se rechaza pero hay mención indirecta, agregar warning
-          const contextLabel = this.getContextLabel(context.type);
-          warnings.push(
-            `⚠️ ${restriction.name}: ${contextLabel} de "${keyword}" (nivel ${SEVERITY_LEVELS[severityLevel].label})`
-          );
+        if (supportsSeverity) {
+          // Restricciones CON severidad: usar lógica avanzada de contexto
+          if (context.text && this.shouldReject(context, severityLevel)) {
+            const contextLabel = this.getContextLabel(context.type);
+            
+            violations.push({
+              restriction: restriction.name,
+              reason: `${contextLabel}: ${keyword}`,
+              severity: this.getSeverity(restriction.category),
+              severityLevel: severityLevel
+            });
+          } else if (context.text && context.type !== 'direct') {
+            // Si no se rechaza pero hay mención indirecta, agregar warning
+            const contextLabel = this.getContextLabel(context.type);
+            warnings.push(
+              `⚠️ ${restriction.name}: ${contextLabel} de "${keyword}" (nivel ${SEVERITY_LEVELS[severityLevel].label})`
+            );
+          }
+        } else {
+          // Restricciones BINARIAS: detección simple de presencia
+          if (context.text && context.type === 'direct') {
+            violations.push({
+              restriction: restriction.name,
+              reason: `Contiene: ${keyword}`,
+              severity: this.getSeverity(restriction.category)
+            });
+          }
         }
       });
-    });
-
-    // Verificar restricciones personalizadas CON SEVERIDAD
-    customRestrictions.forEach(customRestriction => {
-      const keyword = typeof customRestriction === 'string' 
-        ? customRestriction 
-        : customRestriction.text;
-      const severityLevel = typeof customRestriction === 'object'
-        ? customRestriction.severityLevel
-        : 'moderado';
-      
-      const context = this.detectIngredientContext(productText, keyword, product);
-      
-      if (context.text && this.shouldReject(context, severityLevel)) {
-        const contextLabel = this.getContextLabel(context.type);
-        
-        violations.push({
-          restriction: keyword,
-          reason: `${contextLabel}: ${keyword}`,
-          severity: 'medium',
-          severityLevel: severityLevel // NUEVO: pasar el nivel de severidad real
-        });
-      } else if (context.text && context.type !== 'direct') {
-        const contextLabel = this.getContextLabel(context.type);
-        warnings.push(
-          `⚠️ Restricción personalizada "${keyword}": ${contextLabel} (nivel ${SEVERITY_LEVELS[severityLevel].label})`
-        );
-      }
     });
 
     // Generar advertencias adicionales

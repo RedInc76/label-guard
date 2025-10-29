@@ -44,6 +44,7 @@ export interface DietaryRestriction {
   enabled: boolean;
   isFree?: boolean; // true for FREE mode restrictions (allergens only)
   severityLevel?: SeverityLevel;
+  supportsSeverity?: boolean; // true only for restrictions that can detect traces/derivatives
 }
 
 export interface Profile {
@@ -51,7 +52,6 @@ export interface Profile {
   name: string;
   isActive: boolean;
   restrictions: DietaryRestriction[];
-  customRestrictions: Array<{ text: string; severityLevel: SeverityLevel }>;
   createdAt: string;
 }
 
@@ -63,7 +63,6 @@ export interface ProfileSystem {
 // Legacy interface for migration
 export interface UserProfile {
   restrictions: DietaryRestriction[];
-  customRestrictions: Array<{ text: string; severityLevel: SeverityLevel }>;
 }
 
 export interface ProductInfo {

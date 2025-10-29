@@ -9,7 +9,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['gluten', 'wheat', 'barley', 'rye', 'triticale', 'trigo', 'cebada', 'centeno'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'lactose',
@@ -18,7 +19,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['lactose', 'milk', 'dairy', 'lactosa', 'leche', 'lácteo'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'nuts',
@@ -27,7 +29,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['nuts', 'almond', 'walnut', 'hazelnut', 'cashew', 'pistachio', 'frutos secos', 'almendra', 'nuez'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'soy',
@@ -36,7 +39,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['soy', 'soja', 'soybean', 'lecithin'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'egg',
@@ -45,7 +49,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['egg', 'eggs', 'albumin', 'huevo', 'albúmina', 'ovoproteína', 'ovo'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'fish',
@@ -54,7 +59,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['fish', 'anchovy', 'salmon', 'tuna', 'cod', 'pescado', 'atún', 'salmón', 'anchoa', 'bacalao'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'shellfish',
@@ -63,7 +69,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['shellfish', 'shrimp', 'crab', 'lobster', 'prawn', 'marisco', 'camarón', 'cangrejo', 'langosta', 'gamba'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'celery',
@@ -90,7 +97,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['sesame', 'tahini', 'sésamo', 'ajonjolí'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    supportsSeverity: true
   },
   {
     id: 'sulfites',
@@ -267,7 +275,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'religious',
     keywords: ['pork', 'alcohol', 'cerdo', 'alcohol'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    supportsSeverity: true
   },
   {
     id: 'kosher',
@@ -276,7 +285,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'religious',
     keywords: ['pork', 'shellfish', 'cerdo', 'mariscos'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    supportsSeverity: true
   },
   {
     id: 'no_pork',
@@ -285,6 +295,7 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'religious',
     keywords: ['pork', 'pig', 'bacon', 'ham', 'lard', 'cerdo', 'tocino', 'jamón', 'manteca', 'panceta'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    supportsSeverity: true
   }
 ];
