@@ -33,6 +33,10 @@ const faqs = [
     answer: "Label Guard analiza productos de dos formas:\n\n1. Escaneo de código de barras: Busca el producto en OpenFoodFacts y obtiene sus ingredientes y datos nutricionales.\n\n2. Análisis por IA con foto: Si el producto no está en OpenFoodFacts o quieres analizar la etiqueta directamente, la IA lee la foto y extrae los ingredientes.\n\n⚠️ Importante: El análisis solo puede detectar ingredientes que estén listados en la etiqueta o en la base de datos. Si un ingrediente no aparece, no puede ser detectado."
   },
   {
+    question: "¿Cómo se calcula el score de compatibilidad?",
+    answer: "El score de compatibilidad es calculado por Label Guard basándose en tus perfiles activos:\n\n• Comienza en 100 puntos\n• Cada violación resta puntos según la categoría:\n  - Alérgenos y restricciones religiosas: -30 puntos\n  - Salud y dieta: -20 puntos\n  - Otras restricciones: -10 puntos\n• Cada advertencia resta 5 puntos adicionales\n\nEl resultado final determina la recomendación:\n🟢 80-100: Excelente\n🟡 60-79: Aceptable\n🟠 40-59: Precaución\n🔴 0-39: No recomendado\n\nEste sistema te permite comparar productos y tomar decisiones informadas según tus necesidades específicas."
+  },
+  {
     question: "¿Qué son los niveles de severidad?",
     answer: "Los niveles de severidad determinan qué tan estricto es el análisis:\n\n🟢 Leve: Tolera trazas y menciones como 'puede contener'\n🟡 Moderado: Rechaza ingredientes directos y trazas explícitas (recomendado)\n🔴 Severo: Rechaza cualquier mención, incluso contaminación cruzada (ideal para alergias graves)"
   },
@@ -41,8 +45,8 @@ const faqs = [
     answer: "• Modo gratuito: Puedes crear hasta 3 perfiles\n• Modo Premium: Sin límite de perfiles\n\nCada perfil puede tener múltiples restricciones activas simultáneamente."
   },
   {
-    question: "¿Cómo se calculan los análisis con IA?",
-    answer: "El análisis con IA incluye:\n• Análisis directo de fotos de etiquetas (ai_photo)\n• Análisis desde cache (ai_cache) - cuando un producto ya fue analizado anteriormente\n\nAmbos se agrupan como 'Análisis con IA' en tus estadísticas para simplificar la información."
+    question: "¿Cómo funciona el análisis con IA?",
+    answer: "Cuando escaneas una etiqueta con la cámara, Label Guard utiliza inteligencia artificial para:\n\n1. 📸 Leer y extraer el texto de los ingredientes directamente de la foto\n2. 🔍 Identificar cada ingrediente listado en la etiqueta\n3. ⚠️ Detectar alérgenos y advertencias\n4. ✅ Analizar la compatibilidad con tus restricciones\n\nLa IA funciona de dos formas:\n• Análisis directo: Lee la foto en tiempo real\n• Análisis optimizado: Si otro usuario ya escaneó ese producto antes, reutiliza la información para darte resultados más rápidos\n\n💡 Recuerda: La IA solo puede detectar lo que está visible en la etiqueta. Si un ingrediente no aparece listado, no puede ser detectado."
   }
 ];
 
