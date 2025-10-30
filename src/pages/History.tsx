@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter, BarChart3, Map, Scale, HelpCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Star, Trash2, Camera, Barcode, MapPin, Filter, BarChart3, Scale, HelpCircle, ShoppingCart } from 'lucide-react';
 import { ShoppingListDialog } from '@/components/ShoppingListDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GeolocationService } from '@/services/geolocationService';
@@ -255,10 +255,6 @@ export const History = () => {
             <Button variant="outline" size="sm" onClick={() => navigate('/insights')}>
               <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
               Insights
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/map')}>
-              <Map className="mr-1.5 h-3.5 w-3.5" />
-              Mapa
             </Button>
             <Button variant="outline" size="sm" onClick={() => setCompareMode(true)}>
               <Scale className="mr-1.5 h-3.5 w-3.5" />

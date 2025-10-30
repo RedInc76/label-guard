@@ -27,7 +27,6 @@ import { Terms } from "./pages/Terms";
 import { Permissions } from "./pages/Permissions";
 import { Settings } from "./pages/Settings";
 import { Insights } from "./pages/Insights";
-import { ProductMap } from "./pages/ProductMap";
 import { Compare } from "./pages/Compare";
 import { FAQ } from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
@@ -93,7 +92,6 @@ const App = () => (
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
               <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-              <Route path="/map" element={<ProtectedRoute><ProductMap /></ProtectedRoute>} />
               <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
               <Route path="/permissions" element={<Permissions />} />
