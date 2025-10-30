@@ -360,8 +360,8 @@ export class AnalysisService {
               severity: this.getSeverity(restriction.category),
               severityLevel: severityLevel
             });
-          } else if (context.text && context.type !== 'direct') {
-            // Si no se rechaza pero hay mención indirecta, agregar warning
+          } else if (context.text && context.type !== 'direct' && context.type !== 'ambiguous') {
+            // Si no se rechaza pero hay mención indirecta (trazas, puede contener), agregar warning
             const contextLabel = this.getContextLabel(context.type);
             warnings.push(
               `⚠️ ${restriction.name}: ${contextLabel} de "${keyword}" (nivel ${SEVERITY_LEVELS[severityLevel].label})`

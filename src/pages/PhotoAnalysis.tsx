@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Camera as CameraService } from '@capacitor/camera';
 import { CameraResultType, CameraSource } from '@capacitor/camera';
@@ -23,6 +23,49 @@ export const PhotoAnalysis = () => {
   const [backPhoto, setBackPhoto] = useState<string>('');
   const [productName, setProductName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Intentar recuperar del caché si viene con barcode
+  useEffect(() => {
+    const barcode = (location.state as any)?.barcode;
+    if (barcode) {
+      checkCacheFirst(barcode);
+    }
+  }, []);
+
+  const checkCacheFirst = async (barcode: string) => {
+    try {
+      setLoading(true);
+      const { AIProductCacheService } = await import('@/services/aiProductCacheService');
+      const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
+      
+      if (cachedProduct) {
+        console.log('✅ Producto recuperado del caché');
+        
+        // Incrementar contador de accesos
+        await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
+        
+        // Analizar contra restricciones actuales del usuario
+        const result = await AnalysisService.analyzeProductForActiveProfiles(cachedProduct);
+        
+        // Navegar directo a resultados
+        navigate('/results', {
+          state: {
+            product: cachedProduct,
+            analysis: result,
+            analysisType: 'ai_photo',
+            fromCache: true
+          }
+        });
+      } else {
+        console.log('ℹ️ Producto no encontrado en caché, proceder con análisis AI');
+      }
+    } catch (error) {
+      console.error('Error checking cache:', error);
+      // Si falla, continuar con el flujo normal
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const takeFrontPhoto = async () => {
     try {
