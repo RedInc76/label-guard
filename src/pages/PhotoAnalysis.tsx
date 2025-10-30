@@ -300,7 +300,7 @@ export const PhotoAnalysis = () => {
           <CardHeader>
             <CardTitle>Paso 3: Foto de Ingredientes</CardTitle>
             <CardDescription>
-              Ahora toma una foto de la parte trasera donde están los ingredientes
+              Toma una foto clara de la lista de ingredientes Y cualquier advertencia o precaución (ej: "puede contener", "trazas de", etc.)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

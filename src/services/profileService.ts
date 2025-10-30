@@ -342,6 +342,14 @@ export class ProfileService {
             }))
           );
       }
+
+      // CRÍTICO: Forzar actualización de updated_at en profiles
+      // Esto invalida el caché cuando cambian restricciones/severidad
+      await supabase
+        .from('profiles')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', user.id);
     }
 
     // Custom restrictions removed in v1.8.0

@@ -374,6 +374,21 @@ export const Results = () => {
           </div>
         </Card>
 
+        {/* Disclaimer de verificación manual */}
+        <Card className="p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+          <div className="flex gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                Verifica todos los lados del empaque
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Este análisis se basa en las fotos proporcionadas. Por tu seguridad, revisa físicamente todo el empaque para detectar advertencias adicionales.
+              </p>
+            </div>
+          </div>
+        </Card>
+
         {/* Violations */}
         {analysis.violations.length > 0 && (
           <Card className="p-4 shadow-sm border">
