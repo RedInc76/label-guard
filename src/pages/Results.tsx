@@ -248,8 +248,14 @@ export const Results = () => {
           </h2>
           
           {product.brands && (
-            <p className="text-sm text-muted-foreground text-center mb-2">
+            <p className="text-sm text-muted-foreground text-center mb-1">
               {product.brands}
+            </p>
+          )}
+
+          {product.code && (
+            <p className="text-xs text-muted-foreground text-center mb-2 font-mono">
+              Código: {product.code}
             </p>
           )}
 

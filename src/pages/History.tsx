@@ -447,6 +447,11 @@ export const History = () => {
                             {item.brands}
                           </p>
                         )}
+                        {item.barcode && (
+                          <p className="text-xs text-muted-foreground truncate font-mono">
+                            Código: {item.barcode}
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
