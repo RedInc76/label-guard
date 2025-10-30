@@ -16,13 +16,17 @@ import { ArrowLeft, Map as MapIcon, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 // Componente helper para cambiar la vista del mapa
-const ChangeView = ({ center, zoom }: { center: LatLngExpression; zoom: number }) => {
+function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
   const map = useMap();
+  
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    if (map) {
+      map.setView(center, zoom);
+    }
+  }, [map, center, zoom]);
+  
   return null;
-};
+}
 
 export const ProductMap = () => {
   const navigate = useNavigate();
@@ -260,6 +264,7 @@ export const ProductMap = () => {
             zoom={mapZoom}
             style={{ width: '100%', height: '100%' }}
             zoomControl={true}
+            scrollWheelZoom={true}
           >
             <ChangeView center={mapCenter} zoom={mapZoom} />
             
