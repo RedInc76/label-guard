@@ -280,6 +280,11 @@ export class AnalysisService {
     context: IngredientContext,
     severityLevel: SeverityLevel
   ): boolean {
+    // NUNCA rechazar contextos ambiguos (ej: "NO CONTIENE", "LIBRE DE")
+    if (context.type === 'ambiguous') {
+      return false;
+    }
+    
     switch (severityLevel) {
       case 'severo':
         // Rechazar TODO: directo, trazas, puede contener, contaminación cruzada
@@ -296,8 +301,8 @@ export class AnalysisService {
         return context.type === 'direct';
         
       default:
-        // Por seguridad, en caso ambiguo rechazar
-        return context.confidence === 'low' ? true : context.type === 'direct';
+        // Por defecto, solo rechazar ingredientes directos
+        return context.type === 'direct';
     }
   }
 
