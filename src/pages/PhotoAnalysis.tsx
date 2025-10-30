@@ -118,6 +118,10 @@ export const PhotoAnalysis = () => {
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
         await UsageAnalyticsService.trackAIAnalysis(productName, barcode || undefined);
         
+        // Log successful photo scan
+        const { loggingService } = await import('@/services/loggingService');
+        loggingService.logScan('photo', productName, barcode || undefined);
+        
         // Analyze product against restrictions
         const result = await AnalysisService.analyzeProductForActiveProfiles(product);
         

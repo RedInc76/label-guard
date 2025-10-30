@@ -36,6 +36,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Log authentication events
+        if (event === 'SIGNED_IN') {
+          setTimeout(() => {
+            loggingService.log({
+              logType: 'auth',
+              message: 'Usuario inició sesión',
+              metadata: {
+                email: session?.user?.email,
+                provider: session?.user?.app_metadata?.provider,
+                timestamp: new Date().toISOString()
+              }
+            });
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          setTimeout(() => {
+            loggingService.log({
+              logType: 'auth',
+              message: 'Usuario cerró sesión',
+              metadata: {
+                timestamp: new Date().toISOString()
+              }
+            });
+          }, 0);
+        } else if (event === 'TOKEN_REFRESHED') {
+          setTimeout(() => {
+            loggingService.log({
+              logType: 'auth',
+              message: 'Token actualizado',
+              metadata: {
+                timestamp: new Date().toISOString()
+              }
+            });
+          }, 0);
+        }
+        
         // Initialize profile service and reset logging cache when auth state changes
         if (session?.user) {
           setTimeout(() => {
@@ -237,6 +272,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Log before signing out
+      await loggingService.log({
+        logType: 'auth',
+        message: 'Usuario solicitó cerrar sesión',
+        metadata: {
+          email: user?.email,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       // CRÍTICO: Limpiar localStorage de perfiles antes de cerrar sesión
       localStorage.removeItem('labelGuardProfiles');
       loggingService.resetCache();

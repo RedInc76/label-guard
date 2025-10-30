@@ -140,6 +140,10 @@ export const Scanner = () => {
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
         await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, barcode);
         
+        // Log successful barcode scan
+        const { loggingService } = await import('@/services/loggingService');
+        loggingService.logScan('barcode', product.product_name, barcode);
+        
         // Validar si los ingredientes son suficientes para análisis
         const hasInsufficientIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 30;
         
