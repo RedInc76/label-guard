@@ -85,7 +85,17 @@ export class AnalysisService {
     product: ProductInfo,
     restrictionId?: string
   ): IngredientContext {
-    const lowerText = productText.toLowerCase();
+    // Normalizar texto: remover puntos y espacios redundantes que vienen de OCR/IA
+    // Ej: "P. U. E. D. E. . C. O. N. T. E. N. E. R." -> "puede contener"
+    const normalizeText = (text: string): string => {
+      return text
+        .toLowerCase()
+        .replace(/([a-z])\.\s+/gi, '$1') // "P. U. E. D. E." -> "puede"
+        .replace(/\s+/g, ' ') // múltiples espacios -> un espacio
+        .trim();
+    };
+    
+    const lowerText = normalizeText(productText);
     const lowerKeyword = keyword.toLowerCase();
     
     // SPECIAL CASE: Para restricciones de sal y azúcar, solo buscar en ingredients_text y allergens
@@ -104,12 +114,12 @@ export class AnalysisService {
     
     let searchText = lowerText;
     if (isSaltRelated || isSugarRelated) {
-      // Solo buscar en ingredientes y alérgenos
-      searchText = [product.ingredients_text, product.allergens].join(' ').toLowerCase();
+      // Solo buscar en ingredientes y alérgenos (normalizados)
+      searchText = normalizeText([product.ingredients_text, product.allergens].join(' '));
       
       // Verificar excepciones: si la palabra aparece en el nombre del producto pero no en ingredientes
-      const productNameLower = (product.product_name || '').toLowerCase();
-      const brandsLower = (product.brands || '').toLowerCase();
+      const productNameLower = normalizeText(product.product_name || '');
+      const brandsLower = normalizeText(product.brands || '');
       const hasInName = productNameLower.includes(lowerKeyword) || brandsLower.includes(lowerKeyword);
       
       if (hasInName && !searchText.includes(lowerKeyword)) {
