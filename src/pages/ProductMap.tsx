@@ -9,9 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Map as MapIcon, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -173,38 +170,56 @@ export const ProductMap = () => {
 
             <div>
               <Label className="text-sm mb-2 block">Compatibilidad</Label>
-              <Tabs value={compatibilityFilter} onValueChange={(value: any) => setCompatibilityFilter(value)}>
-                <TabsList className="grid grid-cols-3 w-full">
-                  <TabsTrigger value="all">Todos</TabsTrigger>
-                  <TabsTrigger value="compatible">✓</TabsTrigger>
-                  <TabsTrigger value="incompatible">✗</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-sm rounded-sm border transition ${compatibilityFilter === 'all' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  onClick={() => setCompatibilityFilter('all')}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-sm rounded-sm border transition ${compatibilityFilter === 'compatible' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  onClick={() => setCompatibilityFilter('compatible')}
+                >
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-sm rounded-sm border transition ${compatibilityFilter === 'incompatible' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  onClick={() => setCompatibilityFilter('incompatible')}
+                >
+                  ✗
+                </button>
+              </div>
             </div>
 
             <div>
               <Label className="text-sm mb-2 block">Score Mínimo: {minScore}</Label>
-              <Slider
-                value={[minScore]}
-                onValueChange={(values) => setMinScore(values[0])}
+              <input
+                type="range"
+                min={0}
                 max={100}
                 step={10}
+                value={minScore}
+                onChange={(e) => setMinScore(Number(e.target.value))}
+                className="w-full"
               />
             </div>
 
             <div>
               <Label className="text-sm mb-2 block">Período</Label>
-              <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="7">Últimos 7 días</SelectItem>
-                  <SelectItem value="30">Últimos 30 días</SelectItem>
-                  <SelectItem value="90">Últimos 90 días</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                className="w-full border rounded-md h-10 px-3 bg-background"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value as any)}
+              >
+                <option value="all">Todos</option>
+                <option value="7">Últimos 7 días</option>
+                <option value="30">Últimos 30 días</option>
+                <option value="90">Últimos 90 días</option>
+              </select>
             </div>
 
             {/* Lista de productos */}
