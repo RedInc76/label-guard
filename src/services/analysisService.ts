@@ -197,6 +197,54 @@ export class AnalysisService {
       searchInIngredientsOnly: isSaltRelated
     });
     
+    // Patrones negativos - VERIFICAR PRIMERO para evitar falsos positivos
+    // Indicadores de AUSENCIA del ingrediente
+    const negativePatterns = [
+      'no contiene',
+      'libre de',
+      'sin ',
+      'free from',
+      'does not contain',
+      'gluten free',
+      'dairy free',
+      'nut free',
+      'egg free',
+      'soy free',
+      'lactose free',
+      'sugar free',
+      'salt free',
+      'sodium free',
+      'peanut free',
+      'shellfish free',
+      'fish free',
+      'wheat free',
+      'free of',
+      'without',
+      'not contain',
+      'no added'
+    ];
+
+    // Verificar si el keyword aparece en un contexto negativo
+    const hasNegativeContext = negativePatterns.some(pattern => {
+      const patternIndex = context.indexOf(pattern);
+      if (patternIndex === -1) return false;
+      
+      // Verificar que el keyword esté cerca del patrón negativo (dentro de 30 caracteres)
+      const keywordInContext = context.indexOf(lowerKeyword, patternIndex);
+      const distance = keywordInContext - patternIndex;
+      
+      return distance >= 0 && distance <= 30;
+    });
+
+    if (hasNegativeContext) {
+      console.log('✅ [AnalysisService] Patrón negativo detectado:', {
+        keyword: lowerKeyword,
+        context,
+        reason: 'Producto declara NO contener el ingrediente'
+      });
+      return { text: context, type: 'ambiguous', confidence: 'low' };
+    }
+    
     // Patrones de detección
     const tracePatterns = ['trazas de', 'traces of', 'contiene trazas', 'may contain traces'];
     const mayContainPatterns = ['puede contener', 'may contain', 'podría contener', 'posible presencia'];
