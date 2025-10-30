@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L, { LatLngExpression, DivIcon } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import '@/styles/leaflet-custom.css';
 import { HistoryService, ScanHistoryItem } from '@/services/historyService';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ export const ProductMap = () => {
   const [filteredScans, setFilteredScans] = useState<ScanHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedScan, setSelectedScan] = useState<ScanHistoryItem | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
   // Filtros
   const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
@@ -32,6 +33,7 @@ export const ProductMap = () => {
   const [mapZoom, setMapZoom] = useState<number>(6);
 
   useEffect(() => {
+    setIsClient(true);
     loadScans();
   }, []);
 
@@ -247,63 +249,65 @@ export const ProductMap = () => {
 
         {/* Mapa */}
         <div className="flex-1 relative">
-          <MapContainer
-            key={`map-${JSON.stringify(mapCenter)}-${mapZoom}`}
-            center={mapCenter}
-            zoom={mapZoom}
-            style={{ width: '100%', height: '100%' }}
-            zoomControl={true}
-            scrollWheelZoom={true}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+          {isClient && (
+            <MapContainer
+              key={`map-${JSON.stringify(mapCenter)}-${mapZoom}`}
+              center={mapCenter}
+              zoom={mapZoom}
+              style={{ width: '100%', height: '100%' }}
+              zoomControl={true}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
 
-            {filteredScans.map((scan) => (
-              scan.latitude && scan.longitude && (
-                <Marker
-                  key={scan.id}
-                  position={[scan.latitude, scan.longitude]}
-                  icon={createCustomIcon(getMarkerColor(scan.score))}
-                  eventHandlers={{
-                    click: () => setSelectedScan(scan),
-                  }}
-                >
-                  <Popup>
-                    <div className="p-2 min-w-[200px]">
-                      {scan.image_url && (
-                        <img
-                          src={scan.image_url}
-                          alt={scan.product_name}
-                          className="w-full h-24 object-cover rounded mb-2"
-                        />
-                      )}
-                      <h3 className="font-semibold text-sm mb-1">{scan.product_name}</h3>
-                      {scan.brands && (
-                        <p className="text-xs text-muted-foreground mb-2">{scan.brands}</p>
-                      )}
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant={scan.is_compatible ? 'default' : 'destructive'} className="text-xs">
-                          {scan.is_compatible ? '✓ Apto' : '✗ No apto'}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {scan.score}
-                        </Badge>
+              {filteredScans.map((scan) => (
+                scan.latitude && scan.longitude && (
+                  <Marker
+                    key={scan.id}
+                    position={[scan.latitude, scan.longitude]}
+                    icon={createCustomIcon(getMarkerColor(scan.score))}
+                    eventHandlers={{
+                      click: () => setSelectedScan(scan),
+                    }}
+                  >
+                    <Popup>
+                      <div className="p-2 min-w-[200px]">
+                        {scan.image_url && (
+                          <img
+                            src={scan.image_url}
+                            alt={scan.product_name}
+                            className="w-full h-24 object-cover rounded mb-2"
+                          />
+                        )}
+                        <h3 className="font-semibold text-sm mb-1">{scan.product_name}</h3>
+                        {scan.brands && (
+                          <p className="text-xs text-muted-foreground mb-2">{scan.brands}</p>
+                        )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={scan.is_compatible ? 'default' : 'destructive'} className="text-xs">
+                            {scan.is_compatible ? '✓ Apto' : '✗ No apto'}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {scan.score}
+                          </Badge>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleViewDetails(scan)}
+                        >
+                          Ver detalles
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleViewDetails(scan)}
-                      >
-                        Ver detalles
-                      </Button>
-                    </div>
-                  </Popup>
-                </Marker>
-              )
-            ))}
-          </MapContainer>
+                    </Popup>
+                  </Marker>
+                )
+              ))}
+            </MapContainer>
+          )}
         </div>
       </div>
     </div>
