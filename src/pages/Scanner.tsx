@@ -365,14 +365,14 @@ export const Scanner = () => {
               variant="outline"
               className="w-full justify-start text-left h-auto py-3 hover:border-primary/50 transition-all"
               onClick={() => {
-                setManualCode("7501055914821");
-                searchProduct("7501055914821");
+                setManualCode("75007614");
+                searchProduct("75007614");
               }}
               disabled={isScanning || isSearching || activeProfiles.length === 0}
             >
               <div className="flex flex-col w-full">
-                <span className="font-mono font-semibold text-primary">7501055914821</span>
-                <span className="text-xs text-muted-foreground">Yogurth Alpura Bebible Manzana</span>
+                <span className="font-mono font-semibold text-primary">75007614</span>
+                <span className="text-xs text-muted-foreground">Coca-Cola</span>
               </div>
             </Button>
             <Button
