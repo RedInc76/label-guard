@@ -1,10 +1,10 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L, { LatLngExpression, DivIcon } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import '@/styles/leaflet-custom.css';
 import { HistoryService, ScanHistoryItem } from '@/services/historyService';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Map as MapIcon, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
 
 export const ProductMap = () => {
   const navigate = useNavigate();
@@ -251,7 +250,7 @@ export const ProductMap = () => {
         <div className="flex-1 relative">
           {isClient && (
             <MapContainer
-              key={`map-${JSON.stringify(mapCenter)}-${mapZoom}`}
+              key={`map-${mapZoom}-${JSON.stringify(mapCenter)}`}
               center={mapCenter}
               zoom={mapZoom}
               style={{ width: '100%', height: '100%' }}
