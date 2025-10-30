@@ -39,7 +39,17 @@ export const PhotoAnalysis = () => {
       const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
       
       if (cachedProduct) {
-        console.log('✅ Producto recuperado del caché');
+        // Verificar si el caché es válido (no hubo cambios de perfil después)
+        const isValid = await AIProductCacheService.isCacheValid(
+          cachedProduct.created_at || new Date().toISOString()
+        );
+        
+        if (!isValid) {
+          console.log('⚠️ Caché invalidado por cambios en perfil, re-analizando con IA');
+          return; // Salir y continuar con análisis AI normal
+        }
+        
+        console.log('✅ Producto recuperado del caché válido');
         
         // Incrementar contador de accesos
         await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
@@ -142,7 +152,9 @@ export const PhotoAnalysis = () => {
           product_name: productName,
           brands: '',
           ingredients_text: analysis.ingredients,
-          allergens: analysis.allergens,
+            allergens: [analysis.allergens, ...analysis.warnings]
+              .filter(Boolean)
+              .join('. '),
           image_url: frontUrl,
         };
 

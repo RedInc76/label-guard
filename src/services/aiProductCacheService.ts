@@ -21,7 +21,7 @@ export class AIProductCacheService {
   /**
    * Buscar producto por código de barras en cache local
    */
-  static async getByBarcode(barcode: string): Promise<(ProductInfo & { cache_id: string }) | null> {
+  static async getByBarcode(barcode: string): Promise<(ProductInfo & { cache_id: string; created_at: string }) | null> {
     try {
       const { data, error } = await supabase
         .from('ai_analyzed_products')
@@ -49,6 +49,7 @@ export class AIProductCacheService {
       // Convertir a ProductInfo
       return {
         cache_id: data.id,
+        created_at: data.created_at,
         code: data.barcode || '',
         product_name: data.product_name,
         brands: data.brands || '',
@@ -60,6 +61,44 @@ export class AIProductCacheService {
       console.error('Error in getByBarcode:', error);
       await loggingService.logError('Unexpected error in cache', error);
       return null;
+    }
+  }
+
+  /**
+   * Verificar si el caché es válido comparando con la última modificación de perfiles
+   * @param cacheCreatedAt - Fecha de creación del registro en caché (ISO string)
+   * @returns true si el caché es válido, false si debe re-analizarse
+   */
+  static async isCacheValid(cacheCreatedAt: string): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Obtener la fecha de la última modificación en profiles
+      const { data: latestProfile } = await supabase
+        .from('profiles')
+        .select('updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latestProfile) return true; // Si no hay perfiles, caché es válido
+
+      const latestProfileUpdate = new Date(latestProfile.updated_at);
+      const cacheDate = new Date(cacheCreatedAt);
+
+      // Caché es válido si fue creado DESPUÉS de la última modificación de perfil
+      const isValid = cacheDate >= latestProfileUpdate;
+      
+      if (!isValid) {
+        console.log('⚠️ Caché invalidado: perfil modificado en', latestProfile.updated_at);
+      }
+      
+      return isValid;
+    } catch (error) {
+      console.error('Error checking cache validity:', error);
+      return false; // En caso de error, no usar caché (más seguro)
     }
   }
 
