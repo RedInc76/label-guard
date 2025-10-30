@@ -100,15 +100,31 @@ export class AnalysisService {
       return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     };
     
+    // Crear patrón fuzzy tolerante a OCR fragmentado: "gluten" -> "g[\s.\-_/]*l[\s.\-_/]*u..."
+    const makeFuzzy = (word: string): string => {
+      return word.split('').map(char => 
+        escapeRegex(char) + '[\\s.\\-_/]*'
+      ).join('').slice(0, -'[\\s.\\-_/]*'.length);
+    };
+    
+    // Colapsar texto eliminando todos los separadores para detección extrema
+    const makeCollapsed = (str: string): string => {
+      return str.replace(/[\s.\-_/,]/g, '');
+    };
+    
     // Separar y normalizar textos de ingredientes y alérgenos
     const ingredientsLower = normalizeText(product.ingredients_text || '');
     const allergensLower = normalizeText(product.allergens || '');
     const productNameLower = normalizeText(product.product_name || '');
     const brandsLower = normalizeText(product.brands || '');
     const combinedLower = ingredientsLower + ' ' + allergensLower;
+    const combinedCollapsed = makeCollapsed(combinedLower);
+    const allergensCollapsed = makeCollapsed(allergensLower);
     
     const lowerKeyword = keyword.toLowerCase();
     const escapedKeyword = escapeRegex(lowerKeyword);
+    const fuzzyKeyword = makeFuzzy(lowerKeyword);
+    const collapsedKeyword = makeCollapsed(lowerKeyword);
     
     // SPECIAL CASE: Para restricciones de sal y azúcar, solo buscar en ingredients_text y allergens
     const isSaltRelated = restrictionId === 'low_sodium' || 
@@ -191,68 +207,87 @@ export class AnalysisService {
     const end = Math.min(searchText.length, index + keyword.length + 150);
     const context = searchText.substring(start, end);
     
-    // ========== PASO 1: VERIFICAR PATRONES NEGATIVOS PRIMERO ==========
+    // ========== PASO 1: VERIFICAR PATRONES NEGATIVOS ESPECÍFICOS PRIMERO ==========
     const negativePatterns = [
-      'no contiene', 'libre de', 'sin ', 'free from', 'does not contain',
-      'gluten free', 'dairy free', 'nut free', 'egg free', 'soy free',
-      'lactose free', 'sugar free', 'salt free', 'sodium free',
-      'peanut free', 'shellfish free', 'fish free', 'wheat free',
-      'free of', 'without', 'not contain', 'no added'
+      `sin\\s*${fuzzyKeyword}`,
+      `libre\\s*de\\s*${fuzzyKeyword}`,
+      `free\\s*of\\s*${fuzzyKeyword}`,
+      `without\\s*${fuzzyKeyword}`,
+      `${fuzzyKeyword}\\s*free`,
+      `no\\s*${fuzzyKeyword}`
     ];
 
     const hasNegativeContext = negativePatterns.some(pattern => {
-      const patternIndex = context.indexOf(pattern);
-      if (patternIndex === -1) return false;
-      const keywordInContext = context.indexOf(lowerKeyword, patternIndex);
-      const distance = keywordInContext - patternIndex;
-      return distance >= 0 && distance <= 30;
+      const regex = new RegExp(pattern, 'i');
+      return regex.test(combinedLower);
     });
 
     if (hasNegativeContext) {
-      console.log('✅ [AnalysisService] Patrón negativo detectado:', { keyword: lowerKeyword, context });
-      return { text: context, type: 'ambiguous', confidence: 'low' };
+      console.log('✅ [AnalysisService] Patrón negativo detectado:', { keyword: lowerKeyword });
+      return { text: '', type: 'ambiguous', confidence: 'low' };
     }
     
-    // ========== PASO 2: DETECCIÓN GLOBAL DE "PUEDE CONTENER" / "TRAZAS" ==========
-    // Usar regex con ventana de 200 caracteres para tolerar separación por OCR
-    const mayContainRegex = new RegExp(
-      `(puede\\s+contener|may\\s+contain|podría\\s+contener|posible\\s+presencia)[\\s\\S]{0,200}\\b${escapedKeyword}\\b`,
-      'i'
-    );
-    const traceRegex = new RegExp(
-      `(trazas(?:\\s+de)?|traces\\s+of|contiene\\s+trazas)[\\s\\S]{0,200}\\b${escapedKeyword}\\b`,
-      'i'
-    );
+    // ========== PASO 2: DETECCIÓN UNIVERSAL DE "PUEDE CONTENER" / "TRAZAS" EN ALLERGENS ==========
+    // PRIMERO: Verificar si existe "puede contener"/"may contain"/"trazas" EN CUALQUIER PARTE del campo allergens
+    const puedeContenerFuzzy = makeFuzzy('puede contener');
+    const mayContainFuzzy = makeFuzzy('may contain');
+    const trazasFuzzy = makeFuzzy('trazas');
     
-    if (traceRegex.test(combinedLower)) {
-      const match = combinedLower.match(traceRegex);
-      console.log('🔍 [AnalysisService] TRAZAS detectadas (regex global):', { keyword: lowerKeyword, match: match?.[0] });
-      return { text: match?.[0] || context, type: 'trace', confidence: 'high' };
-    }
+    const hasPuedeContenerInAllergens = new RegExp(puedeContenerFuzzy, 'i').test(allergensLower) ||
+                                        /puedecontener|maycontain/i.test(allergensCollapsed);
+    const hasTrazasInAllergens = new RegExp(trazasFuzzy, 'i').test(allergensLower) ||
+                                 /trazas|traces/i.test(allergensCollapsed);
     
-    if (mayContainRegex.test(combinedLower)) {
-      const match = combinedLower.match(mayContainRegex);
-      console.log('🔍 [AnalysisService] PUEDE CONTENER detectado (regex global):', { keyword: lowerKeyword, match: match?.[0] });
-      return { text: match?.[0] || context, type: 'may_contain', confidence: 'high' };
-    }
+    // SI hay "puede contener" o "trazas" en allergens Y el keyword está presente en allergens
+    const keywordInAllergensFuzzy = new RegExp(fuzzyKeyword, 'i').test(allergensLower);
+    const keywordInAllergensCollapsed = allergensCollapsed.includes(collapsedKeyword);
     
-    // ========== PASO 3: DETECCIÓN DIRECTA PRECISA ==========
-    // Solo es directo si: a) está en ingredientes O b) dice "contiene X" en alérgenos
-    const isInIngredients = ingredientsLower.includes(lowerKeyword);
-    const containsPattern = new RegExp(`contiene[\\s\\S]{0,50}\\b${escapedKeyword}\\b`, 'i');
-    const hasContainsInAllergens = containsPattern.test(allergensLower);
-    
-    if (isInIngredients || hasContainsInAllergens) {
-      console.log('🔍 [AnalysisService] DIRECTO detectado:', { 
-        keyword: lowerKeyword, 
-        isInIngredients, 
-        hasContainsInAllergens,
-        context 
+    if ((hasPuedeContenerInAllergens || hasTrazasInAllergens) && 
+        (keywordInAllergensFuzzy || keywordInAllergensCollapsed)) {
+      
+      const contextType = hasTrazasInAllergens ? 'trace' : 'may_contain';
+      console.log(`🔍 [AnalysisService] ${contextType.toUpperCase()} detectado (universal en allergens):`, {
+        keyword: lowerKeyword,
+        hasPuedeContener: hasPuedeContenerInAllergens,
+        hasTrazas: hasTrazasInAllergens,
+        keywordFound: keywordInAllergensFuzzy || keywordInAllergensCollapsed,
+        allergensPreview: allergensLower.substring(0, 150)
       });
-      return { text: context, type: 'direct', confidence: 'high' };
+      
+      return { 
+        text: allergensLower.substring(0, 200), 
+        type: contextType, 
+        confidence: 'high' 
+      };
     }
     
-    // ========== PASO 4: CONTAMINACIÓN CRUZADA EXTENDIDA ==========
+    // ========== PASO 3: DETECCIÓN DIRECTA PRECISA (solo si NO hay "puede contener" en allergens) ==========
+    // Presencia en allergens sin "puede contener" = es directo (ej: "Contiene: gluten")
+    const isInAllergensDirect = (keywordInAllergensFuzzy || keywordInAllergensCollapsed) && 
+                                !hasPuedeContenerInAllergens && 
+                                !hasTrazasInAllergens;
+    
+    if (isInAllergensDirect) {
+      console.log('🔍 [AnalysisService] DIRECTO en allergens (sin puede contener):', { 
+        keyword: lowerKeyword,
+        allergensPreview: allergensLower.substring(0, 100)
+      });
+      return { text: allergensLower.substring(0, 200), type: 'direct', confidence: 'high' };
+    }
+    
+    // ========== PASO 4: PRESENCIA EN INGREDIENTES ==========
+    const isInIngredientsFuzzy = new RegExp(fuzzyKeyword, 'i').test(ingredientsLower);
+    const isInIngredientsCollapsed = makeCollapsed(ingredientsLower).includes(collapsedKeyword);
+    
+    if (isInIngredientsFuzzy || isInIngredientsCollapsed) {
+      console.log('🔍 [AnalysisService] DIRECTO en ingredients:', { 
+        keyword: lowerKeyword,
+        ingredientsPreview: ingredientsLower.substring(0, 100)
+      });
+      return { text: ingredientsLower.substring(0, 200), type: 'direct', confidence: 'high' };
+    }
+    
+    // ========== PASO 5: CONTAMINACIÓN CRUZADA ==========
     const crossContaminationPatterns = [
       'elaborado en', 'fabricado en', 'procesado en instalaciones',
       'manufactured in a facility', 'processed in a facility',
@@ -261,15 +296,18 @@ export class AnalysisService {
       'producido en instalaciones donde se manipula'
     ];
     
-    const hasCrossContamination = crossContaminationPatterns.some(p => context.includes(p));
-    if (hasCrossContamination) {
-      console.log('🔍 [AnalysisService] CONTAMINACIÓN CRUZADA detectada:', { keyword: lowerKeyword, context });
-      return { text: context, type: 'cross_contamination', confidence: 'medium' };
+    const hasCrossContamination = crossContaminationPatterns.some(p => combinedLower.includes(p));
+    if (hasCrossContamination && (new RegExp(fuzzyKeyword, 'i').test(combinedLower))) {
+      console.log('🔍 [AnalysisService] CONTAMINACIÓN CRUZADA detectada:', { keyword: lowerKeyword });
+      return { text: combinedLower.substring(0, 200), type: 'cross_contamination', confidence: 'medium' };
     }
     
-    // ========== PASO 5: DEFAULT A AMBIGUOUS (no asumir directo) ==========
-    console.log('🔍 [AnalysisService] Contexto AMBIGUO (no clasificado):', { keyword: lowerKeyword, context });
-    return { text: context, type: 'ambiguous', confidence: 'low' };
+    // ========== PASO 6: DEFAULT A AMBIGUOUS ==========
+    console.log('🔍 [AnalysisService] Contexto AMBIGUO (no clasificado):', { 
+      keyword: lowerKeyword,
+      foundInCombined: combinedLower.includes(lowerKeyword)
+    });
+    return { text: '', type: 'ambiguous', confidence: 'low' };
   }
   
   // Determinar si una restricción viola según severidad

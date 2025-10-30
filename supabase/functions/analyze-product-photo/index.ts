@@ -148,17 +148,26 @@ serve(async (req) => {
       Responde en formato JSON: { "product_name": "..." }`;
     } else {
       prompt = `Analiza la tabla de ingredientes y alérgenos de este producto alimenticio.
-      Extrae:
-      1. Lista completa de ingredientes (en texto, tal como aparece)
-      2. Alérgenos declarados (busca en "Contiene:", "Alérgenos:", etc.)
-      3. Advertencias de trazas (busca "Puede contener trazas de...", "Fabricado en instalaciones que...", etc.)
-      
-      Responde en formato JSON estricto:
-      {
-        "ingredients": "lista completa de ingredientes o vacío si no hay",
-        "allergens": "lista de alérgenos declarados o vacío si no hay",
-        "warnings": "advertencias de trazas o vacío si no hay"
-      }`;
+
+IMPORTANTE: Lee y extrae el texto EXACTAMENTE como aparece en la etiqueta, respetando el orden original. NO reorganices ni separes frases.
+
+Extrae:
+1. "ingredients": La lista completa de ingredientes tal como aparece en la etiqueta (busca secciones como "Ingredientes:", "Ingredients:", etc.)
+2. "allergens": TODO el texto relacionado con alérgenos tal como aparece, incluyendo:
+   - Declaraciones de alérgenos ("Contiene:", "Alérgenos:", "Allergens:")
+   - Advertencias de trazas ("Puede contener...", "May contain...", "Trazas de...")
+   - Avisos de contaminación cruzada ("Fabricado en instalaciones que...", "Elaborado en planta que procesa...")
+   
+   CRÍTICO: Si hay una frase como "Puede contener X, Y, Z", captura TODA la frase completa sin separarla.
+   
+3. "warnings": Cualquier otra advertencia o aviso que no sea sobre alérgenos (ej: "Mantener refrigerado", "No apto para menores de 3 años", etc.)
+
+Responde en formato JSON estricto:
+{
+  "ingredients": "texto completo de ingredientes o vacío",
+  "allergens": "texto completo de alérgenos y advertencias de trazas o vacío",
+  "warnings": "otras advertencias no relacionadas con alérgenos o vacío"
+}`;
     }
     
     console.log(`Calling Lovable AI for user ${user.id}, type: ${body.type}, usage: ${currentCount + 1}/${MAX_ANALYSES_PER_WINDOW}`);
