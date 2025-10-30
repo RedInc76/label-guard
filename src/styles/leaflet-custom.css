@@ -1,0 +1,37 @@
+/* Importar estilos base de Leaflet */
+@import 'leaflet/dist/leaflet.css';
+
+/* Personalizar marcadores */
+.leaflet-marker-icon {
+  border: 2px solid white !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.leaflet-marker-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Personalizar popup */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+}
+
+/* Personalizar controles de zoom */
+.leaflet-control-zoom {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 18px !important;
+}

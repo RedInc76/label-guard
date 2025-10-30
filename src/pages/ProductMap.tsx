@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L, { LatLngExpression, DivIcon } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import '@/styles/leaflet-custom.css';
 import { HistoryService, ScanHistoryItem } from '@/services/historyService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +12,17 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Map as MapIcon, Filter, Settings2 } from 'lucide-react';
+import { ArrowLeft, Map as MapIcon, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import Map, { Marker, Popup, NavigationControl } from 'react-map-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+
+// Componente helper para cambiar la vista del mapa
+const ChangeView = ({ center, zoom }: { center: LatLngExpression; zoom: number }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+};
 
 export const ProductMap = () => {
   const navigate = useNavigate();
@@ -19,30 +30,17 @@ export const ProductMap = () => {
   const [filteredScans, setFilteredScans] = useState<ScanHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedScan, setSelectedScan] = useState<ScanHistoryItem | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [showTokenInput, setShowTokenInput] = useState(false);
   
   // Filtros
   const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
   const [minScore, setMinScore] = useState<number>(0);
   const [dateFilter, setDateFilter] = useState<'all' | '7' | '30' | '90'>('all');
 
-  const [viewport, setViewport] = useState({
-    latitude: 40.4168,
-    longitude: -3.7038,
-    zoom: 6,
-  });
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>([19.4326, -99.1332]); // CDMX por defecto
+  const [mapZoom, setMapZoom] = useState<number>(6);
 
   useEffect(() => {
-    // Intentar cargar token de localStorage
-    const savedToken = localStorage.getItem('mapbox_token');
-    if (savedToken) {
-      setMapboxToken(savedToken);
-      loadScans();
-    } else {
-      setShowTokenInput(true);
-      setLoading(false);
-    }
+    loadScans();
   }, []);
 
   useEffect(() => {
@@ -60,13 +58,9 @@ export const ProductMap = () => {
       setScans(data);
       
       // Centrar mapa en el primer escaneo
-      if (data.length > 0) {
-        setViewport(prev => ({
-          ...prev,
-          latitude: data[0].latitude!,
-          longitude: data[0].longitude!,
-          zoom: 10,
-        }));
+      if (data.length > 0 && data[0].latitude && data[0].longitude) {
+        setMapCenter([data[0].latitude, data[0].longitude]);
+        setMapZoom(10);
       }
     } catch (error) {
       console.error('Error loading scans:', error);
@@ -93,20 +87,6 @@ export const ProductMap = () => {
     }
 
     setFilteredScans(filtered);
-  };
-
-  const handleSaveToken = () => {
-    if (!mapboxToken.trim()) {
-      toast({
-        title: 'Token requerido',
-        description: 'Por favor ingresa tu token de Mapbox',
-        variant: 'destructive',
-      });
-      return;
-    }
-    localStorage.setItem('mapbox_token', mapboxToken);
-    setShowTokenInput(false);
-    loadScans();
   };
 
   const handleViewDetails = (scan: ScanHistoryItem) => {
@@ -142,56 +122,22 @@ export const ProductMap = () => {
     return '#ef4444'; // red
   };
 
-  if (showTokenInput) {
-    return (
-      <div className="container max-w-2xl mx-auto px-4 py-12">
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <MapIcon className="h-8 w-8 text-primary" />
-              <div>
-                <h2 className="text-2xl font-bold">Configurar Mapbox</h2>
-                <p className="text-sm text-muted-foreground">
-                  Necesitas un token de Mapbox para usar el mapa
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Token de Mapbox</Label>
-              <input
-                type="text"
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                placeholder="pk.eyJ1IjoiZXhhbXBsZS..."
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <p className="text-xs text-muted-foreground">
-                Obtén tu token gratuito en{' '}
-                <a 
-                  href="https://account.mapbox.com/access-tokens/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary underline"
-                >
-                  mapbox.com
-                </a>
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={handleSaveToken} className="flex-1">
-                Guardar y Continuar
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/scanner')}>
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  const createCustomIcon = (color: string): DivIcon => {
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: ${color};
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        cursor: pointer;
+      "></div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+  };
 
   if (loading) {
     return <div className="container max-w-6xl mx-auto px-4 py-6">Cargando mapa...</div>;
@@ -220,15 +166,6 @@ export const ProductMap = () => {
               </p>
             </div>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowTokenInput(true)}
-          >
-            <Settings2 className="h-4 w-4 mr-2" />
-            Configurar
-          </Button>
         </div>
       </div>
 
@@ -286,13 +223,11 @@ export const ProductMap = () => {
                     key={scan.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => {
-                      setViewport(prev => ({
-                        ...prev,
-                        latitude: scan.latitude!,
-                        longitude: scan.longitude!,
-                        zoom: 14,
-                      }));
-                      setSelectedScan(scan);
+                      if (scan.latitude && scan.longitude) {
+                        setMapCenter([scan.latitude, scan.longitude]);
+                        setMapZoom(14);
+                        setSelectedScan(scan);
+                      }
                     }}
                   >
                     <CardContent className="p-3">
@@ -320,74 +255,63 @@ export const ProductMap = () => {
 
         {/* Mapa */}
         <div className="flex-1 relative">
-          {mapboxToken && (
-            <Map
-              {...viewport}
-              onMove={(evt) => setViewport(evt.viewState)}
-              style={{ width: '100%', height: '100%' }}
-              mapStyle="mapbox://styles/mapbox/streets-v12"
-              mapboxAccessToken={mapboxToken}
-            >
-              <NavigationControl position="top-right" />
+          <MapContainer
+            center={mapCenter}
+            zoom={mapZoom}
+            style={{ width: '100%', height: '100%' }}
+            zoomControl={true}
+          >
+            <ChangeView center={mapCenter} zoom={mapZoom} />
+            
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-              {filteredScans.map((scan) => (
+            {filteredScans.map((scan) => (
+              scan.latitude && scan.longitude && (
                 <Marker
                   key={scan.id}
-                  latitude={scan.latitude!}
-                  longitude={scan.longitude!}
-                  onClick={(e) => {
-                    e.originalEvent.stopPropagation();
-                    setSelectedScan(scan);
+                  position={[scan.latitude, scan.longitude]}
+                  icon={createCustomIcon(getMarkerColor(scan.score))}
+                  eventHandlers={{
+                    click: () => setSelectedScan(scan),
                   }}
                 >
-                  <div
-                    className="w-6 h-6 rounded-full border-2 border-white cursor-pointer shadow-lg hover:scale-110 transition-transform"
-                    style={{ backgroundColor: getMarkerColor(scan.score) }}
-                  />
-                </Marker>
-              ))}
-
-              {selectedScan && (
-                <Popup
-                  latitude={selectedScan.latitude!}
-                  longitude={selectedScan.longitude!}
-                  onClose={() => setSelectedScan(null)}
-                  closeButton={true}
-                  closeOnClick={false}
-                  anchor="bottom"
-                >
-                  <div className="p-2 min-w-[200px]">
-                    {selectedScan.image_url && (
-                      <img
-                        src={selectedScan.image_url}
-                        alt={selectedScan.product_name}
-                        className="w-full h-24 object-cover rounded mb-2"
-                      />
-                    )}
-                    <h3 className="font-semibold text-sm mb-1">{selectedScan.product_name}</h3>
-                    {selectedScan.brands && (
-                      <p className="text-xs text-muted-foreground mb-2">{selectedScan.brands}</p>
-                    )}
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={selectedScan.is_compatible ? 'default' : 'destructive'} className="text-xs">
-                        {selectedScan.is_compatible ? '✓ Apto' : '✗ No apto'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {selectedScan.score}
-                      </Badge>
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      {scan.image_url && (
+                        <img
+                          src={scan.image_url}
+                          alt={scan.product_name}
+                          className="w-full h-24 object-cover rounded mb-2"
+                        />
+                      )}
+                      <h3 className="font-semibold text-sm mb-1">{scan.product_name}</h3>
+                      {scan.brands && (
+                        <p className="text-xs text-muted-foreground mb-2">{scan.brands}</p>
+                      )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={scan.is_compatible ? 'default' : 'destructive'} className="text-xs">
+                          {scan.is_compatible ? '✓ Apto' : '✗ No apto'}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {scan.score}
+                        </Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleViewDetails(scan)}
+                      >
+                        Ver detalles
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleViewDetails(selectedScan)}
-                    >
-                      Ver detalles
-                    </Button>
-                  </div>
-                </Popup>
-              )}
-            </Map>
-          )}
+                  </Popup>
+                </Marker>
+              )
+            ))}
+          </MapContainer>
         </div>
       </div>
     </div>
