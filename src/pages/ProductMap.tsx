@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { LatLngExpression, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/leaflet-custom.css';
@@ -15,18 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Map as MapIcon, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-// Componente helper para cambiar la vista del mapa
-function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (map) {
-      map.setView(center, zoom);
-    }
-  }, [map, center, zoom]);
-  
-  return null;
-}
 
 export const ProductMap = () => {
   const navigate = useNavigate();
@@ -260,14 +248,13 @@ export const ProductMap = () => {
         {/* Mapa */}
         <div className="flex-1 relative">
           <MapContainer
+            key={`map-${JSON.stringify(mapCenter)}-${mapZoom}`}
             center={mapCenter}
             zoom={mapZoom}
             style={{ width: '100%', height: '100%' }}
             zoomControl={true}
             scrollWheelZoom={true}
           >
-            <ChangeView center={mapCenter} zoom={mapZoom} />
-            
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
