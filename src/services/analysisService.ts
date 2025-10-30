@@ -95,11 +95,22 @@ export class AnalysisService {
         .trim();
     };
     
-    const lowerText = normalizeText(productText);
+    // Escapar caracteres especiales de regex
+    const escapeRegex = (str: string): string => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+    
+    // Separar y normalizar textos de ingredientes y alérgenos
+    const ingredientsLower = normalizeText(product.ingredients_text || '');
+    const allergensLower = normalizeText(product.allergens || '');
+    const productNameLower = normalizeText(product.product_name || '');
+    const brandsLower = normalizeText(product.brands || '');
+    const combinedLower = ingredientsLower + ' ' + allergensLower;
+    
     const lowerKeyword = keyword.toLowerCase();
+    const escapedKeyword = escapeRegex(lowerKeyword);
     
     // SPECIAL CASE: Para restricciones de sal y azúcar, solo buscar en ingredients_text y allergens
-    // NO buscar en product_name ni brands para evitar falsos positivos
     const isSaltRelated = restrictionId === 'low_sodium' || 
                          lowerKeyword.includes('salt') || 
                          lowerKeyword.includes('sodium') ||
@@ -112,18 +123,14 @@ export class AnalysisService {
                           lowerKeyword.includes('azúcar') ||
                           lowerKeyword.includes('azucar');
     
-    let searchText = lowerText;
+    let searchText = combinedLower;
     if (isSaltRelated || isSugarRelated) {
-      // Solo buscar en ingredientes y alérgenos (normalizados)
-      searchText = normalizeText([product.ingredients_text, product.allergens].join(' '));
+      searchText = combinedLower;
       
       // Verificar excepciones: si la palabra aparece en el nombre del producto pero no en ingredientes
-      const productNameLower = normalizeText(product.product_name || '');
-      const brandsLower = normalizeText(product.brands || '');
       const hasInName = productNameLower.includes(lowerKeyword) || brandsLower.includes(lowerKeyword);
       
       if (hasInName && !searchText.includes(lowerKeyword)) {
-        // Verificar si es una excepción conocida (ej: "SAL" en "PERRIER", "SUGAR" en "SUGAR FREE")
         const isException = KEYWORD_EXCEPTIONS.some(exc => 
           productNameLower.includes(exc) || brandsLower.includes(exc)
         );
@@ -133,14 +140,13 @@ export class AnalysisService {
             keyword: lowerKeyword,
             restrictionId,
             productName: product.product_name,
-            brands: product.brands,
-            reason: 'Palabra parte del nombre del producto, no un ingrediente'
+            reason: 'Palabra parte del nombre del producto'
           });
           return { text: '', type: 'ambiguous', confidence: 'low' };
         }
       }
       
-      // SPECIAL CASE: Productos declarados "sin azúcar añadido" o "sugar free" en el nombre
+      // SPECIAL CASE: Productos "sin azúcar añadido" o "sugar free"
       if (isSugarRelated &&
           (productNameLower.includes('sin azúcar') ||
            productNameLower.includes('sin azucar') ||
@@ -149,42 +155,28 @@ export class AnalysisService {
            productNameLower.includes('zero') ||
            productNameLower.includes('0%') ||
            productNameLower.includes('light'))) {
-        console.log('🍬 [AnalysisService] Producto declarado sin/bajo azúcar en nombre:', {
-          productName: product.product_name,
-          reason: 'Producto sin azúcar añadido, no marcar violación'
-        });
+        console.log('🍬 [AnalysisService] Producto sin/bajo azúcar:', productNameLower);
         return { text: '', type: 'ambiguous', confidence: 'low' };
       }
       
-      // SPECIAL CASE: Agua mineral sin ingredientes listados
+      // SPECIAL CASE: Agua mineral
       const isWater = productNameLower.includes('water') || 
                      productNameLower.includes('agua') ||
                      productNameLower.includes('mineral');
       const noIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 10;
       
       if (isWater && noIngredients) {
-        console.log('[AnalysisService] Agua mineral detectada sin ingredientes:', {
-          productName: product.product_name,
-          hasIngredientsText: !!product.ingredients_text,
-          ingredientsLength: product.ingredients_text?.length || 0,
-          reason: 'Sodio natural del agua mineral, no sal añadida'
-        });
+        console.log('[AnalysisService] Agua mineral sin ingredientes:', productNameLower);
         return { text: '', type: 'ambiguous', confidence: 'low' };
       }
       
-      // SPECIAL CASE: Jugos/frutas 100% naturales con azúcares naturales
-      const isNaturalProduct = productNameLower.includes('100%') ||
-                              productNameLower.includes('natural');
-      const isFruitJuice = productNameLower.includes('juice') ||
-                          productNameLower.includes('jugo') ||
-                          productNameLower.includes('fruta') ||
-                          productNameLower.includes('fruit');
+      // SPECIAL CASE: Jugos 100% naturales
+      const isNaturalProduct = productNameLower.includes('100%') || productNameLower.includes('natural');
+      const isFruitJuice = productNameLower.includes('juice') || productNameLower.includes('jugo') ||
+                           productNameLower.includes('fruta') || productNameLower.includes('fruit');
       
       if (isSugarRelated && isNaturalProduct && isFruitJuice && noIngredients) {
-        console.log('🍊 [AnalysisService] Producto natural con azúcares naturales:', {
-          productName: product.product_name,
-          reason: 'Azúcares naturales de fruta, no azúcar añadido'
-        });
+        console.log('🍊 [AnalysisService] Producto natural con azúcares naturales:', productNameLower);
         return { text: '', type: 'ambiguous', confidence: 'low' };
       }
     }
@@ -194,95 +186,90 @@ export class AnalysisService {
       return { text: '', type: 'ambiguous', confidence: 'low' };
     }
     
-    // Extraer contexto (50 caracteres antes y después)
-    const start = Math.max(0, index - 50);
-    const end = Math.min(searchText.length, index + keyword.length + 50);
+    // Extraer contexto MÁS AMPLIO (150 caracteres antes y después para tolerar OCR)
+    const start = Math.max(0, index - 150);
+    const end = Math.min(searchText.length, index + keyword.length + 150);
     const context = searchText.substring(start, end);
     
-    console.log('[AnalysisService] Contexto detectado:', {
-      keyword: lowerKeyword,
-      restrictionId,
-      context,
-      productName: product.product_name,
-      searchInIngredientsOnly: isSaltRelated
-    });
-    
-    // Patrones negativos - VERIFICAR PRIMERO para evitar falsos positivos
-    // Indicadores de AUSENCIA del ingrediente
+    // ========== PASO 1: VERIFICAR PATRONES NEGATIVOS PRIMERO ==========
     const negativePatterns = [
-      'no contiene',
-      'libre de',
-      'sin ',
-      'free from',
-      'does not contain',
-      'gluten free',
-      'dairy free',
-      'nut free',
-      'egg free',
-      'soy free',
-      'lactose free',
-      'sugar free',
-      'salt free',
-      'sodium free',
-      'peanut free',
-      'shellfish free',
-      'fish free',
-      'wheat free',
-      'free of',
-      'without',
-      'not contain',
-      'no added'
+      'no contiene', 'libre de', 'sin ', 'free from', 'does not contain',
+      'gluten free', 'dairy free', 'nut free', 'egg free', 'soy free',
+      'lactose free', 'sugar free', 'salt free', 'sodium free',
+      'peanut free', 'shellfish free', 'fish free', 'wheat free',
+      'free of', 'without', 'not contain', 'no added'
     ];
 
-    // Verificar si el keyword aparece en un contexto negativo
     const hasNegativeContext = negativePatterns.some(pattern => {
       const patternIndex = context.indexOf(pattern);
       if (patternIndex === -1) return false;
-      
-      // Verificar que el keyword esté cerca del patrón negativo (dentro de 30 caracteres)
       const keywordInContext = context.indexOf(lowerKeyword, patternIndex);
       const distance = keywordInContext - patternIndex;
-      
       return distance >= 0 && distance <= 30;
     });
 
     if (hasNegativeContext) {
-      console.log('✅ [AnalysisService] Patrón negativo detectado:', {
-        keyword: lowerKeyword,
-        context,
-        reason: 'Producto declara NO contener el ingrediente'
-      });
+      console.log('✅ [AnalysisService] Patrón negativo detectado:', { keyword: lowerKeyword, context });
       return { text: context, type: 'ambiguous', confidence: 'low' };
     }
     
-    // Patrones de detección
-    const tracePatterns = ['trazas de', 'traces of', 'contiene trazas', 'may contain traces'];
-    const mayContainPatterns = ['puede contener', 'may contain', 'podría contener', 'posible presencia'];
-    const crossContaminationPatterns = [
-      'elaborado en', 'fabricado en', 'procesado en instalaciones', 
-      'manufactured in a facility', 'processed in a facility'
-    ];
+    // ========== PASO 2: DETECCIÓN GLOBAL DE "PUEDE CONTENER" / "TRAZAS" ==========
+    // Usar regex con ventana de 200 caracteres para tolerar separación por OCR
+    const mayContainRegex = new RegExp(
+      `(puede\\s+contener|may\\s+contain|podría\\s+contener|posible\\s+presencia)[\\s\\S]{0,200}\\b${escapedKeyword}\\b`,
+      'i'
+    );
+    const traceRegex = new RegExp(
+      `(trazas(?:\\s+de)?|traces\\s+of|contiene\\s+trazas)[\\s\\S]{0,200}\\b${escapedKeyword}\\b`,
+      'i'
+    );
     
-    // Verificar patrones
-    if (tracePatterns.some(p => context.includes(p))) {
-      return { text: context, type: 'trace', confidence: 'high' };
+    if (traceRegex.test(combinedLower)) {
+      const match = combinedLower.match(traceRegex);
+      console.log('🔍 [AnalysisService] TRAZAS detectadas (regex global):', { keyword: lowerKeyword, match: match?.[0] });
+      return { text: match?.[0] || context, type: 'trace', confidence: 'high' };
     }
     
-    if (mayContainPatterns.some(p => context.includes(p))) {
-      return { text: context, type: 'may_contain', confidence: 'medium' };
+    if (mayContainRegex.test(combinedLower)) {
+      const match = combinedLower.match(mayContainRegex);
+      console.log('🔍 [AnalysisService] PUEDE CONTENER detectado (regex global):', { keyword: lowerKeyword, match: match?.[0] });
+      return { text: match?.[0] || context, type: 'may_contain', confidence: 'high' };
     }
     
-    if (crossContaminationPatterns.some(p => context.includes(p))) {
-      return { text: context, type: 'cross_contamination', confidence: 'medium' };
-    }
+    // ========== PASO 3: DETECCIÓN DIRECTA PRECISA ==========
+    // Solo es directo si: a) está en ingredientes O b) dice "contiene X" en alérgenos
+    const isInIngredients = ingredientsLower.includes(lowerKeyword);
+    const containsPattern = new RegExp(`contiene[\\s\\S]{0,50}\\b${escapedKeyword}\\b`, 'i');
+    const hasContainsInAllergens = containsPattern.test(allergensLower);
     
-    // Si está en la lista de ingredientes directamente
-    if (searchText.includes('ingredientes:') && index > searchText.indexOf('ingredientes:')) {
+    if (isInIngredients || hasContainsInAllergens) {
+      console.log('🔍 [AnalysisService] DIRECTO detectado:', { 
+        keyword: lowerKeyword, 
+        isInIngredients, 
+        hasContainsInAllergens,
+        context 
+      });
       return { text: context, type: 'direct', confidence: 'high' };
     }
     
-    // Por defecto, asumir directo si no hay contexto claro
-    return { text: context, type: 'direct', confidence: 'medium' };
+    // ========== PASO 4: CONTAMINACIÓN CRUZADA EXTENDIDA ==========
+    const crossContaminationPatterns = [
+      'elaborado en', 'fabricado en', 'procesado en instalaciones',
+      'manufactured in a facility', 'processed in a facility',
+      'hecho en una fábrica que', 'hecho en una planta que',
+      'puede elaborarse en una planta que procesa',
+      'producido en instalaciones donde se manipula'
+    ];
+    
+    const hasCrossContamination = crossContaminationPatterns.some(p => context.includes(p));
+    if (hasCrossContamination) {
+      console.log('🔍 [AnalysisService] CONTAMINACIÓN CRUZADA detectada:', { keyword: lowerKeyword, context });
+      return { text: context, type: 'cross_contamination', confidence: 'medium' };
+    }
+    
+    // ========== PASO 5: DEFAULT A AMBIGUOUS (no asumir directo) ==========
+    console.log('🔍 [AnalysisService] Contexto AMBIGUO (no clasificado):', { keyword: lowerKeyword, context });
+    return { text: context, type: 'ambiguous', confidence: 'low' };
   }
   
   // Determinar si una restricción viola según severidad
