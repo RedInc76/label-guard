@@ -183,7 +183,36 @@ export const Scanner = () => {
       const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
       
       if (cachedProduct) {
-        // Incrementar contador de accesos
+        // NUEVO: Verificar si el caché es válido
+        const isCacheValid = await AIProductCacheService.isCacheValid(cachedProduct.created_at);
+        
+        if (!isCacheValid) {
+          // Caché inválido por cambio de perfil → forzar nuevo análisis IA
+          if (isPremium) {
+            toast({
+              title: "Perfil actualizado",
+              description: "Tu perfil cambió recientemente. Reanalizaremos este producto con IA.",
+            });
+            navigate('/photo-analysis', { 
+              state: { 
+                barcode,
+                reason: 'profile_changed',
+                productName: cachedProduct.product_name
+              } 
+            });
+            return;
+          } else {
+            // Usuario free: sugerir upgrade
+            toast({
+              title: "Perfil actualizado",
+              description: "Tu perfil cambió. Actualiza a Premium para re-analizar este producto con IA.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        // Caché válido: usar normalmente
         await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
         
         // Track cache hit (silencioso, sin toast)
