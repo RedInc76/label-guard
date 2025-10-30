@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
   Accordion,
   AccordionContent,
@@ -5,7 +6,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { HelpCircle, ArrowLeft } from "lucide-react";
 
 const faqs = [
   {
@@ -55,18 +57,25 @@ const faqs = [
 ];
 
 export const FAQ = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="container max-w-3xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <HelpCircle className="w-8 h-8 text-primary" />
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <HelpCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">Preguntas Frecuentes</h1>
+            <p className="text-muted-foreground">
+              Encuentra respuestas a las dudas más comunes sobre Label Guard
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Preguntas Frecuentes</h1>
-          <p className="text-muted-foreground">
-            Encuentra respuestas a las dudas más comunes sobre Label Guard
-          </p>
         </div>
 
         {/* FAQ Accordion */}

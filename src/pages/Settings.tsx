@@ -58,23 +58,39 @@ export const Settings = () => {
         },
       ],
     },
-    {
-      id: 'device',
-      title: 'Permisos y dispositivo',
-      icon: Smartphone,
-      description: 'Configuración de tu dispositivo',
-      showAlways: true,
-      options: [
-        {
-          icon: Lock,
-          label: 'Permisos',
-          description: 'Gestiona permisos de cámara y ubicación',
-          path: '/permissions',
-          onlyNative: true,
-          badge: 'Móvil',
-        },
-      ],
-    },
+  {
+    id: 'account',
+    title: 'Mi Cuenta',
+    icon: User,
+    description: 'Gestiona tu cuenta y preferencias',
+    showAlways: true,
+    options: [
+      {
+        icon: User,
+        label: 'Información de Cuenta',
+        description: 'Email, contraseña y opciones de cuenta',
+        path: '/account',
+      },
+    ],
+  },
+  {
+    id: 'device',
+    title: 'Permisos y dispositivo',
+    icon: Smartphone,
+    description: 'Configuración de tu dispositivo',
+    showAlways: true,
+    alwaysShow: true, // Siempre mostrar sección aunque no tenga opciones
+    options: [
+      {
+        icon: Lock,
+        label: 'Permisos',
+        description: 'Gestiona permisos de cámara y ubicación',
+        path: '/permissions',
+        onlyNative: true,
+        badge: 'Móvil',
+      },
+    ],
+  },
     {
       id: 'admin',
       title: 'Administración',
@@ -127,19 +143,19 @@ export const Settings = () => {
     });
   };
 
-  // Filtrar secciones visibles
-  const visibleSections = settingsSections.filter((section) => {
-    // Secciones que requieren admin: SOLO mostrar si el usuario ES admin
-    if (section.requiresAdmin && !isAdmin) return false;
-    
-    // Siempre mostrar secciones marcadas como showAlways
-    if (section.showAlways) return true;
-    
-    return false;
-  }).map((section) => ({
-    ...section,
-    options: getVisibleOptions(section.options),
-  })).filter((section) => section.options.length > 0); // Solo mostrar secciones con opciones
+// Filtrar secciones visibles
+const visibleSections = settingsSections.filter((section) => {
+  // Secciones que requieren admin: SOLO mostrar si el usuario ES admin
+  if (section.requiresAdmin && !isAdmin) return false;
+  
+  // Siempre mostrar secciones marcadas como showAlways
+  if (section.showAlways) return true;
+  
+  return false;
+}).map((section) => ({
+  ...section,
+  options: getVisibleOptions(section.options),
+})).filter((section) => section.options.length > 0 || section.alwaysShow); // Mostrar secciones con opciones O marcadas como alwaysShow
 
   if (checking) {
     return (

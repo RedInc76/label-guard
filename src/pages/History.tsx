@@ -193,7 +193,7 @@ export const History = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/scanner')}
+            onClick={() => navigate('/settings')}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

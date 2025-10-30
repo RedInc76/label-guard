@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { Terms } from "./pages/Terms";
 import { Permissions } from "./pages/Permissions";
 import { Settings } from "./pages/Settings";
+import { Account } from "./pages/Account";
 import { Insights } from "./pages/Insights";
 import { Compare } from "./pages/Compare";
 import { FAQ } from "./pages/FAQ";
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
               <Route path="/permissions" element={<Permissions />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="*" element={<NotFound />} />

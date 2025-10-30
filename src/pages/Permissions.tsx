@@ -36,7 +36,7 @@ export const Permissions = () => {
       <div className="min-h-screen p-6">
         <div className="max-w-md mx-auto space-y-6">
           <div className="flex items-center gap-4 pt-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-xl font-bold text-foreground">Permisos</h1>
@@ -58,7 +58,7 @@ export const Permissions = () => {
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4 pt-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-xl font-bold text-foreground">Permisos</h1>

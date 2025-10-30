@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Settings, Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const Profile = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<ProfileType[]>([]);
   const [editingProfile, setEditingProfile] = useState<ProfileType | null>(null);
@@ -141,15 +143,20 @@ export const Profile = () => {
     <div className="min-h-screen p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center pt-4">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-            <Settings className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-4 pt-4 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <Settings className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Perfiles</h1>
+            <p className="text-muted-foreground">
+              {profiles.length}/{maxProfiles} perfiles creados
+              {activeProfilesCount > 0 && ` • ${activeProfilesCount} activo${activeProfilesCount > 1 ? 's' : ''}`}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Perfiles</h1>
-          <p className="text-muted-foreground">
-            {profiles.length}/{maxProfiles} perfiles creados
-            {activeProfilesCount > 0 && ` • ${activeProfilesCount} activo${activeProfilesCount > 1 ? 's' : ''}`}
-          </p>
         </div>
 
         {/* Alert si no hay perfiles activos */}
