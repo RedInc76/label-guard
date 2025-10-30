@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Lock, LogOut, Trash2, AlertTriangle } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { ArrowLeft, Mail, Lock, LogOut, Trash2, AlertTriangle, User, Shield, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { UserProfileService } from '@/services/userProfileService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,12 +24,97 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+const profileFormSchema = z.object({
+  full_name: z.string().max(100, 'El nombre no puede exceder 100 caracteres').optional().or(z.literal('')),
+  date_of_birth: z.string().optional().or(z.literal('')),
+  country: z.string().optional().or(z.literal('')),
+  city: z.string().max(50, 'La ciudad no puede exceder 50 caracteres').optional().or(z.literal('')),
+  community_stats_consent: z.boolean().default(false),
+});
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+const countries = [
+  'España', 'México', 'Argentina', 'Colombia', 'Chile', 'Perú', 'Venezuela',
+  'Ecuador', 'Guatemala', 'Cuba', 'Bolivia', 'República Dominicana', 'Honduras',
+  'Paraguay', 'El Salvador', 'Nicaragua', 'Costa Rica', 'Panamá', 'Uruguay',
+  'Puerto Rico', 'Estados Unidos', 'Otro'
+];
 
 export const Account = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      full_name: '',
+      date_of_birth: '',
+      country: '',
+      city: '',
+      community_stats_consent: false,
+    },
+  });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+
+      setIsLoadingProfile(true);
+      const profile = await UserProfileService.getProfile(user.id);
+      
+      if (profile) {
+        form.reset({
+          full_name: profile.full_name || '',
+          date_of_birth: profile.date_of_birth || '',
+          country: profile.country || '',
+          city: profile.city || '',
+          community_stats_consent: profile.community_stats_consent || false,
+        });
+      }
+      setIsLoadingProfile(false);
+    };
+
+    loadProfile();
+  }, [user, form]);
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    if (!user?.id) return;
+
+    const success = await UserProfileService.updateProfile(user.id, {
+      full_name: data.full_name || null,
+      date_of_birth: data.date_of_birth || null,
+      country: data.country || null,
+      city: data.city || null,
+      community_stats_consent: data.community_stats_consent,
+    });
+
+    if (success) {
+      toast({
+        title: 'Perfil actualizado',
+        description: 'Tu información ha sido guardada correctamente',
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar tu perfil. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleResetPassword = async () => {
     if (!user?.email) return;
@@ -70,18 +163,11 @@ export const Account = () => {
 
     setIsDeleting(true);
     try {
-      // Por ahora, simplemente cerrar sesión y mostrar mensaje
-      // La eliminación completa requeriría una función de backend
       toast({
         title: 'Funcionalidad en desarrollo',
         description: 'La eliminación de cuenta estará disponible próximamente. Por favor contacta con soporte.',
         variant: 'destructive',
       });
-
-      // TODO: Implementar migración con función RPC para eliminar cuenta
-      // const { error } = await supabase.rpc('delete_user_account');
-      // if (error) throw error;
-      
     } catch (error) {
       console.error('Error al eliminar cuenta:', error);
       toast({
@@ -96,7 +182,7 @@ export const Account = () => {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4 pt-4">
@@ -111,73 +197,187 @@ export const Account = () => {
           </div>
         </div>
 
-        {/* Email */}
+        {/* Sección 1: Información Personal */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Mail className="w-5 h-5 text-primary" />
-              </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Información Personal
+            </CardTitle>
+            <CardDescription>Todos los campos son opcionales</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre completo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: María González" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date_of_birth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de nacimiento</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>País</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar país" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ciudad</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Madrid" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" className="w-full" disabled={isLoadingProfile}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar cambios
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        {/* Sección 2: Seguridad de la Cuenta */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5" />
+              Seguridad de la Cuenta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <Mail className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Email</p>
                 <p className="font-medium text-foreground">{user?.email || 'No disponible'}</p>
               </div>
             </div>
+
+            <Button variant="outline" className="w-full justify-start" onClick={handleResetPassword}>
+              <Lock className="w-4 h-4 mr-2" />
+              Cambiar contraseña
+            </Button>
+
+            <Button variant="outline" className="w-full justify-start" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Cerrar sesión
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Acciones de cuenta */}
-        <div className="space-y-3">
-          <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={handleResetPassword}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">Cambiar contraseña</p>
-                  <p className="text-xs text-muted-foreground">
-                    Recibirás un email para restablecer tu contraseña
-                  </p>
-                </div>
+        {/* Sección 3: Preferencias de Privacidad */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Preferencias de Privacidad
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="community_stats"
+                checked={form.watch('community_stats_consent')}
+                onCheckedChange={(checked) => {
+                  form.setValue('community_stats_consent', checked as boolean);
+                  form.handleSubmit(onSubmit)();
+                }}
+              />
+              <div className="space-y-1 leading-none">
+                <Label
+                  htmlFor="community_stats"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Permitir uso de datos anónimos para estadísticas comunitarias
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Esto nos ayuda a entender mejor las tendencias alimentarias y mejorar la app. 
+                  Tus datos personales nunca serán compartidos. Puedes desactivar esto en cualquier momento.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={handleSignOut}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <LogOut className="w-5 h-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">Cerrar sesión</p>
-                  <p className="text-xs text-muted-foreground">
-                    Sal de tu cuenta en este dispositivo
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-primary"
+              onClick={() => navigate('/privacy-policy')}
+            >
+              Ver Política de Privacidad completa
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Zona peligrosa */}
-        <div className="pt-6 border-t border-border">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Zona de peligro
-          </h2>
-          
-          <Card className="border-destructive/50 hover:bg-destructive/5 transition-colors cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Trash2 className="w-5 h-5 text-destructive" />
-                <div className="flex-1">
-                  <p className="font-medium text-destructive">Eliminar cuenta</p>
-                  <p className="text-xs text-muted-foreground">
-                    Esta acción no se puede deshacer. Se eliminarán todos tus datos.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Sección 4: Zona de Peligro */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Zona de Peligro
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Eliminar cuenta permanentemente
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Esta acción no se puede deshacer. Se eliminarán todos tus datos.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Info legal */}
         <Card className="bg-muted/30">

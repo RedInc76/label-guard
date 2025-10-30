@@ -396,6 +396,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          city: string | null
+          community_stats_consent: boolean | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          community_stats_consent?: boolean | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          community_stats_consent?: boolean | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
