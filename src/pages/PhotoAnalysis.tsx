@@ -45,8 +45,32 @@ export const PhotoAnalysis = () => {
         );
         
         if (!isValid) {
-          console.log('⚠️ Caché invalidado por cambios en perfil, re-analizando con IA');
-          return; // Salir y continuar con análisis AI normal
+          console.log('⚠️ Caché invalidado por cambios en perfil, re-analizando contra nuevas restricciones');
+          
+          // ✅ Incrementar contador de accesos
+          await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
+          
+          // ✅ Re-analizar SOLO contra restricciones actuales (sin consumir créditos IA)
+          const result = await AnalysisService.analyzeProductForActiveProfiles(cachedProduct);
+          
+          // ✅ Navegar directo a resultados con datos del cache
+          navigate('/results', {
+            state: {
+              product: cachedProduct,
+              analysis: result,
+              analysisType: 'ai_photo',
+              fromCache: true,
+              cacheInvalidated: true // 🆕 Flag para mostrar mensaje diferente
+            }
+          });
+          
+          // ✅ Mostrar toast informativo
+          toast({
+            title: "Perfiles actualizados",
+            description: "Producto re-analizado con tus restricciones actuales",
+          });
+          
+          return; // ✅ Salir porque ya navegamos a resultados
         }
         
         console.log('✅ Producto recuperado del caché válido');

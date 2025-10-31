@@ -219,6 +219,18 @@ export const Results = () => {
         {/* CRITICAL: Legal Disclaimer - MUST BE FIRST */}
         <LegalDisclaimer variant="results" compact={false} />
 
+        {/* Cache invalidated badge */}
+        {location.state?.cacheInvalidated && (
+          <Card className="p-3 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 justify-center">
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                ♻️ Re-analizado con perfiles actualizados
+              </p>
+            </div>
+          </Card>
+        )}
+
         {/* Active profiles info */}
         <Card className="p-3 bg-muted/30 border-border">
           <p className="text-sm text-center text-muted-foreground">
