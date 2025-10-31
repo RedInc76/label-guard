@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ScanLine, Settings, LogOut } from 'lucide-react';
+import { Home, ScanLine, Settings, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
@@ -8,11 +9,25 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPremium, signOut } = useAuth();
+  const { isAdmin } = useAdminCheck();
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <>
+      {/* Admin button en esquina superior izquierda */}
+      {isAdmin && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/admin')} 
+          className="fixed top-4 left-4 z-50 h-10 w-10 p-0 bg-primary/10 hover:bg-primary/20"
+          title="Admin Dashboard"
+        >
+          <Shield className="h-4 w-4 text-primary" />
+        </Button>
+      )}
+
       {/* Logout button en esquina superior derecha */}
       {isPremium && (
         <Button 
