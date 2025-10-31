@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Capacitor } from '@capacitor/core';
-import { InitialDisclaimerDialog } from '@/components/InitialDisclaimerDialog';
 import { APP_VERSION } from '@/config/app';
 
 export const Settings = () => {
@@ -15,7 +13,6 @@ export const Settings = () => {
   const { isPremium } = useAuth();
   const { isAdmin, checking } = useAdminCheck();
   const isNative = Capacitor.isNativePlatform();
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const settingsSections = [
     {
@@ -124,7 +121,7 @@ export const Settings = () => {
           icon: FileText,
           label: 'Términos y Condiciones',
           description: 'Lee nuestros términos de uso',
-          action: 'showDisclaimer',
+          path: '/terms',
         },
       ],
     },
@@ -195,15 +192,9 @@ const visibleSections = settingsSections.filter((section) => {
                 <div className="space-y-2">
                   {section.options.map((option) => (
                     <Card
-                      key={option.path || option.action}
+                      key={option.path}
                       className="p-3 hover:bg-accent/50 transition-colors cursor-pointer border-muted"
-                      onClick={() => {
-                        if (option.action === 'showDisclaimer') {
-                          setShowDisclaimer(true);
-                        } else {
-                          navigate(option.path);
-                        }
-                      }}
+                      onClick={() => navigate(option.path)}
                     >
                       <div className="flex items-center gap-3">
                         <option.icon className="w-5 h-5 text-muted-foreground" />
@@ -250,12 +241,6 @@ const visibleSections = settingsSections.filter((section) => {
           </Card>
         )}
       </div>
-
-      {/* Disclaimer Dialog */}
-      <InitialDisclaimerDialog 
-        isOpen={showDisclaimer} 
-        onOpenChange={setShowDisclaimer}
-      />
     </div>
   );
 };
