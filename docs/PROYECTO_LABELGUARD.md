@@ -1782,11 +1782,13 @@ RESEND_API_KEY=********** (Resend emails)
 
 ## Modelo de Negocio
 
-### Planes
+> ⚠️ **NOTA IMPORTANTE:** El modelo de negocio descrito a continuación es una **propuesta comercial no implementada**. Actualmente, el sistema solo diferencia entre usuarios registrados (FREE) y no registrados, sin ningún sistema de pagos o suscripciones activo.
+
+### Planes (Propuesta)
 
 | Característica | FREE | PREMIUM |
 |----------------|------|---------|
-| **Precio** | Gratis | $4.99/mes o $49.99/año |
+| **Precio** | Gratis | $0.99 USD/mes |
 | **Escaneo de barras** | ✅ Ilimitado | ✅ Ilimitado |
 | **Análisis de fotos IA** | ❌ No disponible | ✅ Ilimitado* |
 | **Perfiles** | 1 | 5 |
@@ -1799,16 +1801,17 @@ RESEND_API_KEY=********** (Resend emails)
 | **Estadísticas** | ❌ No | ✅ Sí |
 | **Soporte prioritario** | ❌ No | ✅ Sí |
 
-\* *Con fair use policy: 100 análisis IA/mes incluidos, luego $0.02/análisis*
+\* *Con fair use policy: 100 análisis IA/mes incluidos, luego $0.01 USD por análisis adicional*
 
-### Estrategia de Monetización
+### Estrategia de Monetización (Propuesta)
 
-**Fase 1 (Actual):** Freemium con registro
+**Fase 1 (Actual):** Sistema básico sin pagos implementados
 
-- FREE: Sin registro, funcionalidad básica (alérgenos)
-- PREMIUM: Registro obligatorio, funcionalidades avanzadas
+- FREE: Sin registro, funcionalidad básica (solo alérgenos principales)
+- REGISTRADO: Con registro gratuito, acceso a todas las funcionalidades avanzadas
+- **No hay sistema de pagos implementado actualmente**
 
-**Fase 2 (Futuro):**
+**Fase 2 (Propuesta futura):**
 
 1. **Publicidad no intrusiva** en versión FREE
    - Banners en resultados de escaneo
@@ -1824,26 +1827,34 @@ RESEND_API_KEY=********** (Resend emails)
      - Apps de salud (integración)
      - Restaurantes (menús personalizados)
    
-4. **Plan Familiar**
-   - $7.99/mes para hasta 10 perfiles
+4. **Plan Familiar** (propuesta)
+   - $1.99 USD/mes para hasta 10 perfiles
    - Gestión centralizada
    
-5. **Plan Empresarial**
+5. **Plan Empresarial** (propuesta)
    - Para comedores escolares, hospitales, empresas
    - Gestión masiva de restricciones
    - Reportes de compliance
 
-### Costos Operativos (Estimado)
+### Costos Operativos Estimados (Proyección)
+
+> 💡 **Nota:** Estos son costos proyectados para cuando el sistema de suscripciones esté implementado.
 
 | Servicio | Costo Mensual (1000 usuarios activos) |
 |----------|---------------------------------------|
-| **Supabase Pro** | $25/mes (hasta 8GB DB, 250GB bandwidth) |
-| **Lovable AI** | ~$50/mes (5000 análisis IA * $0.01) |
-| **Resend** | Gratis (hasta 3000 emails/mes) |
-| **Lovable Hosting** | Incluido en plan Pro |
-| **Total** | ~$75/mes |
+| **Supabase Pro** | $25 USD/mes (hasta 8GB DB, 250GB bandwidth) |
+| **Lovable AI** | ~$50 USD/mes (5000 análisis IA × $0.01 USD) |
+| **Resend** | $0 USD (hasta 3000 emails/mes en plan gratuito) |
+| **Lovable Hosting** | Incluido en plan |
+| **Total** | ~$75 USD/mes |
 
-**Break-even:** ~20 usuarios premium ($4.99/mes * 20 = $99.80/mes)
+**Break-even proyectado:** ~76 usuarios premium ($0.99 USD/mes × 76 = $75.24 USD/mes)
+
+**Análisis de viabilidad:**
+- Con $0.99 USD/mes, se requiere una base más amplia de usuarios premium
+- Estrategia enfocada en volumen y retención a largo plazo
+- Precio accesible para mercado latinoamericano
+- Potencial de crecimiento con planes Familiar y Empresarial
 
 ---
 
@@ -1858,7 +1869,9 @@ RESEND_API_KEY=********** (Resend emails)
 
 **Solución con LabelGuard:**
 
-1. **Registro como PREMIUM** ($4.99/mes)
+1. **Registro como PREMIUM** ($0.99 USD/mes)*
+
+\* *Precio propuesto, sistema de suscripción no implementado actualmente*
 2. **Crear perfil "Tomás"**
    - Restricción: Cacahuetes
    - Severidad: **Severo** 🔴
@@ -1879,7 +1892,9 @@ RESEND_API_KEY=********** (Resend emails)
 
 **Solución con LabelGuard:**
 
-1. **Registro como PREMIUM**
+1. **Registro como PREMIUM** ($0.99 USD/mes)*
+
+\* *Precio propuesto, sistema de suscripción no implementado actualmente*
 2. **Crear 3 perfiles:**
    - "Luis" - Vegetariano (Severo), Sin lácteos (Severo), Sin huevos (Severo)
    - "Ana" - Vegetariana (Moderado), Lácteos OK, Huevos OK
