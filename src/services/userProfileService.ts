@@ -33,8 +33,10 @@ export class UserProfileService {
   ): Promise<boolean> {
     const { error } = await supabase
       .from('user_profiles')
-      .update(updates)
-      .eq('id', userId);
+      .upsert(
+        { id: userId, ...updates },
+        { onConflict: 'id' }
+      );
 
     if (error) {
       console.error('Error updating profile:', error);
