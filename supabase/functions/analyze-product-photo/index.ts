@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { correctOCRErrors } from './ocr-correction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -229,6 +230,21 @@ Responde en formato JSON estricto:
     }
     
     const result = JSON.parse(jsonStr);
+    
+    // Aplicar corrección OCR SOLO para análisis de ingredientes (back)
+    if (body.type === 'back') {
+      const originalIngredients = result.ingredients || '';
+      const originalAllergens = result.allergens || '';
+      
+      result.ingredients = correctOCRErrors(originalIngredients, false);
+      result.allergens = correctOCRErrors(originalAllergens, true);
+      
+      console.log('✅ OCR corrections applied:', {
+        ingredientsChanged: originalIngredients !== result.ingredients,
+        allergensChanged: originalAllergens !== result.allergens
+      });
+    }
+    
     console.log(`Analysis complete for user ${user.id}, type: ${body.type}`);
     
     return new Response(JSON.stringify(result), {

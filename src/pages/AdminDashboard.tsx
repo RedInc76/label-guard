@@ -3,10 +3,13 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsageAnalyticsService } from '@/services/usageAnalyticsService';
-import { Loader2, TrendingUp, Users, DollarSign, Database, BarChart3, Activity } from 'lucide-react';
+import { AdminCacheService } from '@/services/adminCacheService';
+import { Loader2, TrendingUp, Users, DollarSign, Database, BarChart3, Activity, Trash2 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { LogsViewer } from '@/components/LogsViewer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const COLORS = {
   ai: '#ef4444',
@@ -18,6 +21,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [globalStats, setGlobalStats] = useState<any>(null);
   const [adminInsights, setAdminInsights] = useState<any>(null);
+  const [barcodeToDelete, setBarcodeToDelete] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -40,6 +45,39 @@ export default function AdminDashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    if (!barcodeToDelete.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Ingresa un código de barras',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await AdminCacheService.clearProductByBarcode(barcodeToDelete);
+      
+      toast({
+        title: '✅ Cache limpiado',
+        description: `Producto con código ${barcodeToDelete} eliminado del cache`,
+      });
+      
+      setBarcodeToDelete('');
+      // Recargar stats si es necesario
+      await loadData();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo limpiar el cache',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -246,6 +284,39 @@ export default function AdminDashboard() {
                   <span className="text-muted-foreground">Total OpenFoodFacts:</span>
                   <span className="font-medium">{globalStats.totalOpenFoodFacts}</span>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Admin Cache Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle>🗑️ Gestión de Cache</CardTitle>
+                <CardDescription>Eliminar productos del cache de análisis IA</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Código de barras (ej: 7500478008957)"
+                    value={barcodeToDelete}
+                    onChange={(e) => setBarcodeToDelete(e.target.value)}
+                    disabled={deleting}
+                  />
+                  <Button 
+                    onClick={handleClearCache}
+                    disabled={deleting || !barcodeToDelete.trim()}
+                    variant="destructive"
+                  >
+                    {deleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    Borrar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ⚠️ Esta acción eliminará el producto del cache. En el próximo escaneo se volverá a analizar con IA.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
