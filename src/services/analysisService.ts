@@ -227,8 +227,21 @@ export class AnalysisService {
       return { text: '', type: 'ambiguous', confidence: 'low' };
     }
     
-    // ========== PASO 2: DETECCIÓN UNIVERSAL DE "PUEDE CONTENER" / "TRAZAS" EN ALLERGENS ==========
-    // PRIMERO: Verificar si existe "puede contener"/"may contain"/"trazas" EN CUALQUIER PARTE del campo allergens
+    // ========== PASO 2: PRESENCIA EN INGREDIENTES (PRIORIDAD MÁXIMA) ==========
+    // TODO lo que aparece en la lista de INGREDIENTES es lo que el producto CONTIENE
+    const isInIngredientsFuzzy = new RegExp(fuzzyKeyword, 'i').test(ingredientsLower);
+    const isInIngredientsCollapsed = makeCollapsed(ingredientsLower).includes(collapsedKeyword);
+    
+    if (isInIngredientsFuzzy || isInIngredientsCollapsed) {
+      console.log('🔍 [AnalysisService] DIRECTO en ingredients:', { 
+        keyword: lowerKeyword,
+        ingredientsPreview: ingredientsLower.substring(0, 100)
+      });
+      return { text: ingredientsLower.substring(0, 200), type: 'direct', confidence: 'high' };
+    }
+    
+    // ========== PASO 3: DETECCIÓN DIRECTA EN ALLERGENS (sin "puede contener") ==========
+    // Presencia en allergens sin "puede contener" = es directo (ej: "Contiene: gluten")
     const puedeContenerFuzzy = makeFuzzy('puede contener');
     const mayContainFuzzy = makeFuzzy('may contain');
     const trazasFuzzy = makeFuzzy('trazas');
@@ -238,31 +251,9 @@ export class AnalysisService {
     const hasTrazasInAllergens = new RegExp(trazasFuzzy, 'i').test(allergensLower) ||
                                  /trazas|traces/i.test(allergensCollapsed);
     
-    // SI hay "puede contener" o "trazas" en allergens Y el keyword está presente en allergens
     const keywordInAllergensFuzzy = new RegExp(fuzzyKeyword, 'i').test(allergensLower);
     const keywordInAllergensCollapsed = allergensCollapsed.includes(collapsedKeyword);
     
-    if ((hasPuedeContenerInAllergens || hasTrazasInAllergens) && 
-        (keywordInAllergensFuzzy || keywordInAllergensCollapsed)) {
-      
-      const contextType = hasTrazasInAllergens ? 'trace' : 'may_contain';
-      console.log(`🔍 [AnalysisService] ${contextType.toUpperCase()} detectado (universal en allergens):`, {
-        keyword: lowerKeyword,
-        hasPuedeContener: hasPuedeContenerInAllergens,
-        hasTrazas: hasTrazasInAllergens,
-        keywordFound: keywordInAllergensFuzzy || keywordInAllergensCollapsed,
-        allergensPreview: allergensLower.substring(0, 150)
-      });
-      
-      return { 
-        text: allergensLower.substring(0, 200), 
-        type: contextType, 
-        confidence: 'high' 
-      };
-    }
-    
-    // ========== PASO 3: DETECCIÓN DIRECTA PRECISA (solo si NO hay "puede contener" en allergens) ==========
-    // Presencia en allergens sin "puede contener" = es directo (ej: "Contiene: gluten")
     const isInAllergensDirect = (keywordInAllergensFuzzy || keywordInAllergensCollapsed) && 
                                 !hasPuedeContenerInAllergens && 
                                 !hasTrazasInAllergens;
@@ -275,16 +266,25 @@ export class AnalysisService {
       return { text: allergensLower.substring(0, 200), type: 'direct', confidence: 'high' };
     }
     
-    // ========== PASO 4: PRESENCIA EN INGREDIENTES ==========
-    const isInIngredientsFuzzy = new RegExp(fuzzyKeyword, 'i').test(ingredientsLower);
-    const isInIngredientsCollapsed = makeCollapsed(ingredientsLower).includes(collapsedKeyword);
-    
-    if (isInIngredientsFuzzy || isInIngredientsCollapsed) {
-      console.log('🔍 [AnalysisService] DIRECTO en ingredients:', { 
+    // ========== PASO 4: DETECCIÓN DE "PUEDE CONTENER" / "TRAZAS" EN ALLERGENS ==========
+    // SI hay "puede contener" o "trazas" en allergens Y el keyword está presente en allergens
+    if ((hasPuedeContenerInAllergens || hasTrazasInAllergens) && 
+        (keywordInAllergensFuzzy || keywordInAllergensCollapsed)) {
+      
+      const contextType = hasTrazasInAllergens ? 'trace' : 'may_contain';
+      console.log(`🔍 [AnalysisService] ${contextType.toUpperCase()} detectado en allergens:`, {
         keyword: lowerKeyword,
-        ingredientsPreview: ingredientsLower.substring(0, 100)
+        hasPuedeContener: hasPuedeContenerInAllergens,
+        hasTrazas: hasTrazasInAllergens,
+        keywordFound: keywordInAllergensFuzzy || keywordInAllergensCollapsed,
+        allergensPreview: allergensLower.substring(0, 150)
       });
-      return { text: ingredientsLower.substring(0, 200), type: 'direct', confidence: 'high' };
+      
+      return { 
+        text: allergensLower.substring(0, 200), 
+        type: contextType, 
+        confidence: 'high' 
+      };
     }
     
     // ========== PASO 5: CONTAMINACIÓN CRUZADA ==========
