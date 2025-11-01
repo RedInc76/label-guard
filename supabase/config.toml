@@ -6,7 +6,7 @@ verify_jwt = true
 [functions.send-otp]
 verify_jwt = false
 
-[functions.send-confirmation-email]
+[functions.verify-otp]
 verify_jwt = false
 
 [functions.admin-clear-cache]

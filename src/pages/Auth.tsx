@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Separator } from '@/components/ui/separator';
+import { OTPVerification } from '@/components/OTPVerification';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z
@@ -25,7 +26,7 @@ const passwordSchema = z
 
 export const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle, isPremium } = useAuth();
+  const { signIn, signUpWithOTP, verifyOTP, resendOTP, signInWithGoogle, isPremium } = useAuth();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'login';
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,8 @@ export const Auth = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
 
   // Redirect if already logged in
   if (isPremium) {
@@ -112,12 +115,13 @@ export const Auth = () => {
     
     setLoading(true);
     try {
-      await signUp(email, password);
+      await signUpWithOTP(email, password);
+      setPendingEmail(email);
+      setShowOTPVerification(true);
       toast({
-        title: "¡Bienvenido!",
-        description: "Tu cuenta ha sido creada exitosamente. Te enviamos un email de bienvenida.",
+        title: "¡Código enviado! 📧",
+        description: "Revisa tu email e ingresa el código de 6 dígitos",
       });
-      navigate('/scanner');
     } catch (error: any) {
       const errorMessage = error.message?.toLowerCase() || '';
       
@@ -139,6 +143,73 @@ export const Auth = () => {
     }
   };
 
+  const handleVerifyOTP = async (code: string) => {
+    try {
+      await verifyOTP(pendingEmail, code);
+      toast({
+        title: "¡Cuenta verificada! ✅",
+        description: "Tu cuenta ha sido activada exitosamente",
+      });
+      navigate('/scanner');
+    } catch (error: any) {
+      toast({
+        title: "Código inválido",
+        description: error.message || "El código no es válido o ha expirado",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      await resendOTP(pendingEmail);
+      toast({
+        title: "Código reenviado 📨",
+        description: "Revisa tu email nuevamente",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al reenviar",
+        description: error.message || "No se pudo reenviar el código",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+
+  // Show OTP verification screen if needed
+  if (showOTPVerification) {
+    return (
+      <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="w-full space-y-6">
+          <div className="text-center">
+            <img src="/logo-192.png" alt="LabelGuard" className="w-20 h-20 mx-auto mb-4 object-contain" />
+            <h1 className="text-3xl font-bold mb-2">LabelGuard</h1>
+            <p className="text-muted-foreground">Verifica tu email</p>
+          </div>
+
+          <OTPVerification
+            email={pendingEmail}
+            onVerify={handleVerifyOTP}
+            onResend={handleResendOTP}
+          />
+
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              setShowOTPVerification(false);
+              setPendingEmail('');
+            }} 
+            className="w-full"
+          >
+            Volver atrás
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
