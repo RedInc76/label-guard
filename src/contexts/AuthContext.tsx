@@ -10,10 +10,7 @@ interface AuthContextType {
   session: Session | null;
   isPremium: boolean;
   isGuest: boolean;
-  signUp: (email: string, password: string) => Promise<{ needsEmailConfirmation: boolean }>;
-  signUpWithOTP: (email: string, password: string) => Promise<void>;
-  verifyOTP: (email: string, code: string) => Promise<void>;
-  resendOTP: (email: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -110,6 +107,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/scanner`
+        }
       });
 
       if (error) {
@@ -134,8 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         message: 'Sign up successful',
         metadata: { email }
       });
-      
-      return { needsEmailConfirmation: true };
     } catch (error: any) {
       console.error('Error signing up:', error);
       loggingService.logError('Sign up exception', { error: error.message });
@@ -143,141 +141,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUpWithOTP = async (email: string, password: string) => {
-    try {
-      loggingService.log({
-        logType: 'auth',
-        message: 'Attempting OTP sign up',
-        metadata: { email }
-      });
-      
-      // Create user without confirming
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/scanner`
-        }
-      });
-
-      if (error) {
-        loggingService.logError('OTP sign up error', { error: error.message });
-        throw error;
-      }
-
-      // Store password temporarily in sessionStorage for verification
-      sessionStorage.setItem('temp_password', password);
-
-      // Send OTP code via edge function
-      const { error: otpError } = await supabase.functions.invoke('send-otp', {
-        body: { email }
-      });
-
-      if (otpError) {
-        loggingService.logError('Failed to send OTP', { error: otpError.message });
-        throw new Error('No se pudo enviar el código de verificación');
-      }
-
-      loggingService.log({
-        logType: 'auth',
-        message: 'OTP sent successfully',
-        metadata: { email }
-      });
-    } catch (error: any) {
-      console.error('Error in OTP signup:', error);
-      loggingService.logError('OTP signup exception', { error: error.message });
-      throw error;
-    }
-  };
-
-  const verifyOTP = async (email: string, code: string) => {
-    try {
-      loggingService.log({
-        logType: 'auth',
-        message: 'Verifying OTP',
-        metadata: { email }
-      });
-
-      // Get stored password
-      const password = sessionStorage.getItem('temp_password');
-      if (!password) {
-        throw new Error('Sesión expirada. Por favor, regístrate de nuevo.');
-      }
-
-      // Call edge function to verify OTP and confirm user
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { email, code, password }
-      });
-
-      if (error) {
-        loggingService.logError('OTP verification error', { error: error.message });
-        throw new Error(error.message || 'Error al verificar el código');
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      // Clear temporary password
-      sessionStorage.removeItem('temp_password');
-
-      // Set the session manually
-      if (data?.session) {
-        await supabase.auth.setSession(data.session);
-      }
-
-      loggingService.log({
-        logType: 'auth',
-        message: 'OTP verified successfully',
-        metadata: { email }
-      });
-
-      // Migrate local profile after verification
-      const localProfile = localStorage.getItem('localProfile');
-      if (localProfile) {
-        setTimeout(async () => {
-          await ProfileService.migrateLocalToCloud();
-          toast({
-            title: "¡Bienvenido a PREMIUM! 🎉",
-            description: "Tu perfil local ha sido sincronizado",
-          });
-        }, 100);
-      }
-    } catch (error: any) {
-      console.error('Error verifying OTP:', error);
-      loggingService.logError('OTP verification exception', { error: error.message });
-      throw error;
-    }
-  };
-
-  const resendOTP = async (email: string) => {
-    try {
-      loggingService.log({
-        logType: 'auth',
-        message: 'Resending OTP',
-        metadata: { email }
-      });
-
-      const { error } = await supabase.functions.invoke('send-otp', {
-        body: { email }
-      });
-
-      if (error) {
-        loggingService.logError('Failed to resend OTP', { error: error.message });
-        throw new Error('No se pudo reenviar el código');
-      }
-
-      loggingService.log({
-        logType: 'auth',
-        message: 'OTP resent successfully',
-        metadata: { email }
-      });
-    } catch (error: any) {
-      console.error('Error resending OTP:', error);
-      loggingService.logError('OTP resend exception', { error: error.message });
-      throw error;
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -370,9 +233,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isPremium,
         isGuest,
         signUp,
-        signUpWithOTP,
-        verifyOTP,
-        resendOTP,
         signIn,
         signInWithGoogle,
         signOut,
