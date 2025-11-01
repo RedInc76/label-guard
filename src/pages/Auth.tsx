@@ -6,14 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
-import { OTPVerification } from '@/components/OTPVerification';
 import { Separator } from '@/components/ui/separator';
 
 const emailSchema = z.string().email('Email inválido');
@@ -27,18 +25,14 @@ const passwordSchema = z
 
 export const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, signUpWithOTP, verifyOTP, signInWithGoogle, isPremium, resendConfirmationEmail, resendOTP } = useAuth();
+  const { signIn, signUp, signInWithGoogle, isPremium } = useAuth();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'login';
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [showOTPVerification, setShowOTPVerification] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [useOTP, setUseOTP] = useState(false);
 
   // Redirect if already logged in
   if (isPremium) {
@@ -93,22 +87,11 @@ export const Auth = () => {
       });
       navigate('/scanner');
     } catch (error: any) {
-      // Check if it's an email confirmation error
-      if (error.message?.includes('confirma tu email')) {
-        setShowEmailVerification(true);
-        setRegisteredEmail(email);
-        toast({
-          title: "Email no confirmado",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error al iniciar sesión",
-          description: error.message || "Verifica tus credenciales",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error al iniciar sesión",
+        description: error.message || "Verifica tus credenciales",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -129,32 +112,12 @@ export const Auth = () => {
     
     setLoading(true);
     try {
-      if (useOTP) {
-        await signUpWithOTP(email, password);
-        setRegisteredEmail(email);
-        setShowOTPVerification(true);
-        toast({
-          title: "¡Código enviado! 📧",
-          description: "Revisa tu email para el código de verificación",
-        });
-      } else {
-        const { needsEmailConfirmation } = await signUp(email, password);
-        
-        if (needsEmailConfirmation) {
-          setShowEmailVerification(true);
-          setRegisteredEmail(email);
-          toast({
-            title: "¡Registro exitoso!",
-            description: "Revisa tu email para confirmar tu cuenta",
-          });
-        } else {
-          toast({
-            title: "¡Bienvenido!",
-            description: "Tu cuenta ha sido creada exitosamente",
-          });
-          navigate('/scanner');
-        }
-      }
+      await signUp(email, password);
+      toast({
+        title: "¡Bienvenido!",
+        description: "Tu cuenta ha sido creada exitosamente. Te enviamos un email de bienvenida.",
+      });
+      navigate('/scanner');
     } catch (error: any) {
       const errorMessage = error.message?.toLowerCase() || '';
       
@@ -176,109 +139,6 @@ export const Auth = () => {
     }
   };
 
-  const handleVerifyOTP = async (otp: string) => {
-    try {
-      await verifyOTP(registeredEmail, otp);
-      toast({
-        title: "¡Cuenta verificada! ✅",
-        description: "Tu cuenta ha sido activada exitosamente",
-      });
-      navigate('/scanner');
-    } catch (error: any) {
-      toast({
-        title: "Código inválido",
-        description: "El código ingresado no es válido o ha expirado",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleResendOTP = async () => {
-    try {
-      await resendOTP(registeredEmail);
-      toast({
-        title: "Código reenviado",
-        description: "Revisa tu email para el nuevo código",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "No se pudo reenviar el código",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleResendEmail = async () => {
-    setLoading(true);
-    try {
-      await resendConfirmationEmail(registeredEmail);
-      toast({
-        title: "Email reenviado",
-        description: "Revisa tu bandeja de entrada",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "No se pudo reenviar el email",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (showOTPVerification) {
-    return (
-      <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
-        <OTPVerification
-          email={registeredEmail}
-          onVerify={handleVerifyOTP}
-          onResend={handleResendOTP}
-        />
-      </div>
-    );
-  }
-
-  if (showEmailVerification) {
-    return (
-      <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
-        <Card className="w-full">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">📧</span>
-            </div>
-            <CardTitle>Confirma tu email</CardTitle>
-            <CardDescription>
-              Te enviamos un link de confirmación a
-            </CardDescription>
-            <p className="font-semibold text-foreground mt-2">{registeredEmail}</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                <strong>Pasos a seguir:</strong>
-                <ol className="list-decimal list-inside mt-2 space-y-1">
-                  <li>Revisa tu bandeja de entrada</li>
-                  <li>Haz clic en el enlace de confirmación</li>
-                  <li>Inicia sesión con tus credenciales</li>
-                </ol>
-              </AlertDescription>
-            </Alert>
-            
-            <Button onClick={handleResendEmail} disabled={loading} variant="outline" className="w-full">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reenviar email
-            </Button>
-            
-            <Button onClick={() => setShowEmailVerification(false)} variant="ghost" className="w-full">
-              Volver
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="container max-w-md mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
@@ -347,10 +207,6 @@ export const Auth = () => {
                     <Input id="signup-password" type="password" placeholder="Contraseña segura" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                     <PasswordStrengthIndicator password={password} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="use-otp" checked={useOTP} onCheckedChange={(checked) => setUseOTP(checked === true)} />
-                    <Label htmlFor="use-otp" className="text-sm cursor-pointer">Usar código OTP en lugar de link</Label>
                   </div>
                   <div className="flex items-start gap-3">
                     <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} required />

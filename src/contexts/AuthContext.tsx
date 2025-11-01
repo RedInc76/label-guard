@@ -11,13 +11,9 @@ interface AuthContextType {
   isPremium: boolean;
   isGuest: boolean;
   signUp: (email: string, password: string) => Promise<{ needsEmailConfirmation: boolean }>;
-  signUpWithOTP: (email: string, password: string) => Promise<void>;
-  verifyOTP: (email: string, otp: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  resendConfirmationEmail: (email: string) => Promise<void>;
-  resendOTP: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loading: boolean;
 }
@@ -102,38 +98,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/email-confirmed`;
+      loggingService.log({
+        logType: 'auth',
+        message: 'Attempting sign up',
+        metadata: { email }
+      });
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
       });
 
-      if (error) throw error;
-
-      // Check if email confirmation is needed
-      const needsEmailConfirmation = data.user && !data.session;
-
-      // Migrate local profile to cloud after signup (only if confirmed immediately)
-      if (data.session) {
-        const localProfile = localStorage.getItem('localProfile');
-        if (localProfile) {
-          setTimeout(async () => {
-            await ProfileService.migrateLocalToCloud();
-            toast({
-              title: "¡Bienvenido a PREMIUM! 🎉",
-              description: "Tu perfil local ha sido sincronizado",
-            });
-          }, 100);
-        }
+      if (error) {
+        loggingService.logError('Sign up error', { error: error.message });
+        throw error;
       }
 
-      return { needsEmailConfirmation: !!needsEmailConfirmation };
+      // Send welcome email via edge function
+      try {
+        await supabase.functions.invoke('send-confirmation-email', {
+          body: { 
+            to: email,
+            name: email.split('@')[0]
+          }
+        });
+        loggingService.log({
+          logType: 'auth',
+          message: 'Welcome email sent',
+          metadata: { email }
+        });
+      } catch (emailError) {
+        // Don't fail signup if email fails
+        loggingService.logError('Failed to send welcome email', { error: emailError });
+      }
+
+      // Migrate local profile to cloud after signup
+      const localProfile = localStorage.getItem('localProfile');
+      if (localProfile) {
+        setTimeout(async () => {
+          await ProfileService.migrateLocalToCloud();
+          toast({
+            title: "¡Bienvenido a PREMIUM! 🎉",
+            description: "Tu perfil local ha sido sincronizado",
+          });
+        }, 100);
+      }
+
+      loggingService.log({
+        logType: 'auth',
+        message: 'Sign up successful',
+        metadata: { email }
+      });
+      
+      return { needsEmailConfirmation: false };
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Error signing up:', error);
+      loggingService.logError('Sign up exception', { error: error.message });
       throw error;
     }
   };
@@ -162,71 +182,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const resendConfirmationEmail = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmed`
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Resend confirmation error:', error);
-      throw error;
-    }
-  };
-
-  const signUpWithOTP = async (email: string, password: string) => {
-    try {
-      // Create user without auto-confirm
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // Send OTP via edge function
-      const { error: otpError } = await supabase.functions.invoke('send-otp', {
-        body: { email },
-      });
-
-      if (otpError) throw otpError;
-    } catch (error: any) {
-      console.error('Sign up with OTP error:', error);
-      throw error;
-    }
-  };
-
-  const verifyOTP = async (email: string, otp: string) => {
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
-      });
-
-      if (error) throw error;
-
-      // Migrate local profile after successful verification
-      const localProfile = localStorage.getItem('localProfile');
-      if (localProfile) {
-        setTimeout(async () => {
-          await ProfileService.migrateLocalToCloud();
-          toast({
-            title: "¡Bienvenido a PREMIUM! 🎉",
-            description: "Tu perfil local ha sido sincronizado",
-          });
-        }, 100);
-      }
-    } catch (error: any) {
-      console.error('Verify OTP error:', error);
-      throw error;
-    }
-  };
 
   const signInWithGoogle = async () => {
     try {
@@ -244,18 +199,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const resendOTP = async (email: string) => {
-    try {
-      const { error } = await supabase.functions.invoke('send-otp', {
-        body: { email },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Resend OTP error:', error);
-      throw error;
-    }
-  };
 
   const resetPassword = async (email: string) => {
     try {
@@ -306,13 +249,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isPremium,
         isGuest,
         signUp,
-        signUpWithOTP,
-        verifyOTP,
         signIn,
         signInWithGoogle,
         signOut,
-        resendConfirmationEmail,
-        resendOTP,
         resetPassword,
         loading,
       }}
