@@ -345,6 +345,54 @@ private static shouldReject(
 }
 ```
 
+### Sistema de Priorización de Violaciones (v1.10.1)
+
+A partir de la versión 1.10.1, las violaciones se ordenan por **gravedad contextual** antes de mostrarse al usuario. Esto garantiza que las violaciones más importantes (ingredientes directos) aparezcan primero.
+
+#### Tabla de Prioridades
+
+| Prioridad | Tipo de Contexto | Ejemplo |
+|-----------|------------------|---------|
+| **1** (Más grave) | `Contiene:` | "Contiene: harina de trigo" |
+| **2** | `Trazas de:` | "Trazas de: cacahuetes" |
+| **3** | `Puede contener:` | "Puede contener: gluten" |
+| **4** | `Procesado en instalaciones con:` | "Procesado en instalaciones con: frutos secos" |
+| **5** (Menos grave) | Otros contextos ambiguos | Menciones indirectas |
+
+#### Algoritmo de Ordenamiento
+
+```typescript
+// En analysisService.ts (línea ~432)
+violations.sort((a, b) => {
+  // 1. Ordenar por prioridad de contexto
+  const priorityA = this.getContextPriority(a);
+  const priorityB = this.getContextPriority(b);
+  
+  if (priorityA !== priorityB) {
+    return priorityA - priorityB;
+  }
+  
+  // 2. Si tienen la misma prioridad, ordenar por severidad de la categoría
+  const severityOrder = { high: 1, medium: 2, low: 3 };
+  return severityOrder[a.severity] - severityOrder[b.severity];
+});
+```
+
+#### Ejemplo Práctico
+
+**Producto:** Galletas con trigo (Código de barras: 724865030315)  
+**Usuario:** rdrisaldi@gmail.com con restricción "Sin Gluten" (Severo)
+
+**Violaciones detectadas (sin ordenar):**
+- "Puede contener: gluten" (contexto: `trace`)
+- "Contiene: trigo" (contexto: `direct`)
+
+**Resultado mostrado al usuario (ordenado por prioridad):**
+1. 🔴 **Sin Gluten** - Contiene: trigo (Severo, Alto) ← Prioridad 1
+2. ⚠️ **Sin Gluten** - Puede contener: gluten (Severo, Alto) ← Prioridad 3
+
+**Beneficio UX:** El usuario ve inmediatamente la violación más crítica (ingrediente directo) antes que las precauciones secundarias.
+
 ---
 
 ## Stack Tecnológico
@@ -391,7 +439,7 @@ private static shouldReject(
 |-----|-----------|-----------|
 | **Open Food Facts** | Base de datos alimentaria | https://world.openfoodfacts.org |
 | **Lovable AI** | Análisis de fotos con IA | Google Gemini 2.5 Flash |
-| **Resend** | Envío de emails (OTP, confirmación) | Resend.com |
+| **Resend** | Envío de emails (confirmación, recuperación) | Resend.com |
 
 ### Infraestructura
 
@@ -454,7 +502,7 @@ labelguard/
 │   ├── functions/           # Edge Functions
 │   │   ├── analyze-product-photo/
 │   │   │   └── index.ts
-│   │   ├── send-otp/
+│   │   ├── verify-otp/           # Legacy (deshabilitado)
 │   │   │   └── index.ts
 │   │   ├── send-confirmation-email/
 │   │   │   └── index.ts
@@ -1558,25 +1606,23 @@ CREATE TRIGGER on_auth_user_created_profile
   EXECUTE FUNCTION handle_new_user_profile();
 ```
 
-#### 5. Cleanup periódico de rate limits y OTP
+#### 5. Cleanup periódico
 
 ```sql
-CREATE OR REPLACE FUNCTION cleanup_rate_limits()
+-- Función de limpieza periódica (ejecutar diariamente via cron)
+CREATE OR REPLACE FUNCTION cleanup_old_records()
 RETURNS void AS $$
 BEGIN
-  -- Limpiar rate limits de IA mayores a 24 horas
-  DELETE FROM ai_analysis_rate_limit
-  WHERE window_start < now() - INTERVAL '24 hours';
+  -- Limpiar historial de escaneos mayor a 90 días para usuarios FREE
+  DELETE FROM scan_history 
+  WHERE created_at < now() - INTERVAL '90 days'
+    AND user_id IS NULL;
   
-  -- Limpiar rate limits de OTP mayores a 24 horas
-  DELETE FROM otp_rate_limit
-  WHERE window_start < now() - INTERVAL '24 hours';
-  
-  -- Limpiar códigos OTP expirados
-  DELETE FROM otp_codes
-  WHERE expires_at < now() - INTERVAL '1 hour';
+  -- Limpiar análisis de IA cacheados sin uso en 180 días
+  DELETE FROM ai_analyzed_products
+  WHERE last_used_at < now() - INTERVAL '180 days';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql;
 ```
 
 ---
@@ -1587,8 +1633,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 LabelGuard utiliza **Supabase Auth** con soporte para:
 
-- **Email/Password** con confirmación por email
-- **OTP (One-Time Password)** vía email (sin contraseña)
+- **Email/Password** con confirmación automática
 - **Google OAuth** (próximamente)
 
 **Flujo de autenticación:**
@@ -1598,32 +1643,24 @@ sequenceDiagram
     participant U as Usuario
     participant A as App Frontend
     participant SA as Supabase Auth
-    participant E as Edge Function
     
-    U->>A: Ingresa email
-    A->>E: send-otp(email)
-    E->>E: Verificar rate limit
-    E->>E: Generar código 6 dígitos
-    E->>SA: Guardar en otp_codes
-    E->>E: Enviar email vía Resend
-    E->>A: ✅ OTP enviado
-    A->>U: "Revisa tu email"
-    
-    U->>A: Ingresa código OTP
-    A->>SA: verifyOtp(email, code)
-    SA->>SA: Validar código
+    U->>A: Completa formulario de registro
+    A->>A: Valida email y contraseña
+    A->>A: Valida confirmación de contraseña
+    A->>SA: signUp(email, password)
+    SA->>SA: Crear cuenta
+    SA->>SA: Auto-confirmar email
     SA->>A: ✅ JWT Token
-    A->>A: Guardar sesión en localStorage
-    A->>U: Redirigir a /home
+    A->>U: Redirige a /scanner
 ```
 
-**Seguridad del OTP:**
+**Seguridad de autenticación:**
 
-- Códigos expiran en **10 minutos**
-- Rate limiting: **3 intentos por email cada 15 minutos**
-- Rate limiting: **5 intentos por IP cada 15 minutos**
-- Los códigos se eliminan después de ser verificados
-- Cleanup automático de códigos expirados
+- Las contraseñas deben cumplir requisitos mínimos de seguridad
+- Confirmación de contraseña obligatoria en el registro
+- Auto-confirmación de email habilitada para facilitar onboarding
+- Tokens JWT con expiración automática
+- Rate limiting en intentos de login
 
 ### 2. Row Level Security (RLS)
 
@@ -1959,7 +1996,20 @@ RESEND_API_KEY=********** (Resend emails)
 
 ## Roadmap y Futuro
 
-### Versión 2.0 (Q1 2025)
+### Versión 1.11.0 (Diciembre 2025)
+
+- [ ] **Análisis de tabla nutricional con IA**
+  - Captura opcional de tabla nutricional (foto adicional)
+  - Alertas inteligentes por excesos (azúcar, sodio, grasas saturadas)
+  - Restricciones nutricionales configurables ("Bajo en Azúcar", "Bajo en Sodio")
+  - Comparaciones nutricionales precisas entre productos
+  
+- [ ] **Mejoras en comparación de productos**
+  - Comparación nutricional detallada
+  - Cálculos automáticos de excesos (% valor diario)
+  - Recomendaciones personalizadas
+
+### Versión 2.0 (Q1 2026)
 
 - [ ] **Modo offline completo**
   - Cache de productos escaneados previamente
@@ -1973,7 +2023,7 @@ RESEND_API_KEY=********** (Resend emails)
   - Sugerencias de recetas basadas en productos compatibles
   - Integración con apps de cocina
 
-### Versión 2.5 (Q2 2025)
+### Versión 2.5 (Q2 2026)
 
 - [ ] **Social features**
   - Compartir perfiles con familia (permisos)
@@ -1987,7 +2037,7 @@ RESEND_API_KEY=********** (Resend emails)
 - [ ] **Alertas de retiro de productos**
   - Notificaciones push si un favorito es retirado del mercado
 
-### Versión 3.0 (Q3 2025)
+### Versión 3.0 (Q3 2026)
 
 - [ ] **Inteligencia artificial mejorada**
   - Detección de "ingredientes ocultos" (ej: E-numbers)
@@ -2001,7 +2051,7 @@ RESEND_API_KEY=********** (Resend emails)
   - Permitir a desarrolladores integrar LabelGuard
   - SDK para iOS, Android, Web
 
-### Versión 4.0 (Q4 2025)
+### Versión 4.0 (Q4 2026)
 
 - [ ] **Realidad aumentada**
   - Apuntar cámara a estante → destacar productos aptos en tiempo real
@@ -2133,9 +2183,10 @@ interface AnalysisResult {
 | Function | Path | Método | Auth | Descripción |
 |----------|------|--------|------|-------------|
 | `analyze-product-photo` | `/analyze-product-photo` | POST | ✅ | Analiza fotos con Gemini |
-| `send-otp` | `/send-otp` | POST | ❌ | Envía código OTP por email |
 | `send-confirmation-email` | `/send-confirmation-email` | POST | ❌ | Envía email de confirmación |
+| `verify-otp` | `/verify-otp` | POST | ❌ | Verifica código OTP (legacy, deshabilitado) |
 | `admin-insights` | `/admin-insights` | GET | ✅ Admin | Obtiene insights globales |
+| `admin-clear-cache` | `/admin-clear-cache` | POST | ✅ Admin | Limpia cache de productos IA |
 
 ### E. Variables de Entorno
 
@@ -2182,8 +2233,32 @@ LabelGuard es una solución integral para personas con restricciones alimentaria
 
 ---
 
-**Versión del documento:** 1.0  
-**Fecha:** Octubre 2025  
+## Changelog
+
+### Versión 1.10.1 (2 de Noviembre, 2025)
+
+**Cambios:**
+- ✅ Sistema de priorización de violaciones por contexto de gravedad
+  - Las violaciones por ingredientes directos aparecen antes que "puede contener"
+  - Ordenamiento automático: directo > trazas > puede contener > procesamiento
+- 🔄 Simplificación del sistema de autenticación
+  - Eliminado sistema OTP temporal
+  - Retorno a email/password con confirmación automática
+  - Mejora en la experiencia de onboarding
+- 📝 Mejoras en la UX de registro
+  - Validación de confirmación de contraseña
+  - Mensajes de error más claros
+
+**Correcciones:**
+- Fixed: Orden de visualización de violaciones múltiples
+- Fixed: Validación de formulario de registro
+
+---
+
+**Versión de la aplicación:** 1.10.1
+**Versión del documento:** 1.1  
+**Fecha:** Noviembre 2025  
+**Última actualización:** 2 de Noviembre, 2025  
 **Autor:** Equipo LabelGuard  
 **Contacto:** support@labelguard.app
 
