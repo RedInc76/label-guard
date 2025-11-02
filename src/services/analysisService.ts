@@ -359,6 +359,23 @@ export class AnalysisService {
     }
   }
 
+  // Obtener prioridad numérica del tipo de contexto (menor = más grave)
+  private static getContextPriority(violation: AnalysisResult['violations'][0]): number {
+    const reason = violation.reason.toLowerCase();
+    
+    if (reason.startsWith('contiene:')) {
+      return 1; // Ingrediente directo - MÁXIMA PRIORIDAD
+    } else if (reason.startsWith('trazas de:')) {
+      return 2; // Trazas explícitas
+    } else if (reason.startsWith('puede contener:')) {
+      return 3; // Puede contener
+    } else if (reason.startsWith('procesado en instalaciones con:')) {
+      return 4; // Contaminación cruzada
+    } else {
+      return 5; // Otros casos ambiguos
+    }
+  }
+
   // Método original para compatibilidad
   static analyzeProduct(product: ProductInfo, profile: UserProfile): AnalysisResult {
     const violations: AnalysisResult['violations'] = [];
@@ -413,6 +430,21 @@ export class AnalysisService {
           }
         }
       });
+    });
+
+    // Ordenar violaciones por prioridad de contexto y severidad
+    violations.sort((a, b) => {
+      const priorityA = this.getContextPriority(a);
+      const priorityB = this.getContextPriority(b);
+      
+      // Si tienen diferente prioridad de contexto, ordenar por eso
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // Si tienen la misma prioridad de contexto, ordenar por severidad de categoría
+      const severityOrder = { high: 1, medium: 2, low: 3 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
     });
 
     // Generar advertencias adicionales
