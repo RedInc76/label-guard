@@ -5,16 +5,17 @@
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
 2. [¿Qué es LabelGuard?](#qué-es-labelguard)
 3. [Características Principales](#características-principales)
-4. [Sistema de Niveles de Severidad](#sistema-de-niveles-de-severidad)
-5. [Stack Tecnológico](#stack-tecnológico)
-6. [Arquitectura del Sistema](#arquitectura-del-sistema)
-7. [Flujo de Análisis de Productos](#flujo-de-análisis-de-productos)
-8. [Servicios y Componentes Principales](#servicios-y-componentes-principales)
-9. [Base de Datos](#base-de-datos)
-10. [Seguridad y Privacidad](#seguridad-y-privacidad)
-11. [Modelo de Negocio](#modelo-de-negocio)
-12. [Casos de Uso](#casos-de-uso)
-13. [Roadmap y Futuro](#roadmap-y-futuro)
+4. [Features Prioritarios en Desarrollo](#features-prioritarios-en-desarrollo)
+5. [Sistema de Niveles de Severidad](#sistema-de-niveles-de-severidad)
+6. [Stack Tecnológico](#stack-tecnológico)
+7. [Arquitectura del Sistema](#arquitectura-del-sistema)
+8. [Flujo de Análisis de Productos](#flujo-de-análisis-de-productos)
+9. [Servicios y Componentes Principales](#servicios-y-componentes-principales)
+10. [Base de Datos](#base-de-datos)
+11. [Seguridad y Privacidad](#seguridad-y-privacidad)
+12. [Modelo de Negocio](#modelo-de-negocio)
+13. [Casos de Uso](#casos-de-uso)
+14. [Roadmap y Futuro](#roadmap-y-futuro)
 
 ---
 
@@ -135,6 +136,76 @@ graph LR
 - **Historial**: Registra todos los escaneos con timestamp, geolocalización, resultado de análisis
 - **Favoritos**: Permite marcar productos compatibles para recompra rápida
 - **Comparación**: Compara hasta 3 productos lado a lado
+
+---
+
+## Features Prioritarios en Desarrollo
+
+### 🔜 Próximamente (Versión 1.11.0)
+
+#### Análisis de Tabla Nutricional con IA
+**Estado:** Planificado para Diciembre 2025  
+**Descripción:** 
+- Captura opcional de la tabla nutricional mediante foto adicional
+- Análisis inteligente con Google Gemini para detectar excesos
+- Alertas personalizadas por:
+  - Exceso de azúcar (>20g por 100g)
+  - Exceso de sodio (>1.5g por 100g)
+  - Grasas saturadas (>5g por 100g)
+- Nuevas restricciones nutricionales configurables:
+  - "Bajo en Azúcar" 
+  - "Bajo en Sodio"
+  - "Bajo en Grasas Saturadas"
+- Comparaciones nutricionales precisas entre productos escaneados
+- Integración con perfil de salud del usuario
+
+**Impacto esperado:**
+- Usuarios diabéticos podrán configurar límites personalizados
+- Comparación nutricional automática en modo "Comparar"
+- Recomendaciones basadas en valores nutricionales reales
+
+---
+
+### 🎯 Mediano Plazo (Versión 2.0 - Q1 2026)
+
+#### Modo Offline Completo
+**Descripción:**
+- Cache local inteligente de productos escaneados
+- Base de datos SQLite local con:
+  - Últimos 100 productos escaneados
+  - Favoritos disponibles offline
+  - Perfiles y restricciones sincronizados
+- Análisis sin conexión usando datos en cache
+- Sincronización automática al recuperar conexión
+- Indicador visual de "modo offline"
+
+**Impacto esperado:**
+- Uso en supermercados con mala señal
+- Viajes internacionales sin roaming
+- Reducción de costos de datos móviles
+
+---
+
+### 👥 Largo Plazo (Versión 2.5 - Q2 2026)
+
+#### Compartir Perfiles entre Usuarios
+**Descripción:**
+- Sistema de invitaciones por email/link
+- Permisos configurables:
+  - **Lectura:** Ver perfil y escanear productos para ese perfil
+  - **Escritura:** Modificar restricciones (ej: padres → hijos)
+  - **Admin:** Eliminar perfil compartido
+- Sincronización en tiempo real de cambios
+- Notificaciones push cuando alguien escanea para tu perfil compartido
+- Casos de uso:
+  - Padres comparten perfiles de hijos con abuelos/niñeras
+  - Parejas gestionan restricciones mutuas
+  - Nutricionistas monitorean pacientes
+
+**Impacto esperado:**
+- Facilitar compras delegadas
+- Colaboración familiar en gestión de dietas
+- Seguimiento profesional por especialistas
 
 ---
 
