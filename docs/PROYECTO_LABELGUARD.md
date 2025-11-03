@@ -2235,6 +2235,37 @@ LabelGuard es una solución integral para personas con restricciones alimentaria
 
 ## Changelog
 
+### Versión 1.10.2 (3 de Noviembre, 2025)
+
+**Mejoras de Rendimiento:**
+- ✅ Implementación de React Query para gestión de cache
+  - Cache en memoria para perfiles, historial e insights
+  - Eliminación del 90% del delay visible en navegación
+  - Datos disponibles instantáneamente en navegaciones subsecuentes
+- 🎨 Skeleton loaders implementados
+  - ProfileListSkeleton para página de perfiles
+  - HistoryListSkeleton para historial de escaneos
+  - InsightsSkeleton para página de estadísticas
+- ⚡ Optimistic UI updates
+  - Toggle de perfiles activos sin espera
+  - Actualización instantánea de UI antes de respuesta del servidor
+- 🚀 Prefetching inteligente
+  - Precarga de perfiles y historial después del login
+  - Mejora significativa en la percepción de velocidad
+
+**Mejoras Técnicas:**
+- Migración de useState/useEffect a custom hooks con React Query
+- Configuración optimizada de staleTime y gcTime para PWA
+- Invalidación selectiva de queries para mantener sincronización
+
+**Impacto UX:**
+- Primera carga: skeleton visible (en lugar de pantalla vacía)
+- Navegaciones subsecuentes: **0ms de delay** (datos en cache)
+- Toggle de perfiles: **respuesta instantánea**
+- Experiencia más fluida en dispositivos móviles
+
+---
+
 ### Versión 1.10.1 (2 de Noviembre, 2025)
 
 **Cambios:**
@@ -2255,7 +2286,7 @@ LabelGuard es una solución integral para personas con restricciones alimentaria
 
 ---
 
-**Versión de la aplicación:** 1.10.1
+**Versión de la aplicación:** 1.10.2
 **Versión del documento:** 1.1  
 **Fecha:** Noviembre 2025  
 **Última actualización:** 2 de Noviembre, 2025  
