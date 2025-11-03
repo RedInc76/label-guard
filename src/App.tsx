@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { Layout } from "./components/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
+import { setupPersistence } from "./lib/queryPersistence";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
 import { PermissionsOnboarding } from "./components/PermissionsOnboarding";
@@ -37,13 +38,17 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutos (datos "frescos")
-      gcTime: 10 * 60 * 1000, // 10 minutos en memoria
-      retry: 2, // Reintentar 2 veces si falla
+      gcTime: 2 * 60 * 60 * 1000, // 2 horas en memoria (sync con persistencia)
+      retry: 3, // Reintentar 3 veces si falla (aumentado para mejor UX offline)
       refetchOnWindowFocus: false, // No refetch al volver a la app
       refetchOnReconnect: true, // Sí refetch al recuperar conexión
+      networkMode: 'offlineFirst', // Intenta cache primero, luego red
     },
   },
 });
+
+// Configurar persistencia automática en IndexedDB
+setupPersistence(queryClient);
 
 const ErrorLogger = () => {
   useEffect(() => {

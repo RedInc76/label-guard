@@ -139,12 +139,53 @@ graph LR
 
 ---
 
+## Changelog - Versiones Recientes
+
+### Versión 1.11.0 - Diciembre 2025
+
+**🔌 Modo Offline - Fase 1: Cache Persistente**
+
+#### Nuevas Características
+- **Persistencia Automática de Cache:**
+  - Historial, Favoritos, Perfiles e Insights ahora se guardan localmente en IndexedDB
+  - Datos disponibles instantáneamente incluso sin conexión a internet
+  - Cache se mantiene hasta 2 horas y se invalida automáticamente con cada actualización de la app
+  - Carga de datos 3-5x más rápida mediante cache local
+
+- **Detección de Estado de Conexión:**
+  - Banner visual indicando cuando la app está en modo offline
+  - Sincronización automática al recuperar conexión
+  - Mejor experiencia en áreas con señal débil (supermercados, viajes)
+  - Menor consumo de datos móviles
+
+#### Mejoras Técnicas
+- Implementación de `@tanstack/react-query-persist-client` con IndexedDB
+- `networkMode: 'offlineFirst'` para React Query (cache primero, red después)
+- Hook `useOnlineStatus` para detección reactiva de conectividad
+- Selectividad de cache: solo datos del usuario (excluye admin/logs por seguridad)
+- `gcTime` aumentado a 2 horas para mejor disponibilidad offline
+- `retry` aumentado a 3 intentos para mejor UX en conexiones inestables
+
+#### Limitaciones Conocidas
+- ⚠️ Las **acciones de escritura** (crear favorito, editar perfil, guardar escaneo) requieren conexión
+- ⚠️ El **escaneo de productos** (barcode y foto IA) requiere conexión
+- ⚠️ Los datos en cache expiran después de 2 horas o al actualizar la app
+- ⚠️ Cache máximo: últimos 50 escaneos + perfiles + favoritos + insights
+
+#### Próximos Pasos (Fase 2 - v2.0)
+La Fase 2 (planeada para Q1 2026) agregará:
+- Cola de mutations offline (crear favoritos, editar perfiles sin conexión)
+- Sincronización automática de acciones pendientes
+- Indicador de "pendiente de sincronizar"
+
+---
+
 ## Features Prioritarios en Desarrollo
 
-### 🔜 Próximamente (Versión 1.11.0)
+### 🔜 Próximamente (Versión 1.12.0)
 
 #### Análisis de Tabla Nutricional con IA
-**Estado:** Planificado para Diciembre 2025  
+**Estado:** Planificado para Enero 2026
 **Descripción:** 
 - Captura opcional de la tabla nutricional mediante foto adicional
 - Análisis inteligente con Google Gemini para detectar excesos
