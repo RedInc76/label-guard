@@ -1,6 +1,7 @@
 {
   "name": "LabelGuard",
   "short_name": "LabelGuard",
+  "version": "1.11.0",
   "description": "Gestiona múltiples perfiles alimenticios y escanea productos para toda tu familia",
   "icons": [
     {
