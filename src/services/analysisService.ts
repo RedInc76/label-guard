@@ -209,12 +209,33 @@ export class AnalysisService {
     
     // ========== PASO 1: VERIFICAR PATRONES NEGATIVOS ESPECÍFICOS PRIMERO ==========
     const negativePatterns = [
+      // Patrones directos
       `sin\\s*${fuzzyKeyword}`,
       `libre\\s*de\\s*${fuzzyKeyword}`,
       `free\\s*of\\s*${fuzzyKeyword}`,
       `without\\s*${fuzzyKeyword}`,
       `${fuzzyKeyword}\\s*free`,
-      `no\\s*${fuzzyKeyword}`
+      
+      // Patrones con "contiene" (corrección del bug principal)
+      `no\\s*contiene\\s*${fuzzyKeyword}`,
+      `does\\s*not\\s*contain\\s*${fuzzyKeyword}`,
+      `sin\\s*contenido\\s*de\\s*${fuzzyKeyword}`,
+      
+      // Patrones con "naturaleza"
+      `por\\s*naturaleza\\s*no\\s*contiene\\s*${fuzzyKeyword}`,
+      `por\\s*su\\s*naturaleza\\s*no\\s*contiene\\s*${fuzzyKeyword}`,
+      `naturally\\s*${fuzzyKeyword}\\s*free`,
+      
+      // Patrones con "alérgenos"
+      `no\\s*contiene\\s*alergen[osa]*\\s*${fuzzyKeyword}`,
+      `allergens?\\s*[:-]?\\s*no\\s*${fuzzyKeyword}`,
+      `allergens?\\s*[:-]?\\s*does\\s*not\\s*contain\\s*${fuzzyKeyword}`,
+      
+      // Casos especiales
+      `0%\\s*${fuzzyKeyword}`,
+      `cero\\s*${fuzzyKeyword}`,
+      `exento\\s*de\\s*${fuzzyKeyword}`,
+      `exempt\\s*from\\s*${fuzzyKeyword}`
     ];
 
     const hasNegativeContext = negativePatterns.some(pattern => {
@@ -240,6 +261,46 @@ export class AnalysisService {
       return { text: ingredientsLower.substring(0, 200), type: 'direct', confidence: 'high' };
     }
     
+    // ========== PASO 2.5: VERIFICACIÓN ESPECÍFICA DE ALLERGENS CON NEGACIONES ==========
+    // Antes de verificar presencia directa en allergens, confirmar que NO sea una negación explícita
+    const allergenNegationPatterns = [
+      /no\s+contiene/i,
+      /does\s+not\s+contain/i,
+      /free\s+of/i,
+      /sin\s+contenido/i,
+      /libre\s+de/i,
+      /por\s+naturaleza\s+no/i,
+      /naturally.*free/i,
+      /0%/,
+      /exento/i
+    ];
+    
+    const hasAllergenNegation = allergenNegationPatterns.some(pattern => 
+      pattern.test(allergensLower)
+    );
+    
+    if (hasAllergenNegation) {
+      // Verificar que la negación esté relacionada con el keyword específico
+      const negationWithKeyword = allergenNegationPatterns.some(pattern => {
+        const match = allergensLower.match(pattern);
+        if (match) {
+          const negationIndex = match.index!;
+          const keywordIndex = allergensLower.indexOf(lowerKeyword);
+          // La negación debe estar cerca del keyword (dentro de 50 caracteres)
+          return keywordIndex !== -1 && Math.abs(negationIndex - keywordIndex) < 50;
+        }
+        return false;
+      });
+      
+      if (negationWithKeyword) {
+        console.log('✅ [AnalysisService] Negación detectada en allergens:', { 
+          keyword: lowerKeyword,
+          allergensText: allergensLower.substring(0, 100)
+        });
+        return { text: '', type: 'ambiguous', confidence: 'low' };
+      }
+    }
+    
     // ========== PASO 3: DETECCIÓN DIRECTA EN ALLERGENS (sin "puede contener") ==========
     // Presencia en allergens sin "puede contener" = es directo (ej: "Contiene: gluten")
     const puedeContenerFuzzy = makeFuzzy('puede contener');
@@ -261,7 +322,10 @@ export class AnalysisService {
     if (isInAllergensDirect) {
       console.log('🔍 [AnalysisService] DIRECTO en allergens (sin puede contener):', { 
         keyword: lowerKeyword,
-        allergensPreview: allergensLower.substring(0, 100)
+        allergensPreview: allergensLower.substring(0, 100),
+        hasPuedeContener: hasPuedeContenerInAllergens,
+        hasTrazas: hasTrazasInAllergens,
+        allergensFullText: allergensLower
       });
       return { text: allergensLower.substring(0, 200), type: 'direct', confidence: 'high' };
     }
