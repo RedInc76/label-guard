@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HistoryService, ScanHistoryItem } from '@/services/historyService';
+import { useHistory, useDeleteHistoryItem } from '@/hooks/useHistory';
 import { FavoritesService } from '@/services/favoritesService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { HistoryListSkeleton } from '@/components/HistoryListSkeleton';
+import type { ScanHistoryItem } from '@/services/historyService';
 
 // Helper para obtener color de fondo y texto del Nutriscore
 const getNutriscoreColor = (grade: string): { bg: string; text: string; border: string } => {
@@ -38,9 +40,7 @@ const getNutriscoreColor = (grade: string): { bg: string; text: string; border: 
 
 export const History = () => {
   const navigate = useNavigate();
-  const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
   const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'barcode' | 'ai_photo'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
@@ -50,21 +50,18 @@ export const History = () => {
   const [selectedForShop, setSelectedForShop] = useState<Set<string>>(new Set());
   const [isShoppingListDialogOpen, setIsShoppingListDialogOpen] = useState(false);
 
+  // React Query: datos instantáneos desde cache
+  const { data: history = [], isLoading } = useHistory();
+  const deleteMutation = useDeleteHistoryItem();
+
   useEffect(() => {
-    loadHistory();
+    loadFavorites();
   }, []);
 
-  const loadHistory = async () => {
-    setLoading(true);
-    const data = await HistoryService.getHistory();
-    setHistory(data);
-    
-    // Load favorites
+  const loadFavorites = async () => {
     const favs = await FavoritesService.getFavorites();
     const favSet = new Set(favs.map(f => f.scan_history_id));
     setFavorites(favSet);
-    
-    setLoading(false);
   };
 
   const handleToggleFavorite = async (item: ScanHistoryItem) => {
@@ -90,11 +87,15 @@ export const History = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const success = await HistoryService.deleteHistoryItem(id);
-    if (success) {
-      setHistory(prev => prev.filter(item => item.id !== id));
+    try {
+      await deleteMutation.mutateAsync(id);
       toast({
         title: "Eliminado del historial",
+      });
+    } catch (error) {
+      toast({
+        title: "Error al eliminar",
+        variant: "destructive",
       });
     }
   };
@@ -182,8 +183,12 @@ export const History = () => {
 
   const filteredHistory = getFilteredHistory();
 
-  if (loading) {
-    return <div className="container max-w-4xl mx-auto px-4 py-6">Cargando...</div>;
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto px-4 py-6">
+        <HistoryListSkeleton />
+      </div>
+    );
   }
 
   return (

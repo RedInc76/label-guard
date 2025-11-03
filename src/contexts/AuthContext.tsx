@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProfileService } from '@/services/profileService';
 import { loggingService } from '@/services/loggingService';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Set up auth state listener
@@ -43,6 +45,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 provider: session?.user?.app_metadata?.provider,
                 timestamp: new Date().toISOString()
               }
+            });
+            
+            // PREFETCH: precargar perfiles en background después del login
+            queryClient.prefetchQuery({
+              queryKey: ['profiles'],
+              queryFn: () => ProfileService.getProfiles(),
+            });
+            queryClient.prefetchQuery({
+              queryKey: ['profiles', 'active'],
+              queryFn: () => ProfileService.getActiveProfiles(),
             });
           }, 0);
         } else if (event === 'SIGNED_OUT') {
@@ -94,7 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   const signUp = async (email: string, password: string) => {
     try {

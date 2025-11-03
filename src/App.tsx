@@ -33,7 +33,17 @@ import { FAQ } from "./pages/FAQ";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos (datos "frescos")
+      gcTime: 10 * 60 * 1000, // 10 minutos en memoria
+      retry: 2, // Reintentar 2 veces si falla
+      refetchOnWindowFocus: false, // No refetch al volver a la app
+      refetchOnReconnect: true, // Sí refetch al recuperar conexión
+    },
+  },
+});
 
 const ErrorLogger = () => {
   useEffect(() => {

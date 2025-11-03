@@ -9,12 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { CameraService } from '@/services/cameraService';
 import { OpenFoodFactsService } from '@/services/openFoodFactsService';
-import { ProfileService } from '@/services/profileService';
 import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { UpgradeBanner } from '@/components/UpgradeBanner';
-import type { ProductInfo, Profile } from '@/types/restrictions';
+import type { ProductInfo } from '@/types/restrictions';
 import { Capacitor } from '@capacitor/core';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
+import { useActiveProfiles } from '@/hooks/useProfiles';
 
 export const Scanner = () => {
   const navigate = useNavigate();
@@ -25,15 +25,9 @@ export const Scanner = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState<string>('');
-  const [activeProfiles, setActiveProfiles] = useState<Profile[]>([]);
-
-  useEffect(() => {
-    const loadActiveProfiles = async () => {
-      const profiles = await ProfileService.getActiveProfiles();
-      setActiveProfiles(profiles);
-    };
-    loadActiveProfiles();
-  }, []);
+  
+  // React Query: datos instantáneos desde cache
+  const { data: activeProfiles = [] } = useActiveProfiles();
 
   const handleScan = async () => {
     try {

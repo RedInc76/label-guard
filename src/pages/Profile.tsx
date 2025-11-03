@@ -4,11 +4,12 @@ import { Settings, Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { ProfileService } from '@/services/profileService';
+import { useProfiles, useToggleProfile, useCreateProfile, useUpdateProfile, useDeleteProfile, useMaxProfiles } from '@/hooks/useProfiles';
 import type { Profile as ProfileType } from '@/types/restrictions';
 import { ProfileCard } from '@/components/ProfileCard';
 import { ProfileEditorDialog } from '@/components/ProfileEditorDialog';
 import { CreateProfileDialog } from '@/components/CreateProfileDialog';
+import { ProfileListSkeleton } from '@/components/ProfileListSkeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,31 +24,21 @@ import {
 export const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [profiles, setProfiles] = useState<ProfileType[]>([]);
   const [editingProfile, setEditingProfile] = useState<ProfileType | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
-  const [maxProfiles, setMaxProfiles] = useState(1);
-
-  useEffect(() => {
-    const initializeProfiles = async () => {
-      await ProfileService.initialize();
-      loadProfiles();
-      const max = await ProfileService.getMaxProfiles();
-      setMaxProfiles(max);
-    };
-    initializeProfiles();
-  }, []);
-
-  const loadProfiles = async () => {
-    const profiles = await ProfileService.getProfiles();
-    setProfiles(profiles);
-  };
+  
+  // React Query: datos instantáneos desde cache
+  const { data: profiles = [], isLoading } = useProfiles();
+  const { data: maxProfiles = 1 } = useMaxProfiles();
+  const toggleMutation = useToggleProfile();
+  const createMutation = useCreateProfile();
+  const updateMutation = useUpdateProfile();
+  const deleteMutation = useDeleteProfile();
 
   const handleCreateProfile = async (name: string) => {
     try {
-      const newProfile = await ProfileService.createProfile(name);
-      loadProfiles();
+      const newProfile = await createMutation.mutateAsync(name);
       toast({
         title: "Perfil creado",
         description: `El perfil "${newProfile.name}" ha sido creado exitosamente`,
@@ -63,12 +54,12 @@ export const Profile = () => {
 
   const handleToggleActive = async (id: string) => {
     try {
-      const isActive = await ProfileService.toggleProfileActive(id);
-      const profile = await ProfileService.getProfile(id);
-      await loadProfiles();
+      const profile = profiles.find(p => p.id === id);
+      // Actualización optimista: UI cambia INSTANTÁNEAMENTE
+      await toggleMutation.mutateAsync(id);
       toast({
-        title: isActive ? "Perfil activado" : "Perfil desactivado",
-        description: `El perfil "${profile?.name}" ha sido ${isActive ? 'activado' : 'desactivado'}`,
+        title: profile?.isActive ? "Perfil desactivado" : "Perfil activado",
+        description: `El perfil "${profile?.name}" ha sido ${profile?.isActive ? 'desactivado' : 'activado'}`,
       });
     } catch (error) {
       toast({
@@ -79,8 +70,8 @@ export const Profile = () => {
     }
   };
 
-  const handleEditProfile = async (id: string) => {
-    const profile = await ProfileService.getProfile(id);
+  const handleEditProfile = (id: string) => {
+    const profile = profiles.find(p => p.id === id);
     if (profile) {
       setEditingProfile(profile);
     }
@@ -88,11 +79,13 @@ export const Profile = () => {
 
   const handleSaveProfile = async (profile: ProfileType) => {
     try {
-      await ProfileService.updateProfile(profile.id, {
-        name: profile.name,
-        restrictions: profile.restrictions
+      await updateMutation.mutateAsync({
+        id: profile.id,
+        updates: {
+          name: profile.name,
+          restrictions: profile.restrictions
+        }
       });
-      await loadProfiles();
       toast({
         title: "Perfil actualizado",
         description: `Los cambios en "${profile.name}" han sido guardados`,
@@ -114,9 +107,8 @@ export const Profile = () => {
     if (!profileToDelete) return;
     
     try {
-      const profile = await ProfileService.getProfile(profileToDelete);
-      await ProfileService.deleteProfile(profileToDelete);
-      await loadProfiles();
+      const profile = profiles.find(p => p.id === profileToDelete);
+      await deleteMutation.mutateAsync(profileToDelete);
       toast({
         title: "Perfil eliminado",
         description: `El perfil "${profile?.name}" ha sido eliminado`,
@@ -133,11 +125,6 @@ export const Profile = () => {
   };
 
   const activeProfilesCount = profiles.filter(p => p.isActive).length;
-  const [canCreateMore, setCanCreateMore] = useState(true);
-
-  useEffect(() => {
-    ProfileService.canCreateProfile().then(setCanCreateMore);
-  }, [profiles]);
 
   return (
     <div className="min-h-screen p-6">
@@ -172,14 +159,14 @@ export const Profile = () => {
         {/* Botón crear perfil */}
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          disabled={!canCreateMore}
+          disabled={profiles.length >= maxProfiles}
           className="w-full"
           size="lg"
         >
           <Plus className="w-5 h-5 mr-2" />
-          {canCreateMore 
-            ? 'Crear Nuevo Perfil' 
-            : `Máximo ${maxProfiles} perfiles alcanzado`
+          {profiles.length >= maxProfiles
+            ? `Máximo ${maxProfiles} perfiles alcanzado`
+            : 'Crear Nuevo Perfil'
           }
         </Button>
 

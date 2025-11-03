@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HistoryService } from '@/services/historyService';
+import { useInsights } from '@/hooks/useHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,32 +10,23 @@ import { ArrowLeft, BarChart3, TrendingUp, Star, AlertTriangle, DollarSign, Zap 
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { InsightsSkeleton } from '@/components/InsightsSkeleton';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--warning))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export const Insights = () => {
   const navigate = useNavigate();
-  const [insights, setInsights] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'7' | '30' | '90'>('30');
 
-  useEffect(() => {
-    loadInsights();
-  }, [period]);
+  // React Query: datos instantáneos desde cache
+  const { data: insights, isLoading } = useInsights(Number(period));
 
-  const loadInsights = async () => {
-    setLoading(true);
-    try {
-      const data = await HistoryService.getInsightsData(Number(period));
-      setInsights(data);
-    } catch (error) {
-      console.error('Error loading insights:', error);
-    }
-    setLoading(false);
-  };
-
-  if (loading) {
-    return <div className="container max-w-6xl mx-auto px-4 py-6">Cargando insights...</div>;
+  if (isLoading) {
+    return (
+      <div className="container max-w-6xl mx-auto px-4 py-6">
+        <InsightsSkeleton />
+      </div>
+    );
   }
 
   if (!insights) {
