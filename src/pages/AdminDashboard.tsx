@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsageAnalyticsService } from '@/services/usageAnalyticsService';
 import { AdminCacheService } from '@/services/adminCacheService';
-import { Loader2, TrendingUp, Users, DollarSign, Database, BarChart3, Activity, Trash2 } from 'lucide-react';
+import { ErrorReportsService } from '@/services/errorReportsService';
+import { Loader2, TrendingUp, Users, DollarSign, Database, BarChart3, Activity, Trash2, AlertCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { LogsViewer } from '@/components/LogsViewer';
+import { ErrorReportsManager } from '@/components/ErrorReportsManager';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -21,6 +23,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [globalStats, setGlobalStats] = useState<any>(null);
   const [adminInsights, setAdminInsights] = useState<any>(null);
+  const [reportStats, setReportStats] = useState<any>(null);
   const [barcodeToDelete, setBarcodeToDelete] = useState('');
   const [deleting, setDeleting] = useState(false);
 
@@ -30,13 +33,15 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const [stats, insights] = await Promise.all([
+      const [stats, insights, reports] = await Promise.all([
         UsageAnalyticsService.getGlobalStats(),
         UsageAnalyticsService.getAdminInsights(),
+        ErrorReportsService.getReportStats(),
       ]);
 
       setGlobalStats(stats);
       setAdminInsights(insights);
+      setReportStats(reports);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -108,10 +113,14 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full max-w-full grid-cols-2 lg:max-w-[400px]">
+          <TabsList className="grid w-full max-w-full grid-cols-3 lg:max-w-[600px]">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Estadísticas
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Reportes
             </TabsTrigger>
             <TabsTrigger value="logs" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />

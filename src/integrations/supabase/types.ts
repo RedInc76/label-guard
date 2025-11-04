@@ -113,6 +113,60 @@ export type Database = {
         }
         Relationships: []
       }
+      error_reports: {
+        Row: {
+          active_profiles_snapshot: Json | null
+          admin_id: string | null
+          admin_notes: string | null
+          analysis_snapshot: Json | null
+          barcode: string | null
+          cache_cleared_at: string | null
+          created_at: string
+          error_category: string
+          id: string
+          product_name: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          user_description: string | null
+          user_id: string
+        }
+        Insert: {
+          active_profiles_snapshot?: Json | null
+          admin_id?: string | null
+          admin_notes?: string | null
+          analysis_snapshot?: Json | null
+          barcode?: string | null
+          cache_cleared_at?: string | null
+          created_at?: string
+          error_category: string
+          id?: string
+          product_name: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_description?: string | null
+          user_id: string
+        }
+        Update: {
+          active_profiles_snapshot?: Json | null
+          admin_id?: string | null
+          admin_notes?: string | null
+          analysis_snapshot?: Json | null
+          barcode?: string | null
+          cache_cleared_at?: string | null
+          created_at?: string
+          error_category?: string
+          id?: string
+          product_name?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_description?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           barcode: string | null

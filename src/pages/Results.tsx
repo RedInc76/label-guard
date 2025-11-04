@@ -16,6 +16,7 @@ import { GeolocationService } from '@/services/geolocationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
+import { ReportErrorDialog } from '@/components/ReportErrorDialog';
 
 // Helper para obtener color de fondo y texto del Nutriscore
 const getNutriscoreColor = (grade: string): { bg: string; text: string; border: string } => {
@@ -468,6 +469,13 @@ export const Results = () => {
 
         {/* Actions */}
         <div className="space-y-3">
+          {/* Report Error Button */}
+          <ReportErrorDialog 
+            product={product}
+            analysis={analysis}
+            activeProfiles={activeProfiles}
+          />
+
           {isPremium && scanHistoryId && (
             <Button onClick={handleToggleFavorite} variant="outline" className="w-full">
               <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
