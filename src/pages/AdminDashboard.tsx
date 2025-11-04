@@ -330,6 +330,96 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="reports" className="space-y-6">
+            {/* Stats Cards para Reportes */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Reportes</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{reportStats?.total || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{reportStats?.byStatus?.pending || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{reportStats?.byStatus?.under_review || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Requieren Verificación</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{reportStats?.byStatus?.requires_verification || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Resueltos</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{reportStats?.byStatus?.resolved || 0}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Distribución por categoría */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribución por Categoría</CardTitle>
+                <CardDescription>Tipos de errores reportados</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">🔄 Producto Incorrecto</span>
+                    <span className="font-bold">{reportStats?.byCategory?.wrong_product || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">📝 Ingredientes Incorrectos</span>
+                    <span className="font-bold">{reportStats?.byCategory?.wrong_ingredients || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">⚠️ Falso Positivo</span>
+                    <span className="font-bold">{reportStats?.byCategory?.false_positive || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">✅ Falso Negativo</span>
+                    <span className="font-bold">{reportStats?.byCategory?.false_negative || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">🤔 Otro</span>
+                    <span className="font-bold">{reportStats?.byCategory?.other || 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Error Reports Manager */}
+            <ErrorReportsManager />
+          </TabsContent>
+
           <TabsContent value="logs">
             <LogsViewer embedded />
           </TabsContent>

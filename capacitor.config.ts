@@ -1,10 +1,10 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2facda13c62041e4bf4539f6ddef5bde',
+  appId: 'com.labelguard.app',
   appName: 'LabelGuard',
   webDir: 'dist',
-  version: '1.11.0',
+  version: '1.12.0',
   plugins: {
     Camera: {
       permissions: ['camera']
