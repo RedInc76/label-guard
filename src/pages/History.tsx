@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { HistoryListSkeleton } from '@/components/HistoryListSkeleton';
+import { ConnectionSpeedIndicator } from '@/components/ConnectionSpeedIndicator';
 import type { ScanHistoryItem } from '@/services/historyService';
 
 // Helper para obtener color de fondo y texto del Nutriscore
@@ -193,6 +194,8 @@ export const History = () => {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6 overflow-x-hidden">
+      <ConnectionSpeedIndicator />
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
