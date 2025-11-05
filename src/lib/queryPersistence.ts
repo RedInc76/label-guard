@@ -48,7 +48,7 @@ export const setupPersistence = (queryClient: any) => {
   persistQueryClient({
     queryClient,
     persister: createLocalStoragePersister(),
-    maxAge: 2 * 60 * 60 * 1000, // 2 horas (balancea frescura vs offline)
+    maxAge: 30 * 60 * 1000, // 30 minutos - datos más frescos
     buster: APP_VERSION, // Invalida cache automáticamente al actualizar app
     dehydrateOptions: {
       shouldDehydrateQuery: (query: any) => {

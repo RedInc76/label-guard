@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProductInfo, AnalysisResult } from '@/types/restrictions';
 import { ProfileService } from './profileService';
 import { loggingService } from './loggingService';
+import { queryClient } from '@/lib/queryClient';
 
 export interface ScanHistoryItem {
   id: string;
@@ -83,6 +84,12 @@ export class HistoryService {
         analysisType,
         hasLocation: !!location
       });
+      
+      // Invalidar caché para refrescar historial inmediatamente
+      if (data?.id) {
+        queryClient.invalidateQueries({ queryKey: ['history'] });
+        queryClient.invalidateQueries({ queryKey: ['insights'] });
+      }
       
       return data?.id || null;
     } catch (error) {

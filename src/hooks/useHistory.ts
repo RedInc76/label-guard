@@ -5,7 +5,7 @@ export const useHistory = (limit = 50) => {
   return useQuery({
     queryKey: ['history', limit],
     queryFn: () => HistoryService.getHistory(limit),
-    staleTime: 10 * 60 * 1000, // Cache 10 minutos (optimizado para reducir peticiones)
+    staleTime: 30 * 1000, // Cache 30 segundos - balance entre frescura y rendimiento
     gcTime: 15 * 60 * 1000,
     networkMode: 'online', // Evita delays innecesarios con red lenta
   });
