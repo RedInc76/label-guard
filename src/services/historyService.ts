@@ -32,7 +32,7 @@ export class HistoryService {
   static async saveToHistory(
     product: ProductInfo,
     analysis: AnalysisResult,
-    analysisType: 'barcode' | 'ai_photo' | 'ai_cache' = 'barcode',
+    analysisType: 'barcode' | 'ai_photo' | 'ai_cache' | 'openfoodfacts' = 'barcode',
     photoUrls?: { front?: string; back?: string },
     location?: { latitude: number; longitude: number } | null
   ): Promise<string | null> {
