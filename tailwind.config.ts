@@ -18,6 +18,27 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+				display: ['Sora', 'Inter', 'sans-serif'],
+				mono: ['JetBrains Mono', 'monospace'],
+			},
+			fontSize: {
+				'2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+				'xs': ['0.75rem', { lineHeight: '1rem' }],
+				'sm': ['0.875rem', { lineHeight: '1.375rem' }],
+				'base': ['1rem', { lineHeight: '1.625rem' }],
+				'lg': ['1.125rem', { lineHeight: '1.875rem' }],
+				'xl': ['1.25rem', { lineHeight: '2rem' }],
+				'2xl': ['1.5rem', { lineHeight: '2.25rem' }],
+				'3xl': ['1.875rem', { lineHeight: '2.5rem' }],
+				'4xl': ['2.25rem', { lineHeight: '2.75rem' }],
+			},
+			spacing: {
+				'18': '4.5rem',
+				'22': '5.5rem',
+				'30': '7.5rem',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				'border-strong': 'hsl(var(--border-strong))',
