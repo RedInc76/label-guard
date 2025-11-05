@@ -22,6 +22,90 @@
 
 ## Changelog
 
+### Versión 1.14.3 - Noviembre 2025
+
+**🐛 Correcciones Críticas + Mejoras de UX para Fase de Pruebas**
+
+#### Correcciones de Bugs
+
+**Fix crítico en guardado de historial para OpenFoodFacts**
+- ✅ **Problema**: Los productos escaneados desde OpenFoodFacts no se guardaban en historial
+- ✅ **Causa**: Constraint de base de datos `scan_history_analysis_type_check` no incluía `'openfoodfacts'` como valor válido
+- ✅ **Solución**: Migración de DB para actualizar constraint y permitir `'openfoodfacts'` junto a `'barcode'`, `'ai_photo'`, `'ai_cache'`
+- ✅ **Impacto**: Usuarios premium ahora pueden ver correctamente su historial de escaneos de productos de OpenFoodFacts
+
+**Fix en filtros de historial**
+- ✅ **Problema**: Productos de OpenFoodFacts no aparecían al aplicar filtro "Escaneo"
+- ✅ **Causa**: Lógica de filtrado solo consideraba `analysis_type: 'barcode'`, no `'openfoodfacts'`
+- ✅ **Solución**: Refactorizar filtros para agrupar correctamente:
+  - **Escaneo**: Incluye `'barcode'` + `'openfoodfacts'` (ambos son escaneos de código de barras)
+  - **IA**: Incluye `'ai_photo'` + `'ai_cache'` (ambos usan análisis de inteligencia artificial)
+- ✅ **Impacto**: UX más coherente y lógica, los usuarios pueden filtrar correctamente su historial
+
+#### Mejoras de UX
+
+**Cache de perfiles más reactivo**
+- ✅ `staleTime` reducido de 5 minutos a 1 minuto
+- ✅ `refetchOnMount: 'always'` para garantizar datos frescos al entrar a `/profile`
+- ✅ `refetchOnWindowFocus: true` para sincronización automática al volver a la pestaña
+- ✅ Previene el bug de "perfiles no visibles" después de migraciones de DB
+  
+**Botón "Refrescar Perfiles"** en página de Perfiles
+- ✅ Permite al usuario forzar recarga manual de perfiles
+- ✅ Indicador visual de carga con ícono animado
+- ✅ Útil cuando sospecha de datos desactualizados o problemas de sincronización
+  
+**Skeleton loader mejorado** en página de Perfiles
+- ✅ Mejor feedback visual durante carga inicial
+- ✅ UX más pulida y profesional
+
+#### Sistema de Debugging para Fase de Pruebas
+
+**Logs estratégicos en consola del navegador** (NO persisten en DB, solo para troubleshooting):
+- 🔍 **Scanner.tsx**: Logs de escaneo de barcode, estados de cámara, resultados de OpenFoodFacts
+- 🔍 **Results.tsx**: Logs de análisis de productos, decisiones de guardado en historial, geolocalización
+- 🔍 **historyService.ts**: Logs detallados de operaciones de INSERT con datos de payload y errores SQL
+- 🔍 **openFoodFactsService.ts**: Logs de llamadas a API, respuestas HTTP, datos de productos
+- 🔍 **useProfiles.ts**: Logs de carga de perfiles, conteo, estados de caché
+  
+**Beneficios del logging en fase de pruebas**:
+- ✅ **Diagnóstico remoto**: Usuarios pueden enviar logs de consola para reportar bugs
+- ✅ **Detección de patrones**: Identificar errores silenciosos y problemas de rendimiento
+- ✅ **Debugging en producción**: Sin necesidad de reproducir bugs localmente
+- ✅ **Costo cero**: Logs solo en consola del navegador, no consumen espacio en DB
+- ✅ **Fácil filtrado**: Prefijos emoji por servicio (`[Scanner] 📷`, `[Results] 💾`, etc.)
+
+#### Mejoras Técnicas
+
+**Migración de base de datos**: `20251105132515_a27fb83b-0104-4f2c-b766-6112ff0a55b0.sql`
+- 🔄 Drop de constraint antiguo `scan_history_analysis_type_check`
+- 🔄 Creación de constraint nuevo con `'openfoodfacts'` incluido
+- 🔄 Backwards compatible: No afecta datos existentes
+  
+**Actualización de tipos TypeScript**
+- 📦 Interface `ScanHistoryItem` ahora incluye `'openfoodfacts'` en enum `analysis_type`
+- 📦 Sincronización automática con schema de Supabase via `src/integrations/supabase/types.ts`
+
+**Refactorización de filtros en History**
+- 🎨 `typeFilter` ahora usa valores semánticos: `'all' | 'scan' | 'ai'` en lugar de tipos específicos
+- 🎨 Lógica de filtrado más mantenible y fácil de extender
+- 🎨 Reduce acoplamiento entre UI y schema de base de datos
+
+#### Notas para Fase de Pruebas
+- ⚠️ **Los logs de debugging se mantendrán activos** durante toda la fase beta
+- ⚠️ Se recomienda a los testers beta abrir la consola del navegador (F12) al reportar problemas
+- ⚠️ Los logs NO afectan rendimiento ni consumen recursos significativos
+- ✅ En versión 1.15.0 (post-beta), se evaluará agregar un flag de entorno para desactivar logs verbose en producción
+
+#### Impacto
+- ✅ Usuarios premium ahora pueden confiar en su historial completo de escaneos
+- ✅ Filtros de historial funcionan correctamente con todas las fuentes de datos
+- ✅ Mejor experiencia en gestión de perfiles con caché más fresco
+- ✅ Troubleshooting más eficiente durante fase de pruebas con usuarios reales
+- ✅ Detección temprana de bugs antes del lanzamiento público
+
+---
+
 ### Versión 1.13.0 - Mayo 2025
 
 **🎯 Modelo Freemium con Rate Limiting + Análisis Financiero**

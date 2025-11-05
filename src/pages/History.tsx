@@ -43,7 +43,7 @@ export const History = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [compatibilityFilter, setCompatibilityFilter] = useState<'all' | 'compatible' | 'incompatible'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'barcode' | 'ai_photo'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'scan' | 'ai'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
@@ -164,8 +164,14 @@ export const History = () => {
     }
     
     // Filtro de tipo
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(item => item.analysis_type === typeFilter);
+    if (typeFilter === 'scan') {
+      filtered = filtered.filter(item => 
+        item.analysis_type === 'barcode' || item.analysis_type === 'openfoodfacts'
+      );
+    } else if (typeFilter === 'ai') {
+      filtered = filtered.filter(item => 
+        item.analysis_type === 'ai_photo' || item.analysis_type === 'ai_cache'
+      );
     }
     
     // Filtro de fecha
@@ -304,8 +310,8 @@ export const History = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="barcode">🔍 Escaneo</SelectItem>
-                  <SelectItem value="ai_photo">📸 IA</SelectItem>
+                  <SelectItem value="scan">🔍 Escaneo</SelectItem>
+                  <SelectItem value="ai">📸 IA</SelectItem>
                 </SelectContent>
               </Select>
             </div>

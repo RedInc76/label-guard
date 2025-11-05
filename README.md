@@ -119,3 +119,21 @@ If you denied permissions, you can enable them in:
 - The web version will show "Scan only available on mobile"
 - Use manual input or test codes when testing in the browser
 - After pulling changes, run `npx cap sync` to update native platforms
+
+### Debugging Logs (Beta Testing Phase)
+
+During the beta testing phase, LabelGuard includes debugging logs in the browser console to facilitate bug reporting.
+
+**To view logs:**
+1. Press `F12` to open developer tools
+2. Navigate to the "Console" tab
+3. Logs appear with emoji prefixes (`[Scanner] 📷`, `[Results] 💾`, etc.)
+
+**To report a bug:**
+- Reproduce the issue with the console open
+- Copy relevant logs (especially those with ❌)
+- Send logs along with your bug report
+
+See the [Debugging Guide](docs/DEBUGGING.md) for detailed information.
+
+**Note:** Console logs do NOT consume database space or affect performance. They only exist in your browser session and are automatically cleared when you close the tab.
