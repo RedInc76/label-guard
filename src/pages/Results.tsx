@@ -47,6 +47,7 @@ export const Results = () => {
   const [activeProfiles, setActiveProfiles] = useState<Profile[]>([]);
 
   const product = location.state?.product as ProductInfo;
+  const analysisType = location.state?.analysisType as 'ai_cache' | 'openfoodfacts' | 'ai_new' | undefined;
 
   useEffect(() => {
     const loadData = async () => {
@@ -272,6 +273,17 @@ export const Results = () => {
             </p>
           )}
 
+          {/* Badge de origen de datos */}
+          {analysisType && (
+            <div className="flex justify-center mb-3">
+              <Badge variant="secondary" className="text-xs">
+                {analysisType === 'ai_cache' && '🤖 Análisis IA (Cache)'}
+                {analysisType === 'openfoodfacts' && '🌐 OpenFoodFacts'}
+                {analysisType === 'ai_new' && '🤖 Análisis IA (Nuevo)'}
+              </Badge>
+            </div>
+          )}
+
           <div className="flex justify-center gap-2 flex-wrap">
             {/* Nutriscore con color y popover */}
             {product.nutriscore_grade && (
@@ -392,6 +404,43 @@ export const Results = () => {
             </p>
           </div>
         </Card>
+
+        {/* Advertencia contextual para OpenFoodFacts incompleto */}
+        {analysisType === 'openfoodfacts' && !analysis.isCompatible && (!product.allergens || product.allergens.length < 10) && (
+          <Card className="p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                  ⚠️ Información de alérgenos limitada
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Este análisis se basa en datos de OpenFoodFacts que pueden estar incompletos. Es posible que falten advertencias de alérgenos como "puede contener".
+                </p>
+                {isPremium ? (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="mt-2 border-amber-600 text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900"
+                    onClick={() => navigate('/photo-analysis', { 
+                      state: { 
+                        barcode: product.code,
+                        reason: 'incomplete_allergens',
+                        productName: product.product_name
+                      } 
+                    })}
+                  >
+                    🤖 Re-analizar con IA para confirmar
+                  </Button>
+                ) : (
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                    💎 Actualiza a Premium para análisis IA completo con detección de trazas.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Disclaimer de verificación manual */}
         <Card className="p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">

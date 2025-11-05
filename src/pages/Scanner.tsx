@@ -126,7 +126,58 @@ export const Scanner = () => {
     try {
       setIsSearching(true);
       
-      // PASO 1: Buscar en OpenFoodFacts API
+      // PASO 1: Buscar en AI Cache primero (datos más completos)
+      const { AIProductCacheService } = await import('@/services/aiProductCacheService');
+      const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
+      
+      if (cachedProduct) {
+        // Verificar si el caché es válido
+        const isCacheValid = await AIProductCacheService.isCacheValid(cachedProduct.created_at);
+        
+        if (!isCacheValid) {
+          // Caché inválido por cambio de perfil → forzar nuevo análisis IA
+          if (isPremium) {
+            toast({
+              title: "Perfil actualizado",
+              description: "Tu perfil cambió recientemente. Reanalizaremos este producto con IA.",
+            });
+            navigate('/photo-analysis', { 
+              state: { 
+                barcode,
+                reason: 'profile_changed',
+                productName: cachedProduct.product_name
+              } 
+            });
+            return;
+          } else {
+            // Usuario free: sugerir upgrade
+            toast({
+              title: "Perfil actualizado",
+              description: "Tu perfil cambió. Actualiza a Premium para re-analizar este producto con IA.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        // Caché válido: usar resultado de IA (datos completos)
+        await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
+        
+        // Track cache hit (silencioso, sin toast)
+        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
+        await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, barcode);
+        
+        navigate('/results', {
+          state: { 
+            product: cachedProduct,
+            analysisType: 'ai_cache',
+            fromCache: true 
+          } 
+        });
+        return;
+      }
+
+      // PASO 2: No en cache → Buscar en OpenFoodFacts API
       const product = await OpenFoodFactsService.getProduct(barcode);
       
       if (product) {
@@ -168,56 +219,10 @@ export const Scanner = () => {
         }
         
         // Ingredientes suficientes: continuar con flujo normal
-        navigate('/results', { state: { product } });
-        return;
-      }
-
-      // PASO 2: NO encontrado en OpenFoodFacts → Buscar en cache local
-      const { AIProductCacheService } = await import('@/services/aiProductCacheService');
-      const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
-      
-      if (cachedProduct) {
-        // NUEVO: Verificar si el caché es válido
-        const isCacheValid = await AIProductCacheService.isCacheValid(cachedProduct.created_at);
-        
-        if (!isCacheValid) {
-          // Caché inválido por cambio de perfil → forzar nuevo análisis IA
-          if (isPremium) {
-            toast({
-              title: "Perfil actualizado",
-              description: "Tu perfil cambió recientemente. Reanalizaremos este producto con IA.",
-            });
-            navigate('/photo-analysis', { 
-              state: { 
-                barcode,
-                reason: 'profile_changed',
-                productName: cachedProduct.product_name
-              } 
-            });
-            return;
-          } else {
-            // Usuario free: sugerir upgrade
-            toast({
-              title: "Perfil actualizado",
-              description: "Tu perfil cambió. Actualiza a Premium para re-analizar este producto con IA.",
-              variant: "destructive",
-            });
-            return;
-          }
-        }
-        
-        // Caché válido: usar normalmente
-        await AIProductCacheService.incrementAccessCount(cachedProduct.cache_id);
-        
-        // Track cache hit (silencioso, sin toast)
-        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
-        await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, barcode);
-        
-        navigate('/results', {
+        navigate('/results', { 
           state: { 
-            product: cachedProduct,
-            analysisType: 'ai_cache',
-            fromCache: true 
+            product,
+            analysisType: 'openfoodfacts' 
           } 
         });
         return;
