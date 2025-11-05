@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Plus, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Settings, Plus, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +29,7 @@ export const Profile = () => {
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   
   // React Query: datos instantáneos desde cache
-  const { data: profiles = [], isLoading } = useProfiles();
+  const { data: profiles = [], isLoading, isFetching, refetch } = useProfiles();
   const { data: maxProfiles = 1 } = useMaxProfiles();
   const toggleMutation = useToggleProfile();
   const createMutation = useCreateProfile();
@@ -156,6 +156,18 @@ export const Profile = () => {
           </Alert>
         )}
 
+        {/* Botón refrescar perfiles */}
+        <Button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          variant="outline"
+          className="w-full"
+          size="lg"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? 'Actualizando...' : 'Refrescar Perfiles'}
+        </Button>
+
         {/* Botón crear perfil */}
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
@@ -170,18 +182,22 @@ export const Profile = () => {
           }
         </Button>
 
-        {/* Lista de perfiles */}
-        <div className="space-y-3">
-          {profiles.map((profile) => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              onToggleActive={handleToggleActive}
-              onEdit={handleEditProfile}
-              onDelete={handleDeleteProfile}
-            />
-          ))}
-        </div>
+        {/* Lista de perfiles con skeleton */}
+        {isLoading ? (
+          <ProfileListSkeleton />
+        ) : (
+          <div className="space-y-3">
+            {profiles.map((profile) => (
+              <ProfileCard
+                key={profile.id}
+                profile={profile}
+                onToggleActive={handleToggleActive}
+                onEdit={handleEditProfile}
+                onDelete={handleDeleteProfile}
+              />
+            ))}
+          </div>
+        )}
 
         {profiles.length === 0 && (
           <div className="text-center py-12">

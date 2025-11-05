@@ -6,10 +6,19 @@ import type { Profile } from '@/types/restrictions';
 export const useProfiles = () => {
   return useQuery({
     queryKey: ['profiles'],
-    queryFn: () => ProfileService.getProfiles(),
-    staleTime: 5 * 60 * 1000, // Cache válido por 5 minutos
+    queryFn: async () => {
+      console.log('[useProfiles] 🔄 Cargando perfiles desde backend...');
+      const profiles = await ProfileService.getProfiles();
+      console.log('[useProfiles] ✅ Perfiles cargados:', {
+        count: profiles.length,
+        profiles: profiles.map(p => ({ id: p.id, name: p.name, isActive: p.isActive }))
+      });
+      return profiles;
+    },
+    staleTime: 1 * 60 * 1000, // Cache válido por 1 minuto (más fresco)
     gcTime: 10 * 60 * 1000, // Mantener en memoria 10 minutos
-    refetchOnWindowFocus: false, // No refetch al cambiar de pestaña
+    refetchOnWindowFocus: true, // Refetch al volver a la pestaña
+    refetchOnMount: 'always', // CRÍTICO: Siempre refetch al montar el componente
   });
 };
 
