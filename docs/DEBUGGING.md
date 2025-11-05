@@ -124,11 +124,29 @@ console.log('[Scanner] 🔍 Estado de permisos:', { camera: 'granted' });
   - Verificar que filteredHistory.length sea correcto
 
 [History] 🔍 Análisis de tipo de producto:
-  - Verificar que analysis_type sea uno de: 'barcode', 'openfoodfacts', 'ai_photo', 'ai_cache'
+  - Verificar que analysis_type sea uno de: 'openfood_api', 'ai_photo', 'ai_cache'
   - Verificar que agrupación sea correcta:
-    - 'scan' → incluye 'barcode' + 'openfoodfacts'
-    - 'ai' → incluye 'ai_photo' + 'ai_cache'
+    - 'scan' → solo 'openfood_api' (productos de OpenFoodFacts API)
+    - 'ai' → incluye 'ai_photo' + 'ai_cache' (análisis IA nuevo y reutilizado)
 ```
+
+#### Tipos de Análisis (v1.14.4+)
+
+LabelGuard usa 3 tipos de análisis técnicos internos:
+
+| Tipo Técnico | Significado | Costo | Aparece como (UI) |
+|--------------|-------------|-------|-------------------|
+| `openfood_api` | Datos de OpenFoodFacts API (escaneo de barcode) | Gratis | 🔍 Escaneo |
+| `ai_cache` | IA previamente ejecutada (producto ya analizado, reutilizado) | Ya pagado | 🤖 IA |
+| `ai_photo` | IA nueva desde foto (análisis fresco de ingredientes) | $0.001-0.01 por análisis | 🤖 IA |
+
+**Para usuarios:**
+- Solo ven "Escaneo" (OpenFoodFacts) vs "IA" (análisis inteligente)
+
+**Para desarrolladores:**
+- Podemos rastrear cuántos productos vienen de API gratis vs IA pagada
+- Útil para analytics de costos y tasa de éxito de OpenFoodFacts
+- Ejemplo: `85% openfood_api` = excelente, `15% openfood_api` = mejorar base de datos
 
 ### Filtrar Logs en Consola
 

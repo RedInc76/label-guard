@@ -262,7 +262,7 @@ export const Compare = () => {
                     <TableCell key={product.id} className="text-xs">
                       {product.analysis_type === 'ai_photo' && '📸 IA'}
                       {product.analysis_type === 'ai_cache' && '💾 Cache IA'}
-                      {product.analysis_type === 'barcode' && '🔍 Escaneo'}
+                      {product.analysis_type === 'openfood_api' && '🔍 Escaneo'}
                     </TableCell>
                   ))}
                 </TableRow>

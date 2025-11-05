@@ -199,7 +199,7 @@ export const PhotoAnalysis = () => {
         
         // Log successful photo scan
         const { loggingService } = await import('@/services/loggingService');
-        loggingService.logScan('photo', productName, barcode || undefined);
+        loggingService.logScan('ai_photo', productName, barcode || undefined);
         
         // Analyze product against restrictions
         const result = await AnalysisService.analyzeProductForActiveProfiles(product);

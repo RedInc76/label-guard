@@ -145,7 +145,7 @@ class LoggingService {
   /**
    * Log a scan event
    */
-  async logScan(scanType: 'barcode' | 'photo', productName?: string, barcode?: string) {
+  async logScan(scanType: 'openfood_api' | 'ai_photo', productName?: string, barcode?: string) {
     await this.log({
       logType: 'scan',
       message: `Scan performed: ${scanType}`,

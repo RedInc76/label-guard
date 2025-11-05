@@ -16,7 +16,7 @@ export interface ScanHistoryItem {
   warnings: any;
   ingredients_text: string | null;
   allergens: string | null;
-  analysis_type: 'barcode' | 'ai_photo' | 'ai_cache' | 'openfoodfacts';
+  analysis_type: 'openfood_api' | 'ai_photo' | 'ai_cache';
   active_profiles_snapshot: any;
   front_photo_url: string | null;
   back_photo_url: string | null;

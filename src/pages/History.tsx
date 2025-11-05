@@ -166,7 +166,7 @@ export const History = () => {
     // Filtro de tipo
     if (typeFilter === 'scan') {
       filtered = filtered.filter(item => 
-        item.analysis_type === 'barcode' || item.analysis_type === 'openfoodfacts'
+        item.analysis_type === 'openfood_api'
       );
     } else if (typeFilter === 'ai') {
       filtered = filtered.filter(item => 

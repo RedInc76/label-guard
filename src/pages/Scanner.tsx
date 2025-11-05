@@ -250,7 +250,7 @@ export const Scanner = () => {
         
         // Log successful barcode scan
         const { loggingService } = await import('@/services/loggingService');
-        loggingService.logScan('barcode', product.product_name, barcode);
+        loggingService.logScan('openfood_api', product.product_name, barcode);
         
         // Validar si los ingredientes son suficientes para análisis
         const hasInsufficientIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 30;
@@ -286,14 +286,14 @@ export const Scanner = () => {
         console.log('[Scanner] 🔀 Navegando a Results con:', {
           productName: product.product_name,
           barcode: product.code,
-          analysisType: 'openfoodfacts',
+          analysisType: 'openfood_api',
           hasIngredients: !!product.ingredients_text
         });
         
         navigate('/results', { 
           state: { 
             product,
-            analysisType: 'openfoodfacts' 
+            analysisType: 'openfood_api' 
           } 
         });
         return;

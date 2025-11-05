@@ -22,6 +22,95 @@
 
 ## Changelog
 
+### Versión 1.14.4 - Noviembre 2025
+
+**🧹 Limpieza Semántica de Tipos de Análisis**
+
+#### Cambios Técnicos
+
+**Renombrado de tipos de análisis** para mayor claridad técnica y analítica:
+- ✅ `'barcode'` → `'openfood_api'` (más descriptivo de la fuente de datos)
+- ✅ `'openfoodfacts'` → `'openfood_api'` (unificación de tipos redundantes)
+- ✅ `'ai_cache'` → mantiene igual (análisis IA reutilizado)
+- ✅ `'ai_photo'` → mantiene igual (análisis IA nuevo desde foto)
+
+#### Justificación
+
+**Técnicamente:**
+- 🎯 Distingue claramente entre datos de **API externa gratuita** (`openfood_api`) vs **análisis IA pagado** (`ai_cache`, `ai_photo`)
+- 🎯 Elimina confusión entre "método de captura" (barcode) y "fuente de datos" (openfood_api)
+- 🎯 Semántica más clara para desarrolladores: el nombre del tipo indica de dónde vienen los datos
+
+**Para Analytics:**
+- 📊 Permite rastrear % de productos obtenidos de OpenFoodFacts (gratis) vs IA (costo)
+- 💰 Monitoreo de costos: identificar cuánto ahorramos usando OpenFoodFacts
+- 📈 Optimización: si tasa de `openfood_api` < 50%, mejorar base de datos
+
+**Para UX del usuario:**
+- ✅ **Sin cambios visibles**: Usuario sigue viendo solo "Escaneo" vs "IA" en filtros
+- ✅ Los filtros de historial agrupan correctamente:
+  - "Escaneo" → `openfood_api`
+  - "IA" → `ai_cache` + `ai_photo`
+
+#### Migración de Datos
+
+- ✅ Todos los registros históricos actualizados automáticamente vía SQL migration
+- ✅ Sin pérdida de información
+- ✅ Compatible con versiones anteriores del app
+- ✅ Constraint de DB actualizado para validar solo los 3 tipos nuevos
+
+#### Archivos Modificados
+
+**Backend:**
+- `20251105_migration.sql`: Renombrado de tipos existentes + actualización de constraint
+
+**Frontend:**
+- `src/services/historyService.ts`: Tipo `ScanHistoryItem` actualizado
+- `src/pages/Scanner.tsx`: Logging y navegación con `'openfood_api'`
+- `src/pages/Results.tsx`: Tipos y badges actualizados
+- `src/pages/History.tsx`: Filtro simplificado (solo `'openfood_api'` para "Escaneo")
+- `src/pages/PhotoAnalysis.tsx`: Logging con `'ai_photo'`
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.14.4
+- `docs/DEBUGGING.md`: Tabla de tipos técnicos actualizada
+
+**Config:**
+- `src/config/app.ts` y `capacitor.config.ts`: Versión → 1.14.4
+
+#### Beneficios
+
+**Para Analytics:**
+```
+📊 Ejemplo de reporte semanal:
+- 850 escaneos OpenFoodFacts (85%) → $0 USD ✅
+- 120 escaneos AI Cache (12%) → Ya pagado (reutilización)
+- 30 escaneos AI Photo (3%) → ~$0.30 USD (nuevo análisis)
+
+💰 Ahorro estimado: $8.50 USD vs si todo fuera IA
+📈 Tasa de éxito OpenFoodFacts: 85% (objetivo: >80%)
+```
+
+**Para Debugging:**
+- 🐛 Logs más claros: `[Scanner] 📡 Producto desde openfood_api` vs `[Scanner] 🤖 Producto desde ai_photo`
+- 🐛 Identificar origen de datos en reportes de error
+- 🐛 Rastrear patrones de fallo por fuente (¿OpenFoodFacts da más errores que IA?)
+
+**Para Optimización de Costos:**
+- 💡 Si `openfood_api` < 50%: agregar más productos a OpenFoodFacts
+- 💡 Si `ai_photo` > 20%: mejorar cache hit rate
+- 💡 Tracking de ROI: cuánto dinero ahorramos con cache compartido
+
+#### Impacto
+
+- ✅ Código más limpio y mantenible
+- ✅ Mejor comprensión técnica del flujo de datos
+- ✅ Analytics precisos para control de costos
+- ✅ Base sólida para futuras optimizaciones
+- ✅ Sin cambios visibles para el usuario final
+
+---
+
 ### Versión 1.14.3 - Noviembre 2025
 
 **🐛 Correcciones Críticas + Mejoras de UX para Fase de Pruebas**

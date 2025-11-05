@@ -49,7 +49,7 @@ export const Results = () => {
   const [activeProfiles, setActiveProfiles] = useState<Profile[]>([]);
 
   const product = location.state?.product as ProductInfo;
-  const analysisType = location.state?.analysisType as 'ai_cache' | 'openfoodfacts' | 'ai_new' | undefined;
+  const analysisType = location.state?.analysisType as 'ai_cache' | 'openfood_api' | 'ai_photo' | undefined;
 
   useEffect(() => {
     const loadData = async () => {
@@ -135,7 +135,7 @@ export const Results = () => {
             const historyId = await HistoryService.saveToHistory(
               product,
               result,
-              location.state?.analysisType || 'barcode',
+              location.state?.analysisType || 'openfood_api',
               location.state?.photoUrls,
               locationResult.location || null
             );
@@ -324,8 +324,8 @@ export const Results = () => {
             <div className="flex justify-center mb-3">
               <Badge variant="secondary" className="text-xs">
                 {analysisType === 'ai_cache' && '🤖 Análisis IA (Cache)'}
-                {analysisType === 'openfoodfacts' && '🌐 OpenFoodFacts'}
-                {analysisType === 'ai_new' && '🤖 Análisis IA (Nuevo)'}
+                {analysisType === 'openfood_api' && '🌐 OpenFoodFacts'}
+                {analysisType === 'ai_photo' && '🤖 Análisis IA (Nuevo)'}
               </Badge>
             </div>
           )}
@@ -555,7 +555,7 @@ export const Results = () => {
         </Card>
 
         {/* Advertencia contextual para OpenFoodFacts incompleto */}
-        {analysisType === 'openfoodfacts' && !analysis.isCompatible && (!product.allergens || product.allergens.length < 10) && (
+        {analysisType === 'openfood_api' && !analysis.isCompatible && (!product.allergens || product.allergens.length < 10) && (
           <Card className="p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
             <div className="flex gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
