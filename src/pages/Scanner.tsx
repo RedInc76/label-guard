@@ -236,6 +236,14 @@ export const Scanner = () => {
       const product = await OpenFoodFactsService.getProduct(barcode);
       
       if (product) {
+        // ✅ LOG NUEVO
+        console.log('[Scanner] ✅ Producto encontrado en OpenFoodFacts:', {
+          barcode,
+          productName: product.product_name,
+          hasIngredients: !!product.ingredients_text,
+          ingredientsLength: product.ingredients_text?.length || 0
+        });
+        
         // Track OpenFoodFacts usage
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
         await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, barcode);
@@ -274,6 +282,14 @@ export const Scanner = () => {
         }
         
         // Ingredientes suficientes: continuar con flujo normal
+        // ✅ LOG NUEVO
+        console.log('[Scanner] 🔀 Navegando a Results con:', {
+          productName: product.product_name,
+          barcode: product.code,
+          analysisType: 'openfoodfacts',
+          hasIngredients: !!product.ingredients_text
+        });
+        
         navigate('/results', { 
           state: { 
             product,

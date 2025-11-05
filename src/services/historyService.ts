@@ -37,10 +37,48 @@ export class HistoryService {
     location?: { latitude: number; longitude: number } | null
   ): Promise<string | null> {
     try {
+      // ✅ LOG NUEVO
+      console.log('[HistoryService] 🔄 Iniciando saveToHistory:', {
+        productName: product.product_name,
+        barcode: product.code,
+        analysisType,
+        hasPhotoUrls: !!photoUrls,
+        hasLocation: !!location
+      });
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null; // Solo PREMIUM guarda historial
+      
+      // ✅ LOG NUEVO
+      console.log('[HistoryService] 👤 Usuario:', {
+        userId: user?.id,
+        hasUser: !!user
+      });
+      
+      if (!user) {
+        console.warn('[HistoryService] ⚠️ No hay usuario autenticado, no se guardará historial');
+        return null;
+      }
       
       const activeProfiles = await ProfileService.getActiveProfiles();
+      
+      // ✅ LOG NUEVO
+      console.log('[HistoryService] 👥 Perfiles activos:', {
+        count: activeProfiles.length,
+        profiles: activeProfiles.map(p => ({ id: p.id, name: p.name }))
+      });
+      
+      // ✅ LOG NUEVO
+      console.log('[HistoryService] 📝 Preparando INSERT en scan_history:', {
+        user_id: user.id,
+        barcode: product.code || null,
+        product_name: product.product_name,
+        analysis_type: analysisType,
+        is_compatible: analysis.isCompatible,
+        score: analysis.score,
+        violations_count: analysis.violations.length,
+        warnings_count: analysis.warnings.length,
+        hasLocation: !!location
+      });
       
       const { data, error } = await supabase
         .from('scan_history')
@@ -73,7 +111,15 @@ export class HistoryService {
       .single();
       
       if (error) {
-        console.error('Error saving to history:', error);
+        // ✅ LOG MEJORADO
+        console.error('[HistoryService] ❌ Error en INSERT scan_history:', {
+          error,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          productName: product.product_name,
+          barcode: product.code
+        });
         loggingService.logError('Error saving scan to history', error);
         return null;
       }
@@ -89,11 +135,28 @@ export class HistoryService {
       if (data?.id) {
         queryClient.invalidateQueries({ queryKey: ['history'] });
         queryClient.invalidateQueries({ queryKey: ['insights'] });
+        
+        // ✅ LOG NUEVO
+        console.log('[HistoryService] ♻️ Cache invalidado para queries:', ['history', 'insights']);
       }
+      
+      // ✅ LOG NUEVO
+      console.log('[HistoryService] ✅ saveToHistory completado exitosamente:', {
+        historyId: data?.id,
+        productName: product.product_name
+      });
       
       return data?.id || null;
     } catch (error) {
-      console.error('Error in saveToHistory:', error);
+      // ✅ LOG MEJORADO
+      console.error('[HistoryService] 💥 Exception en saveToHistory:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        productName: product.product_name,
+        barcode: product.code,
+        analysisType
+      });
       loggingService.logError('Exception in saveToHistory', error);
       return null;
     }

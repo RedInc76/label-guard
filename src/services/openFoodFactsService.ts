@@ -7,11 +7,29 @@ export class OpenFoodFactsService {
     try {
       const response = await fetch(`${this.BASE_URL}/${barcode}.json`);
       
+      // ✅ LOG NUEVO
+      console.log('[OpenFoodFacts] 📡 API Response:', {
+        barcode,
+        status: response.status,
+        ok: response.ok
+      });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // ✅ LOG NUEVO
+      console.log('[OpenFoodFacts] 📦 Producto obtenido:', {
+        barcode,
+        found: data.status === 1,
+        productName: data.product?.product_name,
+        hasIngredients: !!data.product?.ingredients_text,
+        ingredientsLength: data.product?.ingredients_text?.length || 0,
+        hasAllergens: !!data.product?.allergens,
+        hasTraces: !!data.product?.traces
+      });
 
       if (data.status === 0 || !data.product) {
         return null; // Producto no encontrado

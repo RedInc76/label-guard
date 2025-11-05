@@ -53,7 +53,20 @@ export const Results = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      // ✅ LOG NUEVO
+      console.log('[Results] 🔍 Iniciando análisis - Estado recibido:', {
+        hasProduct: !!product,
+        productName: product?.product_name,
+        barcode: product?.code,
+        analysisType,
+        fromHistory: location.state?.fromHistory,
+        fromFavorites: location.state?.fromFavorites,
+        fromCache: location.state?.fromCache,
+        isPremium
+      });
+      
       if (!product) {
+        console.error('[Results] ❌ No hay producto, redirigiendo a scanner');
         navigate('/scanner');
         return;
       }
@@ -87,17 +100,37 @@ export const Results = () => {
           
           setAnalysis(result);
 
+          // ✅ LOG NUEVO - CRÍTICO
+          console.log('[Results] 💾 Evaluando si guardar en historial:', {
+            isPremium,
+            fromHistory: location.state?.fromHistory,
+            fromFavorites: location.state?.fromFavorites,
+            willSave: isPremium && !location.state?.fromHistory && !location.state?.fromFavorites,
+            analysisType: location.state?.analysisType
+          });
+
           // Save to history if premium and not from history
           if (isPremium && !location.state?.fromHistory && !location.state?.fromFavorites) {
             // Intentar capturar ubicación silenciosamente
             const locationResult = await GeolocationService.getCurrentLocation();
             
-            // Log para debugging (sin toast, para no molestar al usuario)
-            if (!locationResult.success) {
-              console.warn('[Results] Ubicación no capturada:', locationResult.error);
-            } else {
-              console.log('[Results] Ubicación capturada:', locationResult.location);
-            }
+            // ✅ LOG NUEVO
+            console.log('[Results] 📍 Resultado de geolocalización:', {
+              success: locationResult.success,
+              hasLocation: !!locationResult.location,
+              error: locationResult.error
+            });
+            
+            // ✅ LOG NUEVO - MUY CRÍTICO
+            console.log('[Results] 💾 Llamando a HistoryService.saveToHistory con:', {
+              productName: product.product_name,
+              barcode: product.code,
+              analysisType: location.state?.analysisType || 'barcode',
+              hasPhotoUrls: !!location.state?.photoUrls,
+              hasLocation: !!locationResult.location,
+              isCompatible: result.isCompatible,
+              score: result.score
+            });
             
             const historyId = await HistoryService.saveToHistory(
               product,
@@ -106,10 +139,21 @@ export const Results = () => {
               location.state?.photoUrls,
               locationResult.location || null
             );
+            
+            // ✅ LOG NUEVO
+            console.log('[Results] 💾 Resultado de saveToHistory:', {
+              historyId,
+              saved: !!historyId,
+              productName: product.product_name
+            });
+            
             if (historyId) {
               setScanHistoryId(historyId);
               const fav = await FavoritesService.isFavorite(historyId);
               setIsFavorite(fav);
+              
+              // ✅ LOG NUEVO
+              console.log('[Results] ✅ Historial guardado exitosamente, ID:', historyId);
             }
           }
         } catch (error: any) {
