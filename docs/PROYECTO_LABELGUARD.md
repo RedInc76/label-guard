@@ -2,20 +2,73 @@
 
 ## Tabla de Contenidos
 
-1. [Resumen Ejecutivo](#resumen-ejecutivo)
-2. [¿Qué es LabelGuard?](#qué-es-labelguard)
-3. [Características Principales](#características-principales)
-4. [Features Prioritarios en Desarrollo](#features-prioritarios-en-desarrollo)
-5. [Sistema de Niveles de Severidad](#sistema-de-niveles-de-severidad)
-6. [Stack Tecnológico](#stack-tecnológico)
-7. [Arquitectura del Sistema](#arquitectura-del-sistema)
-8. [Flujo de Análisis de Productos](#flujo-de-análisis-de-productos)
-9. [Servicios y Componentes Principales](#servicios-y-componentes-principales)
-10. [Base de Datos](#base-de-datos)
-11. [Seguridad y Privacidad](#seguridad-y-privacidad)
-12. [Modelo de Negocio](#modelo-de-negocio)
-13. [Casos de Uso](#casos-de-uso)
-14. [Roadmap y Futuro](#roadmap-y-futuro)
+1. [Changelog](#changelog)
+2. [Resumen Ejecutivo](#resumen-ejecutivo)
+3. [¿Qué es LabelGuard?](#qué-es-labelguard)
+4. [Características Principales](#características-principales)
+5. [Features Prioritarios en Desarrollo](#features-prioritarios-en-desarrollo)
+6. [Sistema de Niveles de Severidad](#sistema-de-niveles-de-severidad)
+7. [Stack Tecnológico](#stack-tecnológico)
+8. [Arquitectura del Sistema](#arquitectura-del-sistema)
+9. [Flujo de Análisis de Productos](#flujo-de-análisis-de-productos)
+10. [Servicios y Componentes Principales](#servicios-y-componentes-principales)
+11. [Base de Datos](#base-de-datos)
+12. [Seguridad y Privacidad](#seguridad-y-privacidad)
+13. [Modelo de Negocio y Análisis Financiero](#modelo-de-negocio-y-análisis-financiero)
+14. [Casos de Uso](#casos-de-uso)
+15. [Roadmap y Futuro](#roadmap-y-futuro)
+
+---
+
+## Changelog
+
+### Versión 1.13.0 - Mayo 2025
+
+**🎯 Modelo Freemium con Rate Limiting + Análisis Financiero**
+
+#### Nuevas Características
+
+**Para Usuarios FREE:**
+- ✅ **Límite de 10 escaneos por día** (ventana móvil de 24h)
+- ✅ Contador visual de escaneos restantes en Scanner
+- ✅ Acceso completo a cache de análisis IA (productos ya analizados por la comunidad)
+- ✅ Datos básicos de OpenFoodFacts (ingredientes, alérgenos)
+- ⚠️ Sin acceso a Nutri-Score ni tabla nutricional completa
+- ⚠️ Sin historial en la nube (solo local)
+- ⚠️ Un solo perfil
+
+**Para Usuarios PREMIUM ($0.99 USD/mes):**
+- ✅ **Escaneos ilimitados**
+- ✅ **Nutri-Score y tabla nutricional completa** (calorías, proteínas, grasas, carbohidratos, sodio, fibra)
+- ✅ Hasta 5 perfiles personalizados con restricciones ilimitadas
+- ✅ Historial y favoritos sincronizados en la nube
+- ✅ Análisis con IA para productos sin datos en OpenFoodFacts
+- ✅ Comparador de productos avanzado
+- ✅ Insights y estadísticas detalladas de uso
+- ✅ Geolocalización de escaneos
+
+#### Mejoras Técnicas
+- 🆕 Nueva tabla `scan_rate_limit` con RLS securizado para control de escaneos
+- 🆕 Servicio `ScanRateLimitService` para gestión inteligente de límites (DB para usuarios registrados, localStorage para anónimos)
+- 🆕 Modal de límite alcanzado con propuesta de valor clara y CTA a Premium
+- 🆕 Badge visual de "X/10 escaneos restantes" en Scanner
+- 🆕 Teasers de upgrade en funciones premium (Nutri-Score, tabla nutricional)
+- 🆕 Tabla nutricional completa en `Results.tsx` con datos detallados de OpenFoodFacts
+- 🔒 Ocultamiento de Nutri-Score y gráficos nutricionales en Insights para usuarios free
+
+#### Análisis Financiero Completo
+- 📊 Modelo de negocio freemium con suscripción de $0.99/mes
+- 💰 Break-even en solo **19 usuarios premium**
+- 📈 Márgenes brutos del 81-88% en todos los escenarios de escalamiento
+- 🚀 Proyección de rentabilidad desde el mes 1 con conversión del 5%
+- 📉 Análisis de sensibilidad: rentable incluso con conversión del 2%
+- 🌐 Plan de escalamiento de infraestructura (Free Tier → Pro → Team/Enterprise)
+- 💡 Estrategias de optimización de costos (cache hit rate, compresión, batch analytics)
+
+#### Beneficios del Modelo
+- **Para usuarios:** Prueba gratuita ilimitada en el tiempo (10 escaneos/día es suficiente para evaluar la app)
+- **Para el negocio:** Protección de costos de IA, incentivo claro de conversión, alta retención
+- **Para la comunidad:** Cache IA compartido beneficia a todos (free y premium), efecto de red
 
 ---
 
@@ -1929,81 +1982,339 @@ RESEND_API_KEY=********** (Resend emails)
 
 ---
 
-## Modelo de Negocio
+## Modelo de Negocio y Análisis Financiero
 
-> ⚠️ **NOTA IMPORTANTE:** El modelo de negocio descrito a continuación es una **propuesta comercial no implementada**. Actualmente, el sistema solo diferencia entre usuarios registrados (FREE) y no registrados, sin ningún sistema de pagos o suscripciones activo.
+### Resumen Ejecutivo
 
-### Planes (Propuesta)
+LabelGuard opera bajo un **modelo freemium híbrido** implementado en **v1.13.0** donde:
+- **Usuarios gratuitos** pueden usar la app de por vida con **10 escaneos/día**
+- **Usuarios premium** pagan **$0.99 USD/mes** para desbloquear funciones avanzadas
 
-| Característica | FREE | PREMIUM |
-|----------------|------|---------|
-| **Precio** | Gratis | $0.99 USD/mes |
-| **Escaneo de barras** | ✅ Ilimitado | ✅ Ilimitado |
-| **Análisis de fotos IA** | ❌ No disponible | ✅ Ilimitado* |
-| **Perfiles** | 1 | 5 |
-| **Restricciones** | Solo alérgenos (8) | Todas (50+) |
-| **Niveles de severidad** | ❌ No | ✅ Sí |
-| **Historial** | Local (no persistente) | Nube (ilimitado) |
-| **Favoritos** | Local | Nube |
-| **Comparación** | ❌ No | ✅ Sí |
-| **Geolocalización** | ❌ No | ✅ Sí |
-| **Estadísticas** | ❌ No | ✅ Sí |
-| **Soporte prioritario** | ❌ No | ✅ Sí |
+Este modelo balancea accesibilidad, sostenibilidad económica y crecimiento escalable.
 
-\* *Con fair use policy: 100 análisis IA/mes incluidos, luego $0.01 USD por análisis adicional*
+---
 
-### Estrategia de Monetización (Propuesta)
+### Estrategia de Diferenciación
 
-**Fase 1 (Actual):** Sistema básico sin pagos implementados
+| Característica | FREE (10 scans/día) | PREMIUM ($0.99/mes) |
+|----------------|---------------------|---------------------|
+| **Escaneos por día** | 10 | ✅ Ilimitados |
+| **Cache IA** | ✅ Acceso completo | ✅ Acceso completo |
+| **OpenFoodFacts** | ✅ Datos básicos | ✅ Datos completos |
+| **Nutri-Score** | ❌ | ✅ |
+| **Tabla nutricional** | ❌ | ✅ Calorías, proteínas, grasas, carbohidratos, sodio, fibra |
+| **Historial** | ⚠️ Solo local | ✅ Nube (ilimitado) |
+| **Favoritos** | ⚠️ Solo local | ✅ Nube (ilimitados) |
+| **Perfiles** | 1 perfil | 5 perfiles |
+| **Análisis IA** | ⚠️ Solo si está en cache | ✅ Análisis nuevo |
+| **Comparador** | ❌ | ✅ |
+| **Insights** | ❌ | ✅ |
+| **Geolocalización** | ❌ | ✅ |
 
-- FREE: Sin registro, funcionalidad básica (solo alérgenos principales)
-- REGISTRADO: Con registro gratuito, acceso a todas las funcionalidades avanzadas
-- **No hay sistema de pagos implementado actualmente**
+---
 
-**Fase 2 (Propuesta futura):**
+### Propuesta de Valor
 
-1. **Publicidad no intrusiva** en versión FREE
-   - Banners en resultados de escaneo
-   - Sugerencias de productos alternativos (patrocinados)
-   
-2. **Partnerships con marcas**
-   - Certificación "LabelGuard Friendly"
-   - Destacar productos aptos en búsquedas
-   
-3. **API B2B**
-   - Vender acceso a API de análisis a:
-     - Supermercados (etiquetado digital)
-     - Apps de salud (integración)
-     - Restaurantes (menús personalizados)
-   
-4. **Plan Familiar** (propuesta)
-   - $1.99 USD/mes para hasta 10 perfiles
-   - Gestión centralizada
-   
-5. **Plan Empresarial** (propuesta)
-   - Para comedores escolares, hospitales, empresas
-   - Gestión masiva de restricciones
-   - Reportes de compliance
+#### Para Usuarios FREE:
+**"¿Puedo comer esto?"** - Respuesta básica de compatibilidad
+- Ideal para: Compras ocasionales, probar la app, restricciones simples
+- Límite razonable: 10 escaneos/día = ~300 productos/mes
+- Acceso al cache IA comunitario (productos ya analizados)
 
-### Costos Operativos Estimados (Proyección)
+#### Para Usuarios PREMIUM:
+**"¿Qué tan saludable es?"** - Análisis nutricional profundo
+- Ideal para: Uso diario, familias, restricciones complejas, seguimiento nutricional
+- Valor agregado: Nutri-Score, tabla nutricional, insights de consumo
+- Conveniencia: Historial en nube, múltiples perfiles, comparaciones
 
-> 💡 **Nota:** Estos son costos proyectados para cuando el sistema de suscripciones esté implementado.
+---
 
-| Servicio | Costo Mensual (1000 usuarios activos) |
-|----------|---------------------------------------|
-| **Supabase Pro** | $25 USD/mes (hasta 8GB DB, 250GB bandwidth) |
-| **Lovable AI** | ~$50 USD/mes (5000 análisis IA × $0.01 USD) |
-| **Resend** | $0 USD (hasta 3000 emails/mes en plan gratuito) |
-| **Lovable Hosting** | Incluido en plan |
-| **Total** | ~$75 USD/mes |
+### Análisis Financiero y Escalabilidad
 
-**Break-even proyectado:** ~76 usuarios premium ($0.99 USD/mes × 76 = $75.24 USD/mes)
+#### Infraestructura Actual (Lovable Cloud)
 
-**Análisis de viabilidad:**
-- Con $0.99 USD/mes, se requiere una base más amplia de usuarios premium
-- Estrategia enfocada en volumen y retención a largo plazo
-- Precio accesible para mercado latinoamericano
-- Potencial de crecimiento con planes Familiar y Empresarial
+**Proveedor:** Lovable Cloud (basado en Supabase)  
+**Modelo:** Infraestructura serverless completamente administrada  
+
+**Componentes:**
+
+1. **Base de Datos (PostgreSQL)**
+   - Tier actual: Supabase Free Tier
+   - Almacenamiento: 500 MB
+   - Conexiones simultáneas: 60
+   - Límite: 50,000 usuarios activos mensuales
+
+2. **Almacenamiento de Archivos (Storage)**
+   - Tier actual: Supabase Free Tier
+   - Espacio: 1 GB
+   - Ancho de banda: 5 GB/mes
+   - Uso estimado: ~10 KB por foto de producto
+
+3. **Edge Functions (Serverless)**
+   - Tier actual: Supabase Free Tier
+   - Invocaciones: 500,000/mes
+   - Duración CPU: 100 horas/mes
+
+4. **Lovable AI (Google Gemini 2.5 Flash)**
+   - Modelo: `google/gemini-2.5-flash`
+   - Costo estimado: ~$0.0015 por análisis (imagen + texto)
+   - Incluye: Análisis de fotos (front + back), OCR, extracción de ingredientes
+
+---
+
+#### Costos Operativos Mensuales
+
+##### Escenario Base (100 usuarios premium)
+
+**Supuestos:**
+- 100 usuarios premium a $0.99/mes = **$99.00 USD/mes de ingresos**
+- Usuario premium promedio: 5 escaneos/día = 150 escaneos/mes
+- Tasa de cache hit: 20% (mejorará con el tiempo)
+- Usuarios free: 500 (10 escaneos/día cada uno)
+
+**Cálculo de costos:**
+
+1. **Lovable AI (análisis con IA)**
+   - Escaneos premium que requieren IA: 100 usuarios × 150 escaneos × 80% (no cache) = 12,000 análisis
+   - Costo por análisis: $0.0015
+   - **Costo AI: 12,000 × $0.0015 = $18.00/mes**
+
+2. **Lovable Cloud (infraestructura)**
+   - Free tier hasta 50k MAU (Monthly Active Users)
+   - 100 premium + 500 free = 600 MAU total
+   - Storage: ~60 MB de fotos (600 usuarios × 100 KB promedio)
+   - Edge Functions: ~15,000 invocaciones/mes
+   - **Costo Cloud: $0/mes** (dentro de free tier)
+
+3. **Total costos operativos: $18.00/mes**
+
+**Análisis financiero:**
+- **Ingresos:** $99.00/mes
+- **Costos:** $18.00/mes
+- **Margen bruto:** $81.00/mes (81.8%)
+- **Punto de equilibrio:** 19 usuarios premium
+
+**Conclusión:** Con solo **19 usuarios premium** ya se cubren todos los costos operativos.
+
+---
+
+##### Escenario Escalado 1: 1,000 usuarios premium
+
+**Supuestos:**
+- 1,000 usuarios premium a $0.99/mes = **$990.00 USD/mes de ingresos**
+- Usuarios free: 5,000 (10 escaneos/día)
+- Tasa de cache hit: 30% (cache creciendo)
+
+**Cálculo de costos:**
+
+1. **Lovable AI**
+   - Escaneos premium: 1,000 × 150 × 70% = 105,000 análisis
+   - **Costo AI: 105,000 × $0.0015 = $157.50/mes**
+
+2. **Lovable Cloud**
+   - 6,000 MAU total (1k premium + 5k free)
+   - Storage: ~600 MB de fotos
+   - Edge Functions: ~150,000 invocaciones/mes
+   - **Costo Cloud: $0/mes** (aún en free tier)
+
+3. **Total costos: $157.50/mes**
+
+**Análisis financiero:**
+- **Ingresos:** $990.00/mes
+- **Costos:** $157.50/mes
+- **Margen bruto:** $832.50/mes (84.1%)
+- **Punto de equilibrio:** 159 usuarios premium
+
+---
+
+##### Escenario Escalado 2: 5,000 usuarios premium
+
+**Supuestos:**
+- 5,000 usuarios premium a $0.99/mes = **$4,950.00 USD/mes de ingresos**
+- Usuarios free: 20,000
+- Tasa de cache hit: 40% (cache maduro)
+
+**Cálculo de costos:**
+
+1. **Lovable AI**
+   - Escaneos premium: 5,000 × 150 × 60% = 450,000 análisis
+   - **Costo AI: 450,000 × $0.0015 = $675.00/mes**
+
+2. **Lovable Cloud** (necesario upgrade a tier Pro)
+   - 25,000 MAU total
+   - Storage: ~2.5 GB de fotos
+   - Edge Functions: ~750,000 invocaciones/mes
+   - **Costo Cloud (Supabase Pro): $25/mes**
+
+3. **Total costos: $700.00/mes**
+
+**Análisis financiero:**
+- **Ingresos:** $4,950.00/mes
+- **Costos:** $700.00/mes
+- **Margen bruto:** $4,250.00/mes (85.9%)
+- **Punto de equilibrio:** 708 usuarios premium
+
+---
+
+##### Escenario Escalado 3: 10,000 usuarios premium
+
+**Supuestos:**
+- 10,000 usuarios premium a $0.99/mes = **$9,900.00 USD/mes de ingresos**
+- Usuarios free: 40,000
+- Tasa de cache hit: 50% (cache muy maduro)
+
+**Cálculo de costos:**
+
+1. **Lovable AI**
+   - Escaneos premium: 10,000 × 150 × 50% = 750,000 análisis
+   - **Costo AI: 750,000 × $0.0015 = $1,125.00/mes**
+
+2. **Lovable Cloud** (tier Pro)
+   - 50,000 MAU total (en el límite del tier Pro)
+   - Storage: ~5 GB de fotos
+   - Edge Functions: ~1.5M invocaciones/mes
+   - **Costo Cloud (Supabase Pro + overages): $50/mes**
+
+3. **Total costos: $1,175.00/mes**
+
+**Análisis financiero:**
+- **Ingresos:** $9,900.00/mes
+- **Costos:** $1,175.00/mes
+- **Margen bruto:** $8,725.00/mes (88.1%)
+- **Punto de equilibrio:** 1,187 usuarios premium
+
+---
+
+#### Tabla Resumen de Escalabilidad
+
+| Usuarios Premium | Usuarios Free | Ingresos/mes | Costos IA | Costos Cloud | Total Costos | Margen | Break-even |
+|------------------|---------------|--------------|-----------|--------------|--------------|--------|------------|
+| 100 | 500 | $99 | $18 | $0 | $18 | 81.8% | 19 users |
+| 500 | 2,500 | $495 | $78.75 | $0 | $78.75 | 84.1% | 80 users |
+| 1,000 | 5,000 | $990 | $157.50 | $0 | $157.50 | 84.1% | 159 users |
+| 5,000 | 20,000 | $4,950 | $675 | $25 | $700 | 85.9% | 708 users |
+| 10,000 | 40,000 | $9,900 | $1,125 | $50 | $1,175 | 88.1% | 1,187 users |
+| 50,000 | 200,000 | $49,500 | $5,625 | $150 | $5,775 | 88.3% | 5,833 users |
+
+---
+
+#### Plan de Escalamiento de Infraestructura
+
+##### Tier 1: Free Tier (0-1,000 usuarios premium)
+**Infraestructura:** Lovable Cloud Free Tier  
+**Capacidad:** Hasta 50,000 MAU  
+**Costos:** $0/mes (solo AI)  
+**Acción requerida:** Ninguna
+
+---
+
+##### Tier 2: Pro Tier (1,000-10,000 usuarios premium)
+**Infraestructura:** Lovable Cloud Pro  
+**Capacidad:** Hasta 500,000 MAU  
+**Costos Cloud:** $25-100/mes (según overages)  
+**Acción requerida:** 
+- Upgrade manual a Supabase Pro cuando se acerque a 50k MAU
+- Configurar alertas de uso
+- Implementar cache más agresivo (objetivo: 50% hit rate)
+
+---
+
+##### Tier 3: Team/Enterprise (10,000+ usuarios premium)
+**Infraestructura:** Lovable Cloud Team/Enterprise  
+**Capacidad:** Ilimitada  
+**Costos Cloud:** $599+/mes (según uso)  
+**Acción requerida:**
+- Migrar a Supabase Team o Enterprise
+- Implementar CDN para imágenes (Cloudflare)
+- Considerar migración a AI propia (fine-tuned model)
+- Implementar sharding de base de datos
+- Escalamiento horizontal de edge functions
+
+---
+
+#### Estrategias de Optimización de Costos
+
+##### 1. **Maximizar Cache Hit Rate**
+- **Actual:** 20% (53 productos en cache de 296 escaneos)
+- **Objetivo:** 50% en 6 meses
+- **Impacto:** Reducción de 37.5% en costos de IA
+- **Cómo:**
+  - Priorizar cache sobre OpenFoodFacts (✅ ya implementado en v1.13.0)
+  - Gamificación: Incentivar usuarios a escanear productos nuevos
+  - Pre-cargar cache con productos más populares de OpenFoodFacts
+
+##### 2. **Rate Limiting Inteligente**
+- **Actual:** 10 escaneos/día para free
+- **Impacto:** Reduce carga en infra y costos de AI
+- **Beneficio adicional:** Incentiva upgrade a premium
+
+##### 3. **Compresión de Imágenes**
+- Implementar compresión WebP en cliente antes de upload
+- Reducción esperada: 60% en storage y bandwidth
+- Costo de implementación: 2 horas de desarrollo
+
+##### 4. **Batch Processing de Analytics**
+- Agregar analytics en batch (cada 24h) en lugar de tiempo real
+- Reducción de edge function invocations: ~30%
+
+---
+
+#### Proyección de Crecimiento y ROI
+
+##### Supuesto: Tasa de conversión Free → Premium del 5%
+
+| Mes | Usuarios Free | Usuarios Premium | Ingresos | Costos | Margen | Acumulado |
+|-----|---------------|------------------|----------|---------|--------|-----------|
+| 1 | 100 | 5 | $4.95 | $0.68 | $4.27 | $4.27 |
+| 3 | 500 | 25 | $24.75 | $3.38 | $21.37 | $68.48 |
+| 6 | 2,000 | 100 | $99.00 | $18.00 | $81.00 | $492.27 |
+| 12 | 10,000 | 500 | $495.00 | $78.75 | $416.25 | $2,989.77 |
+| 24 | 50,000 | 2,500 | $2,475.00 | $393.75 | $2,081.25 | $28,056.77 |
+
+**Conclusión:** Con una tasa de conversión conservadora del 5%, el proyecto alcanza rentabilidad desde el mes 1 y genera $28k+ de margen acumulado en 2 años.
+
+---
+
+#### Análisis de Sensibilidad
+
+##### ¿Qué pasa si...?
+
+**1. La tasa de conversión es solo del 2%?**
+- Mes 6: 40 premium × $0.99 = $39.60 ingresos vs $7.20 costos = $32.40 margen ✅
+- **Aún rentable**, pero crecimiento más lento
+
+**2. El costo de IA sube 50%?**
+- Nuevo costo por análisis: $0.00225
+- Mes 6 (100 premium): $27.00 costos vs $99 ingresos = 72.7% margen ✅
+- **Aún muy rentable**
+
+**3. Necesitamos subir a Pro Tier en mes 6?**
+- Costos: $18 (AI) + $25 (Cloud) = $43
+- Ingresos: $99
+- Margen: $56 (56.6%) ✅
+- **Aún rentable con buen margen**
+
+---
+
+### Conclusión Financiera
+
+**LabelGuard es un negocio altamente escalable y rentable:**
+
+1. ✅ **Bajo punto de equilibrio:** Solo 19 usuarios premium cubren todos los costos
+2. ✅ **Alto margen bruto:** 81-88% en todos los escenarios
+3. ✅ **Escalabilidad probada:** El margen mejora al escalar (economías de escala en cache)
+4. ✅ **Resiliencia financiera:** Rentable incluso con tasa de conversión del 2%
+5. ✅ **Modelo sostenible:** El precio de $0.99/mes es competitivo y accesible
+
+**Riesgos identificados:**
+- ⚠️ Dependencia de Lovable AI (mitigable con modelo propio si escala mucho)
+- ⚠️ Competencia de apps gratuitas sin límites (diferenciación: calidad de análisis)
+
+**Próximos pasos:**
+- Lanzar modelo freemium (v1.13.0) ✅
+- Monitorear tasa de conversión real
+- Optimizar cache hit rate
+- Evaluar migración a modelo IA propio si se alcanzan 50k+ premium users
 
 ---
 

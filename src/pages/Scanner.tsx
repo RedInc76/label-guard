@@ -5,10 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { CameraService } from '@/services/cameraService';
 import { OpenFoodFactsService } from '@/services/openFoodFactsService';
+import { ScanRateLimitService } from '@/services/scanRateLimitService';
 import { ActiveProfilesBadge } from '@/components/ActiveProfilesBadge';
 import { UpgradeBanner } from '@/components/UpgradeBanner';
 import type { ProductInfo } from '@/types/restrictions';
@@ -19,17 +31,43 @@ import { useActiveProfiles } from '@/hooks/useProfiles';
 export const Scanner = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isPremium } = useAuth();
+  const { user, isPremium } = useAuth();
   const [isScanning, setIsScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState<string>('');
   
+  // Rate limiting state
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    remaining: number;
+    resetAt: Date;
+  }>({ remaining: 10, resetAt: new Date() });
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
   // React Query: datos instantáneos desde cache
   const { data: activeProfiles = [] } = useActiveProfiles();
 
+  // Verificar rate limit al montar componente
+  useEffect(() => {
+    const checkLimit = async () => {
+      const info = await ScanRateLimitService.canScan(user?.id || null, isPremium);
+      if (info.allowed || isPremium) {
+        setRateLimitInfo({ remaining: info.remaining, resetAt: info.resetAt });
+      }
+    };
+    checkLimit();
+  }, [user, isPremium]);
+
   const handleScan = async () => {
+    // 1. Verificar rate limit
+    const canScan = await ScanRateLimitService.canScan(user?.id || null, isPremium);
+    
+    if (!canScan.allowed) {
+      setShowLimitDialog(true);
+      return;
+    }
+
     try {
       setIsScanning(true);
       
@@ -70,6 +108,10 @@ export const Scanner = () => {
       
       if (barcode) {
         await searchProduct(barcode);
+        // Incrementar contador después de escaneo exitoso
+        await ScanRateLimitService.incrementScan(user?.id || null);
+        const newInfo = await ScanRateLimitService.canScan(user?.id || null, isPremium);
+        setRateLimitInfo({ remaining: newInfo.remaining, resetAt: newInfo.resetAt });
       } else {
         toast({
           title: "No se detectó código",
@@ -108,7 +150,20 @@ export const Scanner = () => {
       return;
     }
 
+    // Verificar rate limit
+    const canScan = await ScanRateLimitService.canScan(user?.id || null, isPremium);
+    
+    if (!canScan.allowed) {
+      setShowLimitDialog(true);
+      return;
+    }
+
     await searchProduct(manualCode.trim());
+    
+    // Incrementar contador después de búsqueda exitosa
+    await ScanRateLimitService.incrementScan(user?.id || null);
+    const newInfo = await ScanRateLimitService.canScan(user?.id || null, isPremium);
+    setRateLimitInfo({ remaining: newInfo.remaining, resetAt: newInfo.resetAt });
   };
 
   const searchProduct = async (barcode: string) => {
@@ -274,6 +329,12 @@ export const Scanner = () => {
         {/* Upgrade Banner for FREE users */}
         <UpgradeBanner />
 
+        {/* Badge de escaneos restantes para usuarios FREE */}
+        {!isPremium && rateLimitInfo.remaining >= 0 && (
+          <Badge variant="secondary" className="w-full justify-center py-2 text-sm">
+            📊 Escaneos restantes hoy: {rateLimitInfo.remaining}/10
+          </Badge>
+        )}
 
         {/* Active Profiles Badge */}
             <ActiveProfilesBadge 
@@ -405,6 +466,40 @@ export const Scanner = () => {
             )}
           </ul>
         </Card>
+
+        {/* Modal de límite alcanzado */}
+        <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>🚫 Límite de escaneos alcanzado</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-4">
+                <p>Has usado tus 10 escaneos gratuitos de hoy.</p>
+                
+                <div className="bg-primary/10 p-4 rounded-lg space-y-2">
+                  <p className="font-semibold">⚡ Actualiza a Premium por solo $0.99/mes y obtén:</p>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>✅ Escaneos ilimitados</li>
+                    <li>✅ Información nutricional completa (Nutri-Score, tabla nutricional)</li>
+                    <li>✅ Historial y favoritos en la nube</li>
+                    <li>✅ Hasta 5 perfiles personalizados</li>
+                    <li>✅ Comparador de productos</li>
+                    <li>✅ Análisis con IA para productos sin datos</li>
+                  </ul>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  ⏰ Tus escaneos se reiniciarán en: {ScanRateLimitService.formatResetTime(rateLimitInfo.resetAt)}
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Volver mañana</AlertDialogCancel>
+              <AlertDialogAction onClick={() => navigate('/auth')}>
+                🚀 Actualizar a Premium
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

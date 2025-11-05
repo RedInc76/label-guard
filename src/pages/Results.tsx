@@ -1,11 +1,13 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star, HelpCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star, HelpCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { ProductInfo, AnalysisResult, Profile, SeverityLevel } from '@/types/restrictions';
 import { SEVERITY_LEVELS } from '@/types/restrictions';
 import { AnalysisService } from '@/services/analysisService';
@@ -285,53 +287,60 @@ export const Results = () => {
           )}
 
           <div className="flex justify-center gap-2 flex-wrap">
-            {/* Nutriscore con color y popover */}
+            {/* Nutriscore - Solo Premium */}
             {product.nutriscore_grade && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80"
-                    style={{
-                      backgroundColor: getNutriscoreColor(product.nutriscore_grade).bg,
-                      color: getNutriscoreColor(product.nutriscore_grade).text,
-                      borderColor: getNutriscoreColor(product.nutriscore_grade).border,
-                    }}
-                  >
-                    Nutri-Score: {product.nutriscore_grade.toUpperCase()}
-                    <HelpCircle className="w-3 h-3 ml-0.5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">¿Qué es Nutri-Score?</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Sistema de etiquetado nutricional que clasifica los alimentos de la A (mejor calidad nutricional) a la E (peor calidad).
-                    </p>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#038141' }}></span>
-                        <span><strong>A</strong> - Excelente calidad nutricional</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#85BB2F' }}></span>
-                        <span><strong>B</strong> - Buena calidad nutricional</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FECB02' }}></span>
-                        <span><strong>C</strong> - Calidad nutricional aceptable</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#EE8100' }}></span>
-                        <span><strong>D</strong> - Baja calidad nutricional</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E63E11' }}></span>
-                        <span><strong>E</strong> - Muy baja calidad nutricional</span>
+              isPremium ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80"
+                      style={{
+                        backgroundColor: getNutriscoreColor(product.nutriscore_grade).bg,
+                        color: getNutriscoreColor(product.nutriscore_grade).text,
+                        borderColor: getNutriscoreColor(product.nutriscore_grade).border,
+                      }}
+                    >
+                      Nutri-Score: {product.nutriscore_grade.toUpperCase()}
+                      <HelpCircle className="w-3 h-3 ml-0.5" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">¿Qué es Nutri-Score?</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Sistema de etiquetado nutricional que clasifica los alimentos de la A (mejor calidad nutricional) a la E (peor calidad).
+                      </p>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#038141' }}></span>
+                          <span><strong>A</strong> - Excelente calidad nutricional</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#85BB2F' }}></span>
+                          <span><strong>B</strong> - Buena calidad nutricional</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#FECB02' }}></span>
+                          <span><strong>C</strong> - Calidad nutricional aceptable</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#EE8100' }}></span>
+                          <span><strong>D</strong> - Baja calidad nutricional</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: '#E63E11' }}></span>
+                          <span><strong>E</strong> - Muy baja calidad nutricional</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Badge variant="outline" className="bg-muted/50 border-muted-foreground/30">
+                  <Lock className="w-3 h-3 mr-1" />
+                  Nutri-Score: Premium
+                </Badge>
+              )
             )}
 
             {/* NOVA con popover explicativo (sin colores) */}
@@ -369,6 +378,102 @@ export const Results = () => {
             )}
           </div>
         </Card>
+
+        {/* Nutri-Score Premium Teaser para FREE */}
+        {product.nutriscore_grade && !isPremium && (
+          <Alert className="bg-primary/5 border-primary/20">
+            <Lock className="h-4 w-4" />
+            <AlertDescription>
+              <strong>🔒 Nutri-Score - Solo Premium</strong>
+              <br />
+              Actualiza a Premium para ver la calificación nutricional y tabla nutricional completa.
+              <Button onClick={() => navigate('/auth')} size="sm" className="mt-2 w-full">
+                Ver planes - $0.99/mes
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Tabla Nutricional Completa - Solo Premium */}
+        {product.nutriments && (
+          isPremium ? (
+            <Card className="p-4 shadow-sm">
+              <h3 className="font-semibold text-foreground mb-3">📊 Información Nutricional</h3>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nutriente</TableHead>
+                      <TableHead className="text-right">Por 100g</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {product.nutriments.energy_100g && (
+                      <TableRow>
+                        <TableCell>Energía</TableCell>
+                        <TableCell className="text-right">{product.nutriments.energy_100g} kJ ({Math.round(product.nutriments.energy_100g * 0.239)} kcal)</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.proteins_100g !== undefined && (
+                      <TableRow>
+                        <TableCell>Proteínas</TableCell>
+                        <TableCell className="text-right">{product.nutriments.proteins_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.carbohydrates_100g !== undefined && (
+                      <TableRow>
+                        <TableCell>Carbohidratos</TableCell>
+                        <TableCell className="text-right">{product.nutriments.carbohydrates_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.sugars_100g !== undefined && (
+                      <TableRow>
+                        <TableCell className="pl-6">- de los cuales azúcares</TableCell>
+                        <TableCell className="text-right">{product.nutriments.sugars_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.fat_100g !== undefined && (
+                      <TableRow>
+                        <TableCell>Grasas</TableCell>
+                        <TableCell className="text-right">{product.nutriments.fat_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments['saturated-fat_100g'] !== undefined && (
+                      <TableRow>
+                        <TableCell className="pl-6">- de las cuales saturadas</TableCell>
+                        <TableCell className="text-right">{product.nutriments['saturated-fat_100g']} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.sodium_100g !== undefined && (
+                      <TableRow>
+                        <TableCell>Sodio</TableCell>
+                        <TableCell className="text-right">{product.nutriments.sodium_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                    {product.nutriments.fiber_100g !== undefined && (
+                      <TableRow>
+                        <TableCell>Fibra</TableCell>
+                        <TableCell className="text-right">{product.nutriments.fiber_100g} g</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          ) : (
+            <Alert className="bg-primary/5 border-primary/20">
+              <Lock className="h-4 w-4" />
+              <AlertDescription>
+                <strong>🔒 Tabla nutricional completa - Solo Premium</strong>
+                <br />
+                Accede a información detallada de calorías, proteínas, grasas, carbohidratos y más.
+                <Button onClick={() => navigate('/auth')} size="sm" className="mt-2 w-full">
+                  Actualizar ahora - $0.99/mes
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )
+        )}
 
         {/* Analysis Result */}
         <Card className={`p-6 shadow-sm border-2 ${

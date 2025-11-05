@@ -396,6 +396,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_rate_limit: {
+        Row: {
+          created_at: string
+          id: string
+          scan_count: number
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scan_count?: number
+          updated_at?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scan_count?: number
+          updated_at?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       usage_analytics: {
         Row: {
           barcode: string | null
@@ -510,6 +537,7 @@ export type Database = {
     }
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      cleanup_scan_rate_limits: { Args: never; Returns: undefined }
       get_users_for_admin: {
         Args: never
         Returns: {

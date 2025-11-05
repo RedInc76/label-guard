@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.labelguard.app',
   appName: 'LabelGuard',
   webDir: 'dist',
-  version: '1.12.0',
+  version: '1.13.0',
   plugins: {
     Camera: {
       permissions: ['camera']

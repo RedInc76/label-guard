@@ -6,17 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, BarChart3, TrendingUp, Star, AlertTriangle, DollarSign, Zap } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, BarChart3, TrendingUp, Star, AlertTriangle, DollarSign, Zap, Lock } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { InsightsSkeleton } from '@/components/InsightsSkeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--warning))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export const Insights = () => {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<'7' | '30' | '90'>('30');
+  const { isPremium } = useAuth();
 
   // React Query: datos instantáneos desde cache
   const { data: insights, isLoading } = useInsights(Number(period));
@@ -274,29 +277,43 @@ export const Insights = () => {
             <CardTitle className="text-base sm:text-lg">Distribución Nutri-Score</CardTitle>
           </CardHeader>
           <CardContent>
-            {Object.keys(insights.nutriscoreDistribution).length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={Object.entries(insights.nutriscoreDistribution).map(([grade, count]) => ({
-                  grade,
-                  count
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="grade" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }} 
-                  />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" />
-                </BarChart>
-              </ResponsiveContainer>
+            {isPremium ? (
+              Object.keys(insights.nutriscoreDistribution).length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={Object.entries(insights.nutriscoreDistribution).map(([grade, count]) => ({
+                    grade,
+                    count
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="grade" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }} 
+                    />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  Sin datos de Nutri-Score disponibles
+                </p>
+              )
             ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Sin datos de Nutri-Score disponibles
-              </p>
+              <Alert className="bg-primary/5 border-primary/20">
+                <Lock className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>🔒 Análisis nutricional - Solo Premium</strong>
+                  <br />
+                  Descubre la calidad nutricional de tus productos con gráficos detallados.
+                  <Button onClick={() => navigate('/auth')} size="sm" className="mt-2 w-full">
+                    Actualizar ahora - $0.99/mes
+                  </Button>
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
