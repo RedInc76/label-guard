@@ -140,6 +140,51 @@ export const ErrorReportsManager = () => {
     }
   };
 
+  const handleSaveNotes = async (reportId: string) => {
+    const notes = adminNotes[reportId];
+    
+    if (!notes || notes.trim() === '') {
+      toast({
+        title: 'Advertencia',
+        description: 'No hay notas para guardar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setUpdatingReports(prev => new Set(prev).add(reportId));
+      
+      // Obtener el reporte actual para mantener su estado
+      const currentReport = reports.find(r => r.id === reportId);
+      if (!currentReport) throw new Error('Reporte no encontrado');
+      
+      await ErrorReportsService.updateReportStatus(reportId, {
+        status: currentReport.status, // Mantener el estado actual
+        admin_notes: notes,
+      });
+
+      toast({
+        title: '✅ Notas guardadas',
+        description: 'Las notas del admin se guardaron correctamente',
+      });
+
+      await loadReports();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudieron guardar las notas',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reportId);
+        return newSet;
+      });
+    }
+  };
+
   const getQuickActions = (report: ErrorReport) => {
     const isUpdating = updatingReports.has(report.id);
 
@@ -398,6 +443,20 @@ export const ErrorReportsManager = () => {
                         rows={3}
                         className="text-sm"
                       />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleSaveNotes(report.id)}
+                        disabled={updatingReports.has(report.id) || !adminNotes[report.id]?.trim()}
+                        className="w-full"
+                      >
+                        {updatingReports.has(report.id) ? (
+                          <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                        ) : (
+                          '💾 '
+                        )}
+                        Guardar Notas
+                      </Button>
                     </div>
 
                     {/* Quick Actions */}

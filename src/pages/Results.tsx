@@ -20,6 +20,26 @@ import { toast } from '@/hooks/use-toast';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 import { ReportErrorDialog } from '@/components/ReportErrorDialog';
 
+// Helper para limpiar texto OCR (elimina puntos entre letras)
+const cleanOCRText = (text: string): string => {
+  if (!text) return text;
+  
+  // Patrón: letra + punto + espacio + letra (ej: "C. o. n. s.")
+  // Reemplazar por letras sin puntos ni espacios extra
+  let cleaned = text.replace(/([a-záéíóúñü])\.\s+/gi, '$1');
+  
+  // Eliminar puntos dobles o múltiples
+  cleaned = cleaned.replace(/\.{2,}/g, '.');
+  
+  // Limpiar espacios múltiples
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+  
+  // Eliminar punto final antes de espacio si existe
+  cleaned = cleaned.replace(/\.\s/g, ' ');
+  
+  return cleaned.trim();
+};
+
 // Helper para obtener color de fondo y texto del Nutriscore
 const getNutriscoreColor = (grade: string): { bg: string; text: string; border: string } => {
   const upperGrade = grade.toUpperCase();
@@ -673,7 +693,7 @@ export const Results = () => {
               Alérgenos y Advertencias
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {product.allergens}
+              {cleanOCRText(product.allergens)}
             </p>
           </Card>
         )}

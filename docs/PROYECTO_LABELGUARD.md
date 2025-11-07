@@ -22,6 +22,75 @@
 
 ## Changelog
 
+### Versión 1.14.6 - Noviembre 2025
+
+**🐛 Correcciones UX Admin y Visualización**
+
+#### Bugs Corregidos
+
+**Texto de alérgenos limpio**
+- ✅ **Problema**: Alérgenos detectados por OCR mostraban puntos entre cada letra (ej: "C. o. n. s. é. r. v. e. s. e.")
+- ✅ **Causa**: Artefactos de OCR que no se limpiaban antes de mostrar al usuario
+- ✅ **Solución**: Implementada función `cleanOCRText()` que:
+  - Elimina puntos entre letras (`/([a-záéíóúñü])\.\s+/gi`)
+  - Elimina puntos múltiples consecutivos
+  - Normaliza espacios múltiples
+- ✅ **Aplicación**: Se aplica automáticamente a `product.allergens` en la página de resultados
+- ✅ **Resultado**: "C. o. n. s. é. r. v. e. s. e. . e. n. . r. e. f. r. i. g. e. r. a. c. i. ó. n." → "Consérvese en refrigeración"
+
+**Guardar notas en Admin Dashboard**
+- ✅ **Problema**: Campo de "Notas del Admin" permitía escribir pero no había forma de guardar sin cambiar el estado del reporte
+- ✅ **Causa**: Solo existía guardado acoplado al cambio de estado en `handleUpdateStatus()`
+- ✅ **Solución**: Nueva función `handleSaveNotes()` que:
+  - Guarda notas sin modificar el estado actual del reporte
+  - Valida que haya contenido antes de guardar
+  - Muestra feedback con toast de confirmación
+  - Recarga la lista de reportes para reflejar cambios
+- ✅ **UI**: Botón "💾 Guardar Notas" debajo del textarea, deshabilitado si no hay cambios
+- ✅ **Beneficio**: Admins pueden documentar investigaciones incrementalmente sin cerrar/resolver reportes
+
+#### Mejoras UX
+
+**Ocultado botón Google Login**
+- ✅ **Acción**: Botón "Continuar con Google" y separador "O continúa con email" temporalmente ocultos con `{false && ...}`
+- ✅ **Razón**: OAuth de Google aún no está completamente configurado en producción
+- ✅ **Impacto**: Login simplificado mientras se completa integración de Google
+- ✅ **Reversible**: Cambiar `false` a `true` cuando OAuth esté listo
+
+#### Archivos Modificados
+
+**Frontend:**
+- `src/pages/Results.tsx`: Función `cleanOCRText()` agregada (líneas 23-41), aplicada a alérgenos
+- `src/components/ErrorReportsManager.tsx`: 
+  - Nueva función `handleSaveNotes()` (líneas 143-179)
+  - Botón "Guardar Notas" agregado (líneas 401-413)
+- `src/pages/Auth.tsx`: Botón Google y separador envueltos en `{false && ...}` (líneas 161-175)
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.14.6
+- `capacitor.config.ts`: Versión → 1.14.6
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.14.6 (esta sección)
+
+#### Impacto
+
+**Para usuarios:**
+- 👀 **Mejor legibilidad**: Alérgenos y advertencias OCR ahora son completamente legibles
+- ✅ **Información precisa**: Sin confusión por artefactos de OCR en texto crítico de seguridad
+
+**Para el admin:**
+- 💾 **Persistencia de datos**: Notas se guardan correctamente entre sesiones
+- 📝 **Mejor gestión**: Documentar investigaciones sin modificar estado de reportes
+- 🎯 **UX simplificado**: Login enfocado en email hasta habilitar Google OAuth
+
+**Para el negocio:**
+- 🛡️ **Seguridad**: Información de alérgenos clara reduce riesgo de malentendidos
+- 📊 **Mejor trazabilidad**: Historial completo de notas admin en reportes de error
+- 🚀 **Base sólida**: Código preparado para OAuth cuando esté listo
+
+---
+
 ### Versión 1.14.5 - Noviembre 2025
 
 **🐛 Correcciones Críticas y Mejoras UX**
