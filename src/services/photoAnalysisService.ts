@@ -38,9 +38,44 @@ export class PhotoAnalysisService {
     }
   }
   
+  static async analyzeNutritionPhoto(imageBase64: string): Promise<{
+    energy_kj: number;
+    proteins: number;
+    carbohydrates: number;
+    sugars: number;
+    fats: number;
+    saturated_fats: number;
+    fiber: number;
+    sodium: number;
+    salt: number;
+  }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-product-photo', {
+        body: { image: imageBase64, type: 'nutrition' }
+      });
+      
+      if (error) throw error;
+      
+      return {
+        energy_kj: data.energy_kj || 0,
+        proteins: data.proteins || 0,
+        carbohydrates: data.carbohydrates || 0,
+        sugars: data.sugars || 0,
+        fats: data.fats || 0,
+        saturated_fats: data.saturated_fats || 0,
+        fiber: data.fiber || 0,
+        sodium: data.sodium || 0,
+        salt: data.salt || 0,
+      };
+    } catch (error) {
+      console.error('Error analyzing nutrition photo:', error);
+      throw error;
+    }
+  }
+  
   static async uploadPhoto(
     photo: Blob, 
-    type: 'front' | 'back'
+    type: 'front' | 'back' | 'nutrition'
   ): Promise<string> {
     try {
       const { data: { user } } = await supabase.auth.getUser();

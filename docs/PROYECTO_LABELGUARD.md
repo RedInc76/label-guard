@@ -22,6 +22,66 @@
 
 ## Changelog
 
+### Versión 1.15.0 - Noviembre 2025
+
+**🆕 Nueva Funcionalidad: Tercera Foto - Tabla Nutricional (MVP)**
+
+#### Nuevas Características
+- ✨ **Captura de tabla nutricional**: Flujo ampliado a 4 pasos (frente, validar, ingredientes, tabla nutricional)
+- 🤖 **Extracción automática con IA**: OCR especializado para valores nutricionales por 100g
+- 💾 **Almacenamiento completo**: Se guardan las 3 fotos (frente, ingredientes, tabla nutricional)
+- 📊 **Datos nutricionales capturados**:
+  - Energía (kJ)
+  - Proteínas, carbohidratos, azúcares
+  - Grasas totales y saturadas
+  - Fibra
+  - Sodio/Sal
+
+#### Preparación para v1.16.0
+Esta versión es un MVP que captura y almacena los datos nutricionales. 
+La v1.16.0 implementará el cálculo de **Nutri-Score** y clasificación **NOVA** usando estos datos.
+
+#### Mejoras UX
+- 📱 Indicadores visuales de progreso (4 pasos)
+- 💡 Guías contextuales para cada foto
+- ⚡ Análisis paralelo de ingredientes y nutrientes (más rápido)
+
+#### Archivos Modificados
+
+**Frontend:**
+- `src/pages/PhotoAnalysis.tsx`: Nuevo paso 'nutrition' y flujo de 4 pasos
+- `src/services/photoAnalysisService.ts`: Método `analyzeNutritionPhoto()`
+
+**Backend:**
+- `supabase/functions/analyze-product-photo/index.ts`: Soporte para `type: 'nutrition'`
+- `src/services/aiProductCacheService.ts`: Guardar URL de foto nutricional
+
+**Base de Datos:**
+- `ai_analyzed_products`: Nueva columna `nutrition_photo_url`
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.15.0
+- `capacitor.config.ts`: Versión → 1.15.0
+
+#### Validaciones Implementadas
+- ✅ Rangos razonables para valores nutricionales
+- ✅ Conversión automática kcal → kJ si es necesario
+- ✅ Cálculo automático sodio desde sal si falta
+- ✅ Valores en 0 para datos no detectados (no se adivina)
+
+#### Limitaciones Conocidas (por diseño)
+- ⚠️ Esta versión NO calcula Nutri-Score ni NOVA (próxima v1.16.0)
+- ⚠️ Los valores 0 pueden indicar "no detectado" o "realmente es 0"
+- ⚠️ OCR optimizado para tablas estándar españolas/europeas
+
+#### Próximos Pasos (v1.16.0)
+- 🎯 Implementar algoritmo de cálculo Nutri-Score
+- 🎯 Implementar clasificación NOVA basada en ingredientes
+- 🎯 Mostrar badges A-E y 1-4 en resultados
+- 🎯 Validación cruzada de cálculos con Open Food Facts
+
+---
+
 ### Versión 1.14.10 - Noviembre 2025
 
 **🐛 Corrección de Bug Crítico - Campos Faltantes en Historial**

@@ -50,6 +50,7 @@ export type Database = {
           image_url: string | null
           ingredients_text: string | null
           last_accessed_at: string | null
+          nutrition_photo_url: string | null
           product_name: string
           times_accessed: number | null
           user_id: string
@@ -65,6 +66,7 @@ export type Database = {
           image_url?: string | null
           ingredients_text?: string | null
           last_accessed_at?: string | null
+          nutrition_photo_url?: string | null
           product_name: string
           times_accessed?: number | null
           user_id: string
@@ -80,6 +82,7 @@ export type Database = {
           image_url?: string | null
           ingredients_text?: string | null
           last_accessed_at?: string | null
+          nutrition_photo_url?: string | null
           product_name?: string
           times_accessed?: number | null
           user_id?: string

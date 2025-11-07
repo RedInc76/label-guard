@@ -10,7 +10,7 @@ const corsHeaders = {
 // Input validation schema
 interface AnalysisRequest {
   image: string;
-  type: 'front' | 'back';
+  type: 'front' | 'back' | 'nutrition';
 }
 
 const RATE_LIMIT_WINDOW_HOURS = 1;
@@ -61,9 +61,9 @@ serve(async (req) => {
       );
     }
 
-    if (!body.type || !['front', 'back'].includes(body.type)) {
+    if (!body.type || !['front', 'back', 'nutrition'].includes(body.type)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid input: type must be "front" or "back"' }),
+        JSON.stringify({ error: 'Invalid input: type must be "front", "back", or "nutrition"' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -147,27 +147,72 @@ serve(async (req) => {
       Extrae SOLO el nombre del producto (no la marca, solo el nombre del producto).
       Si hay un nombre claro, devuélvelo. Si no hay nombre visible, devuelve "Producto sin nombre".
       Responde en formato JSON: { "product_name": "..." }`;
-    } else {
-      prompt = `Analiza la tabla de ingredientes y alérgenos de este producto alimenticio.
+    } else if (body.type === 'back') {
+      prompt = `Analiza esta imagen de ingredientes de un producto alimenticio.
 
-IMPORTANTE: Lee y extrae el texto EXACTAMENTE como aparece en la etiqueta, respetando el orden original. NO reorganices ni separes frases.
+Extrae ÚNICAMENTE:
+1. "ingredients": lista completa de ingredientes exactamente como aparecen
+2. "allergens": solo los alérgenos declarados explícitamente (ej: "Contiene: leche, soya")
+3. "warnings": advertencias de contaminación cruzada (ej: "Puede contener trazas de...", "Elaborado en instalaciones que...", etc.)
 
-Extrae:
-1. "ingredients": La lista completa de ingredientes tal como aparece en la etiqueta (busca secciones como "Ingredientes:", "Ingredients:", etc.)
-2. "allergens": TODO el texto relacionado con alérgenos tal como aparece, incluyendo:
-   - Declaraciones de alérgenos ("Contiene:", "Alérgenos:", "Allergens:")
-   - Advertencias de trazas ("Puede contener...", "May contain...", "Trazas de...")
-   - Avisos de contaminación cruzada ("Fabricado en instalaciones que...", "Elaborado en planta que procesa...")
-   
-   CRÍTICO: Si hay una frase como "Puede contener X, Y, Z", captura TODA la frase completa sin separarla.
-   
-3. "warnings": Cualquier otra advertencia o aviso que no sea sobre alérgenos (ej: "Mantener refrigerado", "No apto para menores de 3 años", etc.)
+IMPORTANTE: 
+- NO confundas ingredientes con alérgenos
+- Los alérgenos son sustancias específicas declaradas aparte de los ingredientes
+- Las advertencias de trazas/contaminación van SIEMPRE en "warnings", NUNCA en "allergens"
+- Si no encuentras algún campo, devuelve string vacío ""
 
-Responde en formato JSON estricto:
+Responde ÚNICAMENTE en formato JSON:
 {
-  "ingredients": "texto completo de ingredientes o vacío",
-  "allergens": "texto completo de alérgenos y advertencias de trazas o vacío",
-  "warnings": "otras advertencias no relacionadas con alérgenos o vacío"
+  "ingredients": "...",
+  "allergens": "...",
+  "warnings": "..."
+}`;
+    } else if (body.type === 'nutrition') {
+      prompt = `Analiza esta tabla de información nutricional de un producto alimenticio.
+
+CRÍTICO: Extrae ÚNICAMENTE los valores correspondientes a 100 gramos (o 100 ml si es líquido).
+
+IMPORTANTE sobre energía:
+- Si la tabla muestra kJ (kilojulios), usa ese valor
+- Si solo muestra kcal (kilocalorías), conviértelo: kJ = kcal × 4.184
+- Si muestra ambos, usa el valor en kJ
+
+IMPORTANTE sobre sodio:
+- Si la tabla muestra "sodio" (sodium), usa ese valor en mg
+- Si solo muestra "sal" (salt), calcula: sodio (mg) = sal (g) × 400
+- Si muestra ambos, usa el valor de sodio
+
+Extrae los siguientes valores numéricos (solo números, sin unidades):
+
+1. "energy_kj": Energía en kilojulios (kJ) por 100g
+2. "proteins": Proteínas en gramos por 100g
+3. "carbohydrates": Carbohidratos totales en gramos por 100g
+4. "sugars": Azúcares en gramos por 100g
+5. "fats": Grasas totales en gramos por 100g
+6. "saturated_fats": Grasas saturadas en gramos por 100g
+7. "fiber": Fibra alimentaria en gramos por 100g
+8. "sodium": Sodio en miligramos (mg) por 100g
+9. "salt": Sal en gramos por 100g (si está disponible)
+
+Si algún valor NO está visible o es ilegible, devuelve 0 para ese campo.
+
+VALIDACIÓN: Verifica que los valores sean razonables:
+- Energía: típicamente entre 0-4000 kJ
+- Macronutrientes: típicamente entre 0-100 g
+- Sodio: típicamente entre 0-5000 mg
+- Si un valor parece incorrecto (ej: 10000g de proteína), devuelve 0
+
+Responde ÚNICAMENTE en formato JSON estricto:
+{
+  "energy_kj": 0,
+  "proteins": 0,
+  "carbohydrates": 0,
+  "sugars": 0,
+  "fats": 0,
+  "saturated_fats": 0,
+  "fiber": 0,
+  "sodium": 0,
+  "salt": 0
 }`;
     }
     

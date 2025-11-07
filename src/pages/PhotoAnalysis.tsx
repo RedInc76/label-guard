@@ -13,7 +13,7 @@ import { AnalysisService } from '@/services/analysisService';
 import { ProductInfo } from '@/types/restrictions';
 import { LegalDisclaimer } from '@/components/LegalDisclaimer';
 
-type Step = 'front' | 'validate' | 'back' | 'analyzing';
+type Step = 'front' | 'validate' | 'back' | 'nutrition' | 'analyzing';
 
 export const PhotoAnalysis = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export const PhotoAnalysis = () => {
   const [step, setStep] = useState<Step>('front');
   const [frontPhoto, setFrontPhoto] = useState<string>('');
   const [backPhoto, setBackPhoto] = useState<string>('');
+  const [nutritionPhoto, setNutritionPhoto] = useState<string>('');
   const [productName, setProductName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -155,64 +156,7 @@ export const PhotoAnalysis = () => {
 
       if (image.dataUrl) {
         setBackPhoto(image.dataUrl);
-        setStep('analyzing');
-        
-        // Analyze back photo with AI
-        const analysis = await PhotoAnalysisService.analyzeBackPhoto(image.dataUrl);
-        
-        // Upload photos to storage
-        const frontBlob = await fetch(frontPhoto).then(r => r.blob());
-        const backBlob = await fetch(image.dataUrl).then(r => r.blob());
-        
-        const frontUrl = await PhotoAnalysisService.uploadPhoto(frontBlob, 'front');
-        const backUrl = await PhotoAnalysisService.uploadPhoto(backBlob, 'back');
-        
-        // Obtener barcode del state si viene del Scanner
-        const barcode = (location.state as any)?.barcode || '';
-        
-        // Create product info from AI analysis
-        const product: ProductInfo = {
-          code: barcode,
-          product_name: productName,
-          brands: '',
-          ingredients_text: analysis.ingredients,
-            allergens: [analysis.allergens, ...analysis.warnings]
-              .filter(Boolean)
-              .join('. '),
-          image_url: frontUrl,
-        };
-
-        // Guardar en cache ANTES de analizar si tiene barcode
-        if (barcode) {
-          const { AIProductCacheService } = await import('@/services/aiProductCacheService');
-          await AIProductCacheService.saveAnalyzedProduct(
-            product,
-            { front: frontUrl, back: backUrl },
-            barcode
-          );
-          console.log('✅ Producto guardado en cache para futuras búsquedas');
-        }
-        
-        // Track AI analysis
-        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
-        await UsageAnalyticsService.trackAIAnalysis(productName, barcode || undefined);
-        
-        // Log successful photo scan
-        const { loggingService } = await import('@/services/loggingService');
-        loggingService.logScan('ai_photo', productName, barcode || undefined);
-        
-        // Analyze product against restrictions
-        const result = await AnalysisService.analyzeProductForActiveProfiles(product);
-        
-        // Navigate to results
-        navigate('/results', {
-          state: {
-            product,
-            analysis: result,
-            analysisType: 'ai_photo',
-            photoUrls: { front: frontUrl, back: backUrl }
-          }
-        });
+        setStep('nutrition');
       }
     } catch (error: any) {
       console.error('Error in photo analysis:', error);
@@ -222,6 +166,107 @@ export const PhotoAnalysis = () => {
         variant: "destructive",
       });
       setStep('back');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const takeNutritionPhoto = async () => {
+    try {
+      setLoading(true);
+      const image = await CameraService.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (image.dataUrl) {
+        setNutritionPhoto(image.dataUrl);
+        setStep('analyzing');
+        
+        // Analizar ambas fotos en paralelo
+        const [backAnalysis, nutritionAnalysis] = await Promise.all([
+          PhotoAnalysisService.analyzeBackPhoto(backPhoto),
+          PhotoAnalysisService.analyzeNutritionPhoto(image.dataUrl)
+        ]);
+        
+        // Upload las 3 fotos a storage
+        const [frontBlob, backBlob, nutritionBlob] = await Promise.all([
+          fetch(frontPhoto).then(r => r.blob()),
+          fetch(backPhoto).then(r => r.blob()),
+          fetch(image.dataUrl).then(r => r.blob())
+        ]);
+        
+        const [frontUrl, backUrl, nutritionUrl] = await Promise.all([
+          PhotoAnalysisService.uploadPhoto(frontBlob, 'front'),
+          PhotoAnalysisService.uploadPhoto(backBlob, 'back'),
+          PhotoAnalysisService.uploadPhoto(nutritionBlob, 'nutrition')
+        ]);
+        
+        const barcode = (location.state as any)?.barcode || '';
+        
+        // Crear ProductInfo con nutrientes
+        const product: ProductInfo = {
+          code: barcode,
+          product_name: productName,
+          brands: '',
+          ingredients_text: backAnalysis.ingredients,
+          allergens: [backAnalysis.allergens, ...backAnalysis.warnings]
+            .filter(Boolean)
+            .join('. '),
+          image_url: frontUrl,
+          nutriments: {
+            energy_100g: nutritionAnalysis.energy_kj,
+            proteins_100g: nutritionAnalysis.proteins,
+            carbohydrates_100g: nutritionAnalysis.carbohydrates,
+            sugars_100g: nutritionAnalysis.sugars,
+            fat_100g: nutritionAnalysis.fats,
+            'saturated-fat_100g': nutritionAnalysis.saturated_fats,
+            fiber_100g: nutritionAnalysis.fiber,
+            sodium_100g: nutritionAnalysis.sodium
+          }
+        };
+
+        // Guardar en cache con las 3 URLs
+        if (barcode) {
+          const { AIProductCacheService } = await import('@/services/aiProductCacheService');
+          await AIProductCacheService.saveAnalyzedProduct(
+            product,
+            { front: frontUrl, back: backUrl, nutrition: nutritionUrl },
+            barcode
+          );
+          console.log('✅ Producto guardado en cache con 3 fotos');
+        }
+        
+        // Track y log
+        const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
+        await UsageAnalyticsService.trackAIAnalysis(productName, barcode || undefined);
+        
+        const { loggingService } = await import('@/services/loggingService');
+        loggingService.logScan('ai_photo', productName, barcode || undefined);
+        
+        // Analizar restricciones
+        const result = await AnalysisService.analyzeProductForActiveProfiles(product);
+        
+        // Navegar a resultados
+        navigate('/results', {
+          state: {
+            product,
+            analysis: result,
+            analysisType: 'ai_photo',
+            photoUrls: { front: frontUrl, back: backUrl, nutrition: nutritionUrl }
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in nutrition photo analysis:', error);
+      toast({
+        title: "Error en el análisis nutricional",
+        description: error.message || "No se pudo analizar la tabla nutricional",
+        variant: "destructive",
+      });
+      setStep('nutrition');
     } finally {
       setLoading(false);
     }
@@ -337,7 +382,7 @@ export const PhotoAnalysis = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Analizando...
+                  Capturando...
                 </>
               ) : (
                 <>
@@ -357,15 +402,67 @@ export const PhotoAnalysis = () => {
         </Card>
       )}
 
+      {step === 'nutrition' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Paso 4: Tabla Nutricional</CardTitle>
+            <CardDescription>
+              Toma una foto clara de la tabla de información nutricional. 
+              Asegúrate de que se vean bien los valores por 100g.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-2">
+                📊 ¿Qué buscamos?
+              </p>
+              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• Energía (kJ o kcal)</li>
+                <li>• Proteínas, carbohidratos, azúcares</li>
+                <li>• Grasas totales y saturadas</li>
+                <li>• Fibra y sodio/sal</li>
+              </ul>
+            </div>
+            
+            <Button
+              onClick={takeNutritionPhoto}
+              disabled={loading}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Capturando...
+                </>
+              ) : (
+                <>
+                  <Camera className="mr-2 h-5 w-5" />
+                  Tomar Foto de Tabla Nutricional
+                </>
+              )}
+            </Button>
+            
+            {nutritionPhoto && (
+              <img 
+                src={nutritionPhoto} 
+                alt="Tabla nutricional" 
+                className="w-full rounded-lg border"
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {step === 'analyzing' && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              Analizando ingredientes con IA...
+              Analizando producto completo con IA...
             </h3>
             <p className="text-sm text-muted-foreground text-center">
-              Esto puede tomar unos segundos
+              Procesando ingredientes y tabla nutricional. Esto puede tomar unos segundos.
             </p>
           </CardContent>
         </Card>

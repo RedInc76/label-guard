@@ -107,7 +107,7 @@ export class AIProductCacheService {
    */
   static async saveAnalyzedProduct(
     product: ProductInfo,
-    photoUrls: { front?: string; back?: string },
+    photoUrls: { front?: string; back?: string; nutrition?: string },
     barcode?: string
   ): Promise<string | null> {
     try {
@@ -125,6 +125,7 @@ export class AIProductCacheService {
         allergens: product.allergens || null,
         front_photo_url: photoUrls.front || null,
         back_photo_url: photoUrls.back || null,
+        nutrition_photo_url: photoUrls.nutrition || null,
         image_url: product.image_url || photoUrls.front || null,
         user_id: user.id,
       };
