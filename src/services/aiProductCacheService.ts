@@ -56,6 +56,18 @@ export class AIProductCacheService {
         ingredients_text: data.ingredients_text || '',
         allergens: data.allergens || '',
         image_url: data.image_url || data.front_photo_url || '',
+        nutriscore_grade: (data as any).nutriscore_grade || undefined,
+        nova_group: (data as any).nova_group || undefined,
+        nutriments: {
+          energy_100g: (data as any).energy_kj || undefined,
+          proteins_100g: (data as any).proteins || undefined,
+          carbohydrates_100g: (data as any).carbohydrates || undefined,
+          sugars_100g: (data as any).sugars || undefined,
+          fat_100g: (data as any).fats || undefined,
+          'saturated-fat_100g': (data as any).saturated_fats || undefined,
+          fiber_100g: (data as any).fiber || undefined,
+          sodium_100g: (data as any).sodium || undefined,
+        }
       };
     } catch (error) {
       console.error('Error in getByBarcode:', error);
@@ -128,6 +140,18 @@ export class AIProductCacheService {
         nutrition_photo_url: photoUrls.nutrition || null,
         image_url: product.image_url || photoUrls.front || null,
         user_id: user.id,
+        // ✅ NUEVO: Nutri-Score y NOVA
+        nutriscore_grade: product.nutriscore_grade || null,
+        nova_group: product.nova_group || null,
+        // ✅ NUEVO: Nutriments para futuras re-calculaciones
+        energy_kj: product.nutriments?.energy_100g || null,
+        proteins: product.nutriments?.proteins_100g || null,
+        carbohydrates: product.nutriments?.carbohydrates_100g || null,
+        sugars: product.nutriments?.sugars_100g || null,
+        fats: product.nutriments?.fat_100g || null,
+        saturated_fats: product.nutriments?.['saturated-fat_100g'] || null,
+        fiber: product.nutriments?.fiber_100g || null,
+        sodium: product.nutriments?.sodium_100g || null,
       };
 
       const { data, error } = await supabase

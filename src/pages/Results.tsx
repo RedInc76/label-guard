@@ -431,39 +431,47 @@ export const Results = () => {
               )
             )}
 
-            {/* NOVA con popover explicativo (sin colores) */}
-            {product.nova_group && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-accent">
-                    NOVA: {product.nova_group}
-                    <HelpCircle className="w-3 h-3 ml-0.5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">¿Qué es NOVA?</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Sistema de clasificación que agrupa los alimentos según su grado de procesamiento industrial.
-                    </p>
-                    <div className="space-y-1.5 text-xs">
-                      <div>
-                        <strong>Grupo 1:</strong> Alimentos sin procesar o mínimamente procesados (frutas, verduras, legumbres, carnes frescas)
-                      </div>
-                      <div>
-                        <strong>Grupo 2:</strong> Ingredientes culinarios procesados (aceites, mantequilla, azúcar, sal)
-                      </div>
-                      <div>
-                        <strong>Grupo 3:</strong> Alimentos procesados (conservas, quesos, panes artesanales)
-                      </div>
-                      <div>
-                        <strong>Grupo 4:</strong> Alimentos ultraprocesados (snacks, refrescos, comidas preparadas)
+            {/* NOVA con popover explicativo y colores */}
+            {product.nova_group && (() => {
+              const novaColors = (() => {
+                if (product.nova_group === 1) return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700';
+                if (product.nova_group === 2) return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700';
+                if (product.nova_group === 3) return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700';
+                return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700';
+              })();
+              return (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80 ${novaColors}`}>
+                      NOVA: {product.nova_group}
+                      <HelpCircle className="w-3 h-3 ml-0.5" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">¿Qué es NOVA?</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Sistema de clasificación que agrupa los alimentos según su grado de procesamiento industrial.
+                      </p>
+                      <div className="space-y-1.5 text-xs">
+                        <div>
+                          <strong>Grupo 1:</strong> Alimentos sin procesar o mínimamente procesados
+                        </div>
+                        <div>
+                          <strong>Grupo 2:</strong> Ingredientes culinarios procesados
+                        </div>
+                        <div>
+                          <strong>Grupo 3:</strong> Alimentos procesados
+                        </div>
+                        <div>
+                          <strong>Grupo 4:</strong> Productos ultra-procesados (contienen ingredientes que no se usan en la cocina casera)
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+                  </PopoverContent>
+                </Popover>
+              );
+            })()}
           </div>
         </Card>
 

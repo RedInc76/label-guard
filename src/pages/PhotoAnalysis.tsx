@@ -206,7 +206,27 @@ export const PhotoAnalysis = () => {
         
         const barcode = (location.state as any)?.barcode || '';
         
-        // Crear ProductInfo con nutrientes
+        // ✅ NUEVO: Calcular Nutri-Score y NOVA
+        const { NutriScoreService } = await import('@/services/nutriScoreService');
+        
+        const nutriScore = NutriScoreService.calculateNutriScore({
+          energy_kj: nutritionAnalysis.energy_kj,
+          proteins: nutritionAnalysis.proteins,
+          fiber: nutritionAnalysis.fiber,
+          sodium: nutritionAnalysis.sodium,
+          sugars: nutritionAnalysis.sugars,
+          saturated_fats: nutritionAnalysis.saturated_fats,
+        });
+        
+        const novaGroup = NutriScoreService.calculateNovaGroup(backAnalysis.ingredients);
+        
+        console.log('[PhotoAnalysis] 📊 Calculados:', {
+          nutriScore,
+          novaGroup,
+          productName
+        });
+        
+        // Crear ProductInfo con nutrientes + Nutri-Score + NOVA
         const product: ProductInfo = {
           code: barcode,
           product_name: productName,
@@ -216,6 +236,8 @@ export const PhotoAnalysis = () => {
             .filter(Boolean)
             .join('. '),
           image_url: frontUrl,
+          nutriscore_grade: nutriScore || undefined, // ✅ NUEVO
+          nova_group: novaGroup, // ✅ NUEVO
           nutriments: {
             energy_100g: nutritionAnalysis.energy_kj,
             proteins_100g: nutritionAnalysis.proteins,
@@ -228,7 +250,7 @@ export const PhotoAnalysis = () => {
           }
         };
 
-        // Guardar en cache con las 3 URLs
+        // Guardar en cache con Nutri-Score y NOVA
         if (barcode) {
           const { AIProductCacheService } = await import('@/services/aiProductCacheService');
           await AIProductCacheService.saveAnalyzedProduct(
@@ -236,7 +258,7 @@ export const PhotoAnalysis = () => {
             { front: frontUrl, back: backUrl, nutrition: nutritionUrl },
             barcode
           );
-          console.log('✅ Producto guardado en cache con 3 fotos');
+          console.log('✅ Producto guardado en cache con Nutri-Score y NOVA');
         }
         
         // Track y log

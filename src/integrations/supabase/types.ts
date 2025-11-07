@@ -44,14 +44,25 @@ export type Database = {
           back_photo_url: string | null
           barcode: string | null
           brands: string | null
+          carbohydrates: number | null
           created_at: string | null
+          energy_kj: number | null
+          fats: number | null
+          fiber: number | null
           front_photo_url: string | null
           id: string
           image_url: string | null
           ingredients_text: string | null
           last_accessed_at: string | null
+          nova_group: number | null
+          nutriscore_grade: string | null
           nutrition_photo_url: string | null
           product_name: string
+          proteins: number | null
+          salt: number | null
+          saturated_fats: number | null
+          sodium: number | null
+          sugars: number | null
           times_accessed: number | null
           user_id: string
         }
@@ -60,14 +71,25 @@ export type Database = {
           back_photo_url?: string | null
           barcode?: string | null
           brands?: string | null
+          carbohydrates?: number | null
           created_at?: string | null
+          energy_kj?: number | null
+          fats?: number | null
+          fiber?: number | null
           front_photo_url?: string | null
           id?: string
           image_url?: string | null
           ingredients_text?: string | null
           last_accessed_at?: string | null
+          nova_group?: number | null
+          nutriscore_grade?: string | null
           nutrition_photo_url?: string | null
           product_name: string
+          proteins?: number | null
+          salt?: number | null
+          saturated_fats?: number | null
+          sodium?: number | null
+          sugars?: number | null
           times_accessed?: number | null
           user_id: string
         }
@@ -76,14 +98,25 @@ export type Database = {
           back_photo_url?: string | null
           barcode?: string | null
           brands?: string | null
+          carbohydrates?: number | null
           created_at?: string | null
+          energy_kj?: number | null
+          fats?: number | null
+          fiber?: number | null
           front_photo_url?: string | null
           id?: string
           image_url?: string | null
           ingredients_text?: string | null
           last_accessed_at?: string | null
+          nova_group?: number | null
+          nutriscore_grade?: string | null
           nutrition_photo_url?: string | null
           product_name?: string
+          proteins?: number | null
+          salt?: number | null
+          saturated_fats?: number | null
+          sodium?: number | null
+          sugars?: number | null
           times_accessed?: number | null
           user_id?: string
         }

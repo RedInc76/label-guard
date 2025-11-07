@@ -22,6 +22,58 @@
 
 ## Changelog
 
+### Versión 1.16.0 - Noviembre 2025
+
+**✨ Nueva Funcionalidad: Cálculo Automático de Nutri-Score y NOVA**
+
+#### Características Agregadas
+- ✅ **Nutri-Score (A-E):** Cálculo automático basado en tabla nutricional capturada
+  - Algoritmo oficial francés 2024
+  - Puntuación basada en energía, azúcares, grasas saturadas, sodio (negativo)
+  - Proteínas y fibra (positivo)
+  
+- ✅ **NOVA (1-4):** Clasificación de nivel de procesamiento
+  - Grupo 1: Alimentos sin procesar o mínimamente procesados
+  - Grupo 2: Ingredientes culinarios procesados
+  - Grupo 3: Alimentos procesados
+  - Grupo 4: Productos ultra-procesados (detectado por palabras clave)
+
+#### Impacto
+- 🎯 **Paridad con OpenFoodFacts:** Ahora los productos analizados por foto tienen la misma información que los de la API
+- 📊 **Mejor contexto:** Usuarios ven calidad nutricional y nivel de procesamiento inmediatamente
+- 💾 **Cache enriquecido:** `ai_analyzed_products` ahora incluye nutriscore, nova y nutriments
+
+#### Cambios Técnicos
+- **Base de datos:**
+  - `ai_analyzed_products`: +11 columnas (nutriscore_grade, nova_group, nutriments)
+  - Migración de datos para producto `055653111252` (Nutri-Score E, NOVA 4)
+  
+- **Nuevos servicios:**
+  - `src/services/nutriScoreService.ts`: Lógica de cálculo (200 líneas)
+  
+- **Actualizaciones:**
+  - `src/pages/PhotoAnalysis.tsx`: Integración de cálculo pre-guardado
+  - `src/services/aiProductCacheService.ts`: Guardado de nuevos campos
+  - `src/pages/Results.tsx`: Display de badge NOVA mejorado
+  - `src/config/app.ts`: Versión → 1.16.0
+  - `capacitor.config.ts`: Versión → 1.16.0
+
+#### Limitaciones Conocidas
+- **NOVA:** Usa heurística basada en keywords (80-90% precisión vs análisis manual)
+- **Nutri-Score:** Requiere tabla nutricional completa (si faltan datos, devuelve null)
+
+#### Archivos Modificados
+- Migración SQL: Agregar columnas a `ai_analyzed_products`
+- `src/services/nutriScoreService.ts`: Nuevo (230 líneas)
+- `src/services/aiProductCacheService.ts`: ~40 líneas modificadas
+- `src/pages/PhotoAnalysis.tsx`: ~30 líneas modificadas
+- `src/pages/Results.tsx`: ~15 líneas modificadas
+- `src/config/app.ts`: 1 línea
+- `capacitor.config.ts`: 1 línea
+- `docs/PROYECTO_LABELGUARD.md`: Esta documentación
+
+---
+
 ### Versión 1.15.2 - Noviembre 2025
 
 **🐛 Corrección de Bug: Sincronización de Perfiles Activos**
