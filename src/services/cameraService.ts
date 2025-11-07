@@ -103,7 +103,17 @@ export class CameraService {
           }
         ).catch((err) => {
           console.error('Error starting web scanner:', err);
-          reject(new Error('No se pudo acceder a la cámara. Verifica los permisos.'));
+          
+          // Detectar tipo específico de error
+          const errorMsg = err?.message?.toLowerCase() || '';
+          
+          if (errorMsg.includes('permission') || errorMsg.includes('notallowederror')) {
+            reject(new Error('PERMISSION_DENIED'));
+          } else if (errorMsg.includes('notfound') || errorMsg.includes('notfounderror')) {
+            reject(new Error('NO_CAMERA_FOUND'));
+          } else {
+            reject(new Error('CAMERA_ACCESS_ERROR'));
+          }
         });
       } catch (error) {
         console.error('Error in scanBarcodeWeb:', error);

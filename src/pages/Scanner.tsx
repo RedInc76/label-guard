@@ -122,22 +122,34 @@ export const Scanner = () => {
     } catch (error) {
       console.error('Error scanning:', error);
       
-      // Mensaje de error más específico según tipo
-      let errorMessage = "Error al escanear";
+      // Mensajes específicos según tipo de error
+      let errorTitle = "Error al escanear";
+      let errorMessage = "No se pudo escanear el código";
+      
       if (error instanceof Error) {
-        if (error.message.includes('cámara')) {
-          errorMessage = 'No se pudo acceder a la cámara. Verifica los permisos en tu navegador.';
-        } else if (error.message.includes('NotFoundError')) {
-          errorMessage = 'No se detectó ninguna cámara en tu dispositivo.';
+        if (error.message === 'PERMISSION_DENIED') {
+          errorTitle = "Permiso de cámara bloqueado";
+          errorMessage = Capacitor.isNativePlatform() 
+            ? 'Ve a Configuración → Permisos para habilitar la cámara'
+            : 'Haz clic en el ícono de cámara 🎥 en la barra de direcciones (junto a la URL) y selecciona "Permitir"';
+        } else if (error.message === 'NO_CAMERA_FOUND') {
+          errorTitle = "Cámara no detectada";
+          errorMessage = 'No se encontró ninguna cámara en tu dispositivo. Verifica que esté conectada correctamente.';
+        } else if (error.message === 'CAMERA_ACCESS_ERROR') {
+          errorTitle = "No se puede acceder a la cámara";
+          errorMessage = 'La cámara podría estar siendo usada por otra aplicación. Cierra otras apps y vuelve a intentar.';
+        } else if (error.message.includes('módulo')) {
+          errorMessage = error.message;
         } else {
           errorMessage = error.message;
         }
       }
       
       toast({
-        title: "Error al escanear",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
     } finally {
       setIsScanning(false);
