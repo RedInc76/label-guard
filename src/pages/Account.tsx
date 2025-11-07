@@ -35,8 +35,7 @@ import {
 } from '@/components/ui/form';
 
 const profileFormSchema = z.object({
-  full_name: z.string().max(100, 'El nombre no puede exceder 100 caracteres').optional().or(z.literal('')),
-  date_of_birth: z.string().optional().or(z.literal('')),
+  gender: z.enum(['hombre', 'mujer', '']).optional(),
   country: z.string().optional().or(z.literal('')),
   city: z.string().max(50, 'La ciudad no puede exceder 50 caracteres').optional().or(z.literal('')),
   community_stats_consent: z.boolean().default(false),
@@ -61,8 +60,7 @@ export const Account = () => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      full_name: '',
-      date_of_birth: '',
+      gender: '',
       country: '',
       city: '',
       community_stats_consent: false,
@@ -78,8 +76,7 @@ export const Account = () => {
       
       if (profile) {
         form.reset({
-          full_name: profile.full_name || '',
-          date_of_birth: profile.date_of_birth || '',
+          gender: (profile.gender === 'hombre' || profile.gender === 'mujer') ? profile.gender : '',
           country: profile.country || '',
           city: profile.city || '',
           community_stats_consent: profile.community_stats_consent || false,
@@ -95,8 +92,7 @@ export const Account = () => {
     if (!user?.id) return;
 
     const success = await UserProfileService.updateProfile(user.id, {
-      full_name: data.full_name || null,
-      date_of_birth: data.date_of_birth || null,
+      gender: data.gender || null,
       country: data.country || null,
       city: data.city || null,
       community_stats_consent: data.community_stats_consent,
@@ -211,27 +207,21 @@ export const Account = () => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="full_name"
+                  name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: María González" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="date_of_birth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fecha de nacimiento</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <FormLabel>Sexo</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar sexo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="hombre">Hombre</SelectItem>
+                          <SelectItem value="mujer">Mujer</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

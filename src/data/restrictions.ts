@@ -152,7 +152,14 @@ export const defaultRestrictions: DietaryRestriction[] = [
     name: 'Sin Azúcares Añadidos',
     description: 'Evita azúcares agregados artificialmente',
     category: 'dietary',
-    keywords: ['added sugar', 'high fructose corn syrup', 'syrup', 'azúcar añadido', 'jarabe de maíz', 'jarabe'],
+    keywords: [
+      'added sugar', 'added sugars',
+      'high fructose corn syrup',
+      'syrup',
+      'azúcar añadido', 'azúcares añadidos', 'azucar añadido', 'azucares añadidos',
+      'azúcar agregado', 'azúcares agregados', 'azucar agregado', 'azucares agregados',
+      'jarabe de maíz', 'jarabe'
+    ],
     enabled: false,
     isFree: false
   },

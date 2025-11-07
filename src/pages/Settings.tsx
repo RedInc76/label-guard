@@ -224,6 +224,16 @@ const visibleSections = settingsSections.filter((section) => {
                       <p className="text-xs text-muted-foreground text-center">
                         Versión {APP_VERSION}
                       </p>
+                      <p className="text-xs text-center mt-1">
+                        <a 
+                          href="http://stackwyse.net/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          stackwyse.net
+                        </a>
+                      </p>
                     </div>
                   )}
                 </div>

@@ -665,6 +665,19 @@ export const Results = () => {
           </Card>
         )}
 
+        {/* Allergens - Solo si existen */}
+        {product.allergens && (
+          <Card className="p-4 shadow-sm border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30">
+            <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              Alérgenos y Advertencias
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {product.allergens}
+            </p>
+          </Card>
+        )}
+
         {/* Actions */}
         <div className="space-y-3">
           {/* Report Error Button */}

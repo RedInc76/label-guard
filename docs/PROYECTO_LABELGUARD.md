@@ -22,6 +22,102 @@
 
 ## Changelog
 
+### Versión 1.14.5 - Noviembre 2025
+
+**🐛 Correcciones Críticas y Mejoras UX**
+
+#### Bugs Corregidos
+
+**Alérgenos visibles en análisis IA**
+- ✅ **Problema**: Los alérgenos detectados por IA no se mostraban en la página de resultados
+- ✅ **Causa**: La información de `product.allergens` se capturaba pero no se renderizaba
+- ✅ **Solución**: Nueva sección "Alérgenos y Advertencias" con estilo destacado (borde ámbar) que se muestra cuando existen alérgenos
+- ✅ **Beneficio**: Los usuarios ahora ven la "etiqueta completa digitalizada" con ingredientes Y alérgenos, pudiendo leerla completa independientemente de sus restricciones
+
+**Detección mejorada "Sin Azúcares Añadidos"**
+- ✅ **Problema**: Producto con código `7503018092362` que indica "azúcares añadidos azucar" no se detectaba como violación
+- ✅ **Causa**: Keywords incompletas en `restrictions.ts` (línea 155):
+  - Faltaban plurales: "azúcares añadidos" vs "azúcar añadido"
+  - Faltaban variantes sin tilde: "azucar" vs "azúcar"
+  - Faltaban sinónimos: "azúcar agregado"
+- ✅ **Solución**: Expandidas keywords a 13 variaciones:
+  ```typescript
+  keywords: [
+    'added sugar', 'added sugars',
+    'high fructose corn syrup', 'syrup',
+    'azúcar añadido', 'azúcares añadidos', 
+    'azucar añadido', 'azucares añadidos',
+    'azúcar agregado', 'azúcares agregados',
+    'azucar agregado', 'azucares agregados',
+    'jarabe de maíz', 'jarabe'
+  ]
+  ```
+- ✅ **Impacto**: Menos falsos negativos en detección de azúcares añadidos (crítico para diabéticos y perfiles keto)
+
+#### Mejoras UX
+
+**Eliminado botón flotante de cerrar sesión**
+- ✅ **Problema**: Botón transparente en esquina superior derecha se presionaba accidentalmente
+- ✅ **Solución**: Eliminado de `Navigation.tsx` (líneas 31-45). Cerrar sesión ahora solo desde menú CUENTA → Cerrar sesión
+- ✅ **Beneficio**: UX más segura, menos interrupciones accidentales de sesión
+
+**Información personal simplificada en Cuenta**
+- ✅ **Campos eliminados**: 
+  - "Nombre completo" (poco relevante para análisis de productos)
+  - "Fecha de nacimiento" (sensible, opcional, poco usado)
+- ✅ **Nuevo campo**: "Sexo (Hombre/Mujer)" para datos demográficos básicos
+- ✅ **Campos mantenidos**: País, Ciudad, Consentimiento estadísticas
+- ✅ **Migración DB**: Nueva columna `gender TEXT CHECK (gender IN ('hombre', 'mujer') OR gender IS NULL)` en `user_profiles`
+- ✅ **Beneficio**: Formulario más simple y enfocado, menos fricción al completar perfil
+
+**Enlace web agregado en Configuración**
+- ✅ **Ubicación**: Junto al número de versión en sección "Permisos y dispositivo"
+- ✅ **Enlace**: [http://stackwyse.net/](http://stackwyse.net/) (clickeable, abre en nueva pestaña)
+- ✅ **Beneficio**: Canal de contacto y soporte visible para usuarios
+
+#### Archivos Modificados
+
+**Frontend:**
+- `src/pages/Results.tsx`: Nueva Card de alérgenos después de ingredientes (líneas 678-690)
+- `src/data/restrictions.ts`: Keywords expandidas para azúcares añadidos (línea 155)
+- `src/components/Navigation.tsx`: Eliminado botón flotante logout (líneas 31-45)
+- `src/services/userProfileService.ts`: Interface actualizada (eliminados `full_name`, `date_of_birth`, agregado `gender`)
+- `src/pages/Account.tsx`: Formulario simplificado (campo sexo en lugar de nombre/fecha)
+- `src/pages/Settings.tsx`: Enlace stackwyse.net junto a versión (línea 227)
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.14.5
+- `capacitor.config.ts`: Versión → 1.14.5
+
+**Backend:**
+- `supabase/migrations/[timestamp]_add_gender_to_user_profiles.sql`: Nueva columna `gender`
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.14.5 (esta sección)
+
+#### Impacto
+
+**Para usuarios:**
+- ✅ Alérgenos ahora visibles en análisis IA (transparencia total)
+- ✅ Detección más precisa de azúcares añadidos (menos falsos negativos)
+- ✅ UX más segura (sin cerrar sesión accidental)
+- ✅ Formulario de cuenta más simple y rápido
+- ✅ Acceso directo a soporte web (stackwyse.net)
+
+**Para el negocio:**
+- 🎯 Menos reportes de error por falsos negativos en restricciones
+- 👍 Mayor confianza en precisión del análisis IA
+- 📞 Canal de contacto visible (mejor soporte)
+- 📊 Datos demográficos más útiles para analytics (género en lugar de nombre)
+- 🛡️ Menos interrupciones accidentales de sesión (mejor retención)
+
+**Para análisis:**
+- 📊 Reportado específico: Producto `7503018092362` ahora detecta correctamente azúcares añadidos
+- 📈 Mejora en tasa de detección de restricciones alimentarias
+- 💡 Base para futuras optimizaciones de keywords en otras restricciones
+
+---
+
 ### Versión 1.14.4 - Noviembre 2025
 
 **🧹 Limpieza Semántica de Tipos de Análisis**

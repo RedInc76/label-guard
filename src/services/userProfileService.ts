@@ -2,8 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProfile {
   id: string;
-  full_name: string | null;
-  date_of_birth: string | null;
+  gender: string | null;
   country: string | null;
   city: string | null;
   community_stats_consent: boolean;

@@ -28,22 +28,6 @@ export const Navigation = () => {
         </Button>
       )}
 
-      {/* Logout button en esquina superior derecha */}
-      {isPremium && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={async () => {
-            await signOut();
-            navigate('/auth');
-          }} 
-          className="fixed top-4 right-4 z-50 h-10 w-10 p-0"
-          title="Cerrar sesión"
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
-      )}
-
       {/* Barra de navegación con glassmorphism */}
       <nav className="nav-bar">
         <div className="nav-container">
