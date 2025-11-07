@@ -169,7 +169,7 @@ export class HistoryService {
 
       const { data, error } = await supabase
         .from('scan_history')
-        .select('id, product_name, brands, image_url, is_compatible, score, violations, warnings, analysis_type, created_at, nutriscore_grade, nova_group, front_photo_url, back_photo_url')
+        .select('id, barcode, product_name, brands, image_url, is_compatible, score, violations, warnings, ingredients_text, allergens, analysis_type, active_profiles_snapshot, created_at, nutriscore_grade, nova_group, ecoscore_grade, front_photo_url, back_photo_url, latitude, longitude')
         .gte('created_at', ninetyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);

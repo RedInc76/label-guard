@@ -22,6 +22,66 @@
 
 ## Changelog
 
+### Versión 1.14.10 - Noviembre 2025
+
+**🐛 Corrección de Bug Crítico - Campos Faltantes en Historial**
+
+#### Problema Resuelto
+- 🐛 **Bug crítico**: El método `getHistory` no estaba trayendo todos los campos de la base de datos
+- ✅ Agregados 7 campos faltantes en el SELECT: `barcode`, `latitude`, `longitude`, `allergens`, `ingredients_text`, `ecoscore_grade`, `active_profiles_snapshot`
+
+#### Impacto
+- ✅ **Códigos de barras ahora visibles**: Los códigos de barras que ya existían en la BD ahora se muestran correctamente en el historial
+- ✅ **Iconos de ubicación restaurados**: Los iconos de ubicación (📍) vuelven a aparecer para escaneos con geolocalización
+- ✅ **Información completa**: Todos los campos del producto están ahora disponibles en el historial
+
+#### Causa Raíz
+- El SELECT de `getHistory` estaba incompleto y solo traía 14 de 21 campos disponibles
+- Los datos siempre se guardaron correctamente en la BD, pero no se recuperaban al listar el historial
+- El componente `History.tsx` verificaba correctamente `item.barcode` e `item.latitude`, pero estos campos llegaban como `undefined`
+
+#### Regresión Identificada
+- Este bug fue introducido en una versión anterior cuando se agregaron nuevos campos a la tabla `scan_history` sin actualizar el SELECT
+- La regresión se detectó al comparar productos idénticos en dos usuarios diferentes
+
+#### Archivos Modificados
+
+**Backend Services:**
+- `src/services/historyService.ts`: SELECT completo en `getHistory()` (línea 172)
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.14.10
+- `capacitor.config.ts`: Versión → 1.14.10
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.14.10 (esta sección)
+
+#### Testing Realizado
+- ✅ Verificado en base de datos: productos como "AZÚCAR MORENA ZULKA" (barcode `661440000052`) tienen código en BD
+- ✅ Confirmado que el bug afectaba visualización, NO guardado de datos
+- ✅ Sin pérdida de datos: toda la información histórica sigue intacta
+
+#### Impacto del Fix
+
+**Para usuarios:**
+- ✅ Verán códigos de barras que antes no aparecían
+- ✅ Verán iconos de ubicación (📍) que antes no aparecían
+- ✅ Toda la información guardada estará ahora visible
+- ✅ Fix inmediato sin necesidad de re-escanear productos
+
+**Para el negocio:**
+- ✅ Bug crítico resuelto sin pérdida de datos
+- ✅ Los datos siempre estuvieron en la BD (no se perdió nada)
+- ✅ Fix mínimo y seguro (solo 1 línea cambiada)
+- ✅ Restaura funcionalidad de geolocalización y trazabilidad por código de barras
+
+**Para análisis:**
+- 📊 Productos reportados como "sin código" ahora mostrarán su barcode correctamente
+- 📍 Mapas y análisis por ubicación volverán a funcionar
+- 💡 Lección aprendida: validar que SELECTs incluyan todos los campos de la interfaz TypeScript
+
+---
+
 ### Versión 1.14.9 - Noviembre 2025
 
 **✨ Mejora UX - Compatibilidad Individual por Perfil**
