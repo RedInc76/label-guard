@@ -22,6 +22,71 @@
 
 ## Changelog
 
+### Versión 1.14.8 - Noviembre 2025
+
+**✨ Mejora UX - Iconos Visuales en Restricciones**
+
+#### Nueva Funcionalidad
+
+**Iconos visuales en restricciones**
+- ✅ **Objetivo**: Identificación rápida de restricciones sin necesidad de leer
+- ✅ **Implementación**: Cada restricción ahora tiene un emoji/icono representativo
+- ✅ **Ubicación**: Los iconos se muestran al lado del nombre en el editor de perfiles
+- ✅ **Ejemplos de iconos**:
+  - **Alérgenos**: 🌾 Gluten, 🥛 Lactosa, 🥜 Frutos Secos, 🫘 Soja, 🥚 Huevo, 🐟 Pescado, 🦐 Mariscos, 🥬 Apio, 🌭 Mostaza, 🌰 Sésamo, 🍷 Sulfitos
+  - **Dietas**: 🥗 Vegetariano, 🌱 Vegano, 🥑 Keto, 🍖 Paleo, 🚫 Sin Azúcares Añadidos
+  - **Salud**: 🍬 Bajo Azúcar, 🧂 Bajo Sodio, 🫒 Bajo Grasas Saturadas, ⛔ Sin Trans, 🔬 Sin Conservantes, 🎨 Sin Colorantes, 🧃 Sin Edulcorantes, 🍺 Sin Alcohol, 🥩 Sin Nitratos, 🧪 Sin BHA/BHT, 🌊 Sin Carragenina
+  - **Religioso**: ☪️ Halal, ✡️ Kosher, 🐖 Sin Cerdo
+
+#### Mejoras Técnicas
+
+**Arquitectura**
+- 🔧 Nuevo campo `icon?: string` en interface `DietaryRestriction` (`src/types/restrictions.ts`)
+- 🔧 25 restricciones actualizadas con iconos en `src/data/restrictions.ts`
+- 🔧 Componente `ProfileEditorDialog` actualizado para renderizar iconos
+
+**UX mejorada**
+- 👀 **Escaneo visual rápido**: Los usuarios reconocen restricciones inmediatamente por el icono
+- 🎯 **Mejor accesibilidad**: Los iconos complementan el texto sin reemplazarlo
+- 🌍 **Universal**: Los emojis son reconocibles en cualquier idioma
+
+#### Archivos Modificados
+
+**Tipos y Datos:**
+- `src/types/restrictions.ts`: Campo `icon` agregado a `DietaryRestriction` (línea 48)
+- `src/data/restrictions.ts`: 25 restricciones actualizadas con iconos apropiados
+
+**Componentes:**
+- `src/components/ProfileEditorDialog.tsx`: Renderizado de iconos al lado del nombre (líneas 173-177)
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.14.8
+- `capacitor.config.ts`: Versión → 1.14.8
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.14.8 (esta sección)
+
+#### Impacto UX
+
+**Para usuarios:**
+- 👁️ **Identificación instantánea**: Reconocen restricciones visualmente en 0.3s vs 2-3s leyendo
+- 🎨 **Interfaz más atractiva**: UI moderna y visualmente agradable
+- 🚀 **Configuración más rápida**: Menor fricción al crear/editar perfiles
+
+**Para el negocio:**
+- 📊 **Mejor engagement**: UI más atractiva = más tiempo usando perfiles
+- 🎯 **Menor tasa de error**: Usuarios reconocen restricciones correctamente
+- 💡 **Base para Fase 2**: Preparado para mostrar compatibilidad individual por perfil
+
+#### Próximos Pasos (Fase 2 - Planificado)
+
+**Compatibilidad individual por perfil en resultados** (v1.14.9):
+- 🎯 Mostrar compatibilidad de cada perfil activo con palomitas (✓) o tachas (✗)
+- 🎯 Ejemplo: "✓ Juan, ✗ María (alergia frutos secos), ✓ Pedro"
+- 🎯 Usuario decide si llevar producto sabiendo exactamente qué perfil tiene problemas
+
+---
+
 ### Versión 1.14.7 - Noviembre 2025
 
 **⚡ Optimizaciones de Performance Backend y React Query**

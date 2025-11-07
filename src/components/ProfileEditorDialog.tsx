@@ -170,6 +170,11 @@ export const ProfileEditorDialog = ({ profile, isOpen, onClose, onSave }: Profil
                         <div className="flex items-center justify-between min-w-0">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {restriction.icon && (
+                                <span className="text-lg shrink-0" aria-hidden="true">
+                                  {restriction.icon}
+                                </span>
+                              )}
                               <h4 className="font-medium text-foreground text-sm">
                                 {restriction.name}
                               </h4>

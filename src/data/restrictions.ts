@@ -10,7 +10,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['gluten', 'wheat', 'barley', 'rye', 'triticale', 'trigo', 'cebada', 'centeno'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🌾'
   },
   {
     id: 'lactose',
@@ -20,7 +21,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['lactose', 'milk', 'dairy', 'lactosa', 'leche', 'lácteo'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🥛'
   },
   {
     id: 'nuts',
@@ -30,7 +32,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['nuts', 'almond', 'walnut', 'hazelnut', 'cashew', 'pistachio', 'frutos secos', 'almendra', 'nuez'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🥜'
   },
   {
     id: 'soy',
@@ -40,7 +43,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['soy', 'soja', 'soybean', 'lecithin'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🫘'
   },
   {
     id: 'egg',
@@ -50,7 +54,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['egg', 'eggs', 'albumin', 'huevo', 'albúmina', 'ovoproteína', 'ovo'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🥚'
   },
   {
     id: 'fish',
@@ -60,7 +65,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['fish', 'anchovy', 'salmon', 'tuna', 'cod', 'pescado', 'atún', 'salmón', 'anchoa', 'bacalao'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🐟'
   },
   {
     id: 'shellfish',
@@ -70,7 +76,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['shellfish', 'shrimp', 'crab', 'lobster', 'prawn', 'marisco', 'camarón', 'cangrejo', 'langosta', 'gamba'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🦐'
   },
   {
     id: 'celery',
@@ -79,7 +86,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['celery', 'celeriac', 'apio'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    icon: '🥬'
   },
   {
     id: 'mustard',
@@ -88,7 +96,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['mustard', 'mostaza'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    icon: '🌭'
   },
   {
     id: 'sesame',
@@ -98,7 +107,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['sesame', 'tahini', 'sésamo', 'ajonjolí'],
     enabled: false,
     isFree: true,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🌰'
   },
   {
     id: 'sulfites',
@@ -107,7 +117,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'allergens',
     keywords: ['sulfite', 'sulfur dioxide', 'metabisulfite', 'sulfito', 'dióxido de azufre', 'E220', 'E221', 'E222'],
     enabled: false,
-    isFree: true
+    isFree: true,
+    icon: '🍷'
   },
   
   // Dietas (PREMIUM)
@@ -118,7 +129,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'dietary',
     keywords: ['meat', 'beef', 'pork', 'chicken', 'fish', 'seafood', 'carne', 'pollo', 'cerdo', 'pescado'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🥗'
   },
   {
     id: 'vegan',
@@ -127,7 +139,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'dietary',
     keywords: ['meat', 'dairy', 'egg', 'honey', 'gelatin', 'carne', 'lácteo', 'huevo', 'miel', 'gelatina'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🌱'
   },
   {
     id: 'keto',
@@ -136,7 +149,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'dietary',
     keywords: ['sugar', 'bread', 'pasta', 'rice', 'potato', 'flour', 'azúcar', 'pan', 'pasta', 'arroz', 'patata', 'harina'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🥑'
   },
   {
     id: 'paleo',
@@ -145,7 +159,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'dietary',
     keywords: ['grain', 'dairy', 'legume', 'processed', 'grano', 'lácteo', 'legumbre', 'procesado', 'cereal'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🍖'
   },
   {
     id: 'no_added_sugar',
@@ -161,7 +176,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
       'jarabe de maíz', 'jarabe'
     ],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🚫'
   },
   
   // Salud (PREMIUM)
@@ -172,7 +188,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['sugar', 'glucose', 'fructose', 'sucrose', 'azúcar', 'glucosa', 'fructosa', 'sacarosa'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🍬'
   },
   {
     id: 'low_sodium',
@@ -181,7 +198,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['sodium chloride', 'table salt', 'sea salt', 'sal añadida', 'sal de mesa', 'cloruro de sodio', 'added salt', 'salt added', 'sal común'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🧂'
   },
   {
     id: 'low_saturated_fat',
@@ -190,7 +208,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['saturated fat', 'palm oil', 'coconut oil', 'grasa saturada', 'aceite de palma', 'aceite de coco'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🫒'
   },
   {
     id: 'no_trans_fat',
@@ -199,7 +218,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['trans fat', 'partially hydrogenated', 'grasa trans', 'hidrogenado', 'hydrogenated oil'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '⛔'
   },
   {
     id: 'no_preservatives',
@@ -208,7 +228,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['preservative', 'E200', 'E201', 'E202', 'benzoate', 'sorbate', 'conservante', 'benzoato', 'sorbato'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🔬'
   },
   {
     id: 'no_artificial_colors',
@@ -217,7 +238,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['artificial color', 'E100', 'E102', 'tartrazine', 'colorante artificial', 'tartrazina', 'colorante sintético'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🎨'
   },
   {
     id: 'no_artificial_sweeteners',
@@ -226,7 +248,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['aspartame', 'sucralose', 'saccharin', 'acesulfame', 'edulcorante artificial', 'E950', 'E951'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🧃'
   },
   {
     id: 'no_alcohol',
@@ -235,7 +258,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['alcohol', 'ethanol', 'ethyl alcohol', 'alcoholic', 'etanol', 'bebida alcohólica'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🍺'
   },
   {
     id: 'no_msg',
@@ -244,7 +268,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['MSG', 'monosodium glutamate', 'E621', 'glutamato monosódico', 'glutamato', 'ajinomoto'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🧂'
   },
   {
     id: 'no_nitrates',
@@ -253,7 +278,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['nitrate', 'nitrite', 'E249', 'E250', 'E251', 'E252', 'nitrato', 'nitrito', 'sodium nitrite'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🥩'
   },
   {
     id: 'no_bha_bht',
@@ -262,7 +288,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['BHA', 'BHT', 'E320', 'E321', 'butylated hydroxyanisole', 'butylated hydroxytoluene'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🧪'
   },
   {
     id: 'no_carrageenan',
@@ -271,7 +298,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     category: 'health',
     keywords: ['carrageenan', 'E407', 'carragenina', 'carragenano'],
     enabled: false,
-    isFree: false
+    isFree: false,
+    icon: '🌊'
   },
   
   // Religioso (PREMIUM)
@@ -283,7 +311,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['pork', 'alcohol', 'cerdo', 'alcohol'],
     enabled: false,
     isFree: false,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '☪️'
   },
   {
     id: 'kosher',
@@ -293,7 +322,8 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['pork', 'shellfish', 'cerdo', 'mariscos'],
     enabled: false,
     isFree: false,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '✡️'
   },
   {
     id: 'no_pork',
@@ -303,6 +333,7 @@ export const defaultRestrictions: DietaryRestriction[] = [
     keywords: ['pork', 'pig', 'bacon', 'ham', 'lard', 'cerdo', 'tocino', 'jamón', 'manteca', 'panceta'],
     enabled: false,
     isFree: false,
-    supportsSeverity: true
+    supportsSeverity: true,
+    icon: '🐖'
   }
 ];

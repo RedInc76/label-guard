@@ -45,6 +45,7 @@ export interface DietaryRestriction {
   isFree?: boolean; // true for FREE mode restrictions (allergens only)
   severityLevel?: SeverityLevel;
   supportsSeverity?: boolean; // true only for restrictions that can detect traces/derivatives
+  icon?: string; // emoji/icono visual para identificación rápida
 }
 
 export interface Profile {
