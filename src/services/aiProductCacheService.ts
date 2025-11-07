@@ -129,6 +129,16 @@ export class AIProductCacheService {
         return null;
       }
 
+      // ⚠️ VALIDACIÓN v1.16.1: Verificar que nutriments existan cuando hay nutriscore
+      if (product.nutriscore_grade && !product.nutriments?.energy_100g) {
+        console.warn('[Cache] ⚠️ ATENCIÓN: Nutri-Score calculado pero sin nutriments:', {
+          productName: product.product_name,
+          nutriscore: product.nutriscore_grade,
+          hasNutriments: !!product.nutriments,
+          nutrimentKeys: product.nutriments ? Object.keys(product.nutriments) : []
+        });
+      }
+
       const cacheData = {
         barcode: barcode || null,
         product_name: product.product_name,

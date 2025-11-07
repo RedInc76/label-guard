@@ -22,6 +22,57 @@
 
 ## Changelog
 
+### Versión 1.16.1 - Noviembre 2025
+
+**🐛 Correcciones de UI y Limpieza de Datos**
+
+#### Problemas Corregidos
+1. ✅ **Card de Información Nutricional**: Ahora colapsable para ahorrar espacio
+2. ✅ **Historial duplicado**: Eliminadas entradas redundantes del producto 055653111252
+3. ✅ **Tipos de análisis**: Unificados como "Escaneo" (OpenFoodFacts) e "IA" (fotos + cache)
+4. ✅ **Validación de nutriments**: Agregado logging para detectar nutriments faltantes
+
+#### Cambios Técnicos
+- **`src/pages/Results.tsx`:**
+  - Card "Información Nutricional" ahora usa `Collapsible` de Radix UI
+  - Posicionada después de "Alérgenos y advertencias"
+  - Estado inicial: cerrada (solo título visible)
+
+- **`src/pages/History.tsx`:**
+  - Simplificada lógica de badges de tipo de análisis
+  - `ai_photo` + `ai_cache` → "IA" 📸
+  - `openfood_api` → "Escaneo" 🔍
+
+- **Base de datos:**
+  - Eliminadas 2 entradas duplicadas de producto 055653111252
+  - Solo mantiene escaneo más reciente con Nutri-Score y NOVA
+
+- **`src/services/aiProductCacheService.ts`:**
+  - Agregado logging de advertencia cuando Nutri-Score existe sin nutriments
+
+#### Impacto
+- ✅ Mejor UX en Results (menos scroll)
+- ✅ Historial más limpio y rápido
+- ✅ Terminología consistente en toda la app
+- ✅ Detecta bugs de nutriments faltantes
+
+#### Archivos Modificados
+- Migración SQL: Limpieza de historial
+- `src/pages/Results.tsx`: ~50 líneas (card colapsable)
+- `src/pages/History.tsx`: ~10 líneas (badges unificados)
+- `src/services/aiProductCacheService.ts`: 5 líneas (validación)
+- `docs/PROYECTO_LABELGUARD.md`: Esta documentación
+
+#### Bug Conocido (No resuelto en v1.16.1)
+⚠️ **Nutriments no se guardan en cache**: El servicio `PhotoAnalysisService.analyzeNutritionPhoto()` no está retornando los nutriments correctamente, por lo que aunque se calcula el Nutri-Score, los valores detallados (calorías, proteínas, etc.) quedan en NULL.
+
+**Solución propuesta para v1.16.2:**
+- Revisar `supabase/functions/analyze-product-photo/index.ts`
+- Asegurar que el edge function retorne `nutriments` en el objeto de respuesta
+- Actualizar tipo `ProductInfo` si es necesario
+
+---
+
 ### Versión 1.16.0 - Noviembre 2025
 
 **✨ Nueva Funcionalidad: Cálculo Automático de Nutri-Score y NOVA**

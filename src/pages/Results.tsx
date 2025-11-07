@@ -1,11 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star, HelpCircle, Lock } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Info, Star, HelpCircle, Lock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { ProductInfo, AnalysisResult, Profile, SeverityLevel } from '@/types/restrictions';
@@ -490,86 +491,6 @@ export const Results = () => {
           </Alert>
         )}
 
-        {/* Tabla Nutricional Completa - Solo Premium */}
-        {product.nutriments && (
-          isPremium ? (
-            <Card className="p-4 shadow-sm">
-              <h3 className="font-semibold text-foreground mb-3">📊 Información Nutricional</h3>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nutriente</TableHead>
-                      <TableHead className="text-right">Por 100g</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {product.nutriments.energy_100g && (
-                      <TableRow>
-                        <TableCell>Energía</TableCell>
-                        <TableCell className="text-right">{product.nutriments.energy_100g} kJ ({Math.round(product.nutriments.energy_100g * 0.239)} kcal)</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.proteins_100g !== undefined && (
-                      <TableRow>
-                        <TableCell>Proteínas</TableCell>
-                        <TableCell className="text-right">{product.nutriments.proteins_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.carbohydrates_100g !== undefined && (
-                      <TableRow>
-                        <TableCell>Carbohidratos</TableCell>
-                        <TableCell className="text-right">{product.nutriments.carbohydrates_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.sugars_100g !== undefined && (
-                      <TableRow>
-                        <TableCell className="pl-6">- de los cuales azúcares</TableCell>
-                        <TableCell className="text-right">{product.nutriments.sugars_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.fat_100g !== undefined && (
-                      <TableRow>
-                        <TableCell>Grasas</TableCell>
-                        <TableCell className="text-right">{product.nutriments.fat_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments['saturated-fat_100g'] !== undefined && (
-                      <TableRow>
-                        <TableCell className="pl-6">- de las cuales saturadas</TableCell>
-                        <TableCell className="text-right">{product.nutriments['saturated-fat_100g']} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.sodium_100g !== undefined && (
-                      <TableRow>
-                        <TableCell>Sodio</TableCell>
-                        <TableCell className="text-right">{product.nutriments.sodium_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                    {product.nutriments.fiber_100g !== undefined && (
-                      <TableRow>
-                        <TableCell>Fibra</TableCell>
-                        <TableCell className="text-right">{product.nutriments.fiber_100g} g</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          ) : (
-            <Alert className="bg-primary/5 border-primary/20">
-              <Lock className="h-4 w-4" />
-              <AlertDescription>
-                <strong>🔒 Tabla nutricional completa - Solo Premium</strong>
-                <br />
-                Accede a información detallada de calorías, proteínas, grasas, carbohidratos y más.
-                <Button onClick={() => navigate('/auth')} size="sm" className="mt-2 w-full">
-                  Actualizar ahora - $0.99/mes
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )
-        )}
 
         {/* Analysis Result */}
         <Card className={`p-6 shadow-sm border-2 ${
@@ -772,6 +693,99 @@ export const Results = () => {
               {cleanOCRText(product.allergens)}
             </p>
           </Card>
+        )}
+
+        {/* Tabla Nutricional Colapsable - Solo Premium */}
+        {product.nutriments && (
+          isPremium ? (
+            <Collapsible>
+              <Card className="p-0 shadow-sm border overflow-hidden">
+                <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    📊 Información Nutricional
+                  </h3>
+                  <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <div className="p-4 pt-0 border-t">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nutriente</TableHead>
+                            <TableHead className="text-right">Por 100g</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {product.nutriments.energy_100g && (
+                            <TableRow>
+                              <TableCell>Energía</TableCell>
+                              <TableCell className="text-right">{product.nutriments.energy_100g} kJ ({Math.round(product.nutriments.energy_100g * 0.239)} kcal)</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.proteins_100g !== undefined && (
+                            <TableRow>
+                              <TableCell>Proteínas</TableCell>
+                              <TableCell className="text-right">{product.nutriments.proteins_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.carbohydrates_100g !== undefined && (
+                            <TableRow>
+                              <TableCell>Carbohidratos</TableCell>
+                              <TableCell className="text-right">{product.nutriments.carbohydrates_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.sugars_100g !== undefined && (
+                            <TableRow>
+                              <TableCell className="pl-6">- de los cuales azúcares</TableCell>
+                              <TableCell className="text-right">{product.nutriments.sugars_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.fat_100g !== undefined && (
+                            <TableRow>
+                              <TableCell>Grasas</TableCell>
+                              <TableCell className="text-right">{product.nutriments.fat_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments['saturated-fat_100g'] !== undefined && (
+                            <TableRow>
+                              <TableCell className="pl-6">- de las cuales saturadas</TableCell>
+                              <TableCell className="text-right">{product.nutriments['saturated-fat_100g']} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.sodium_100g !== undefined && (
+                            <TableRow>
+                              <TableCell>Sodio</TableCell>
+                              <TableCell className="text-right">{product.nutriments.sodium_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                          {product.nutriments.fiber_100g !== undefined && (
+                            <TableRow>
+                              <TableCell>Fibra</TableCell>
+                              <TableCell className="text-right">{product.nutriments.fiber_100g} g</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ) : (
+            <Alert className="bg-primary/5 border-primary/20">
+              <Lock className="h-4 w-4" />
+              <AlertDescription>
+                <strong>🔒 Tabla nutricional completa - Solo Premium</strong>
+                <br />
+                Accede a información detallada de calorías, proteínas, grasas, carbohidratos y más.
+                <Button onClick={() => navigate('/auth')} size="sm" className="mt-2 w-full">
+                  Actualizar ahora - $0.99/mes
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )
         )}
 
         {/* Actions */}

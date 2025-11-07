@@ -490,14 +490,10 @@ export const History = () => {
                         Score: {item.score}
                       </Badge>
                       <Badge variant="secondary" className="flex items-center gap-1">
-                        {item.analysis_type === 'ai_photo' ? (
+                        {item.analysis_type === 'ai_photo' || item.analysis_type === 'ai_cache' ? (
                           <>
                             <Camera className="h-3 w-3" />
                             IA
-                          </>
-                        ) : item.analysis_type === 'ai_cache' ? (
-                          <>
-                            💾 Cache IA
                           </>
                         ) : (
                           <>
