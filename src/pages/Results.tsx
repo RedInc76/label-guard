@@ -332,48 +332,6 @@ export const Results = () => {
           </p>
         </Card>
 
-        {/* Compatibilidad individual por perfil */}
-        {activeProfiles.length > 1 && (
-          <Card className="p-4 border">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              Compatibilidad por Perfil
-            </h3>
-            <div className="space-y-2">
-              {activeProfiles.map((profile) => {
-                const isCompatible = checkProfileCompatibility(profile, analysis.violations);
-                return (
-                  <div 
-                    key={profile.id} 
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
-                  >
-                    <div className="flex items-center gap-2">
-                      {isCompatible ? (
-                        <CheckCircle className="w-5 h-5 text-success shrink-0" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-destructive shrink-0" />
-                      )}
-                      <span className="text-sm font-medium text-foreground">
-                        {profile.name}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {isCompatible ? '✓' : '✗'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Explicación */}
-            <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-              💡 {analysis.isCompatible 
-                ? 'Todos los perfiles son compatibles con este producto.' 
-                : 'El producto tiene restricciones que afectan a uno o más perfiles.'}
-            </p>
-          </Card>
-        )}
-
         {/* Product Info */}
         <Card className="p-4 shadow-sm border">
           {product.image_url && (
@@ -694,32 +652,76 @@ export const Results = () => {
 
         {/* Violations */}
         {analysis.violations.length > 0 && (
-          <Card className="p-4 shadow-sm border">
-            <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive" />
-              Restricciones Violadas
-            </h3>
-            
-            <div className="space-y-3">
-              {analysis.violations.map((violation, index) => (
-                <div key={index} className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="font-medium text-foreground flex-1">{violation.restriction}</h4>
-                    <div className="flex gap-2 items-center flex-shrink-0">
-                      {/* Mostrar nivel de severidad real del perfil */}
-                      {getSeverityLevelBadge(violation.severityLevel)}
-                      {/* Mantener severidad de categoría para contexto */}
-                      <Badge className={`text-xs ${getSeverityColor(violation.severity)}`}>
-                        {violation.severity === 'high' ? 'Alto' : 
-                         violation.severity === 'medium' ? 'Medio' : 'Bajo'}
-                      </Badge>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{violation.reason}</p>
+          <>
+            {/* Compatibilidad individual por perfil */}
+            {activeProfiles.length > 1 && (
+              <Card className="p-4 border">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Compatibilidad por Perfil
+                </h3>
+                <div className="space-y-2">
+                  {activeProfiles.map((profile) => {
+                    const isCompatible = checkProfileCompatibility(profile, analysis.violations);
+                    return (
+                      <div 
+                        key={profile.id} 
+                        className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                      >
+                        <div className="flex items-center gap-2">
+                          {isCompatible ? (
+                            <CheckCircle className="w-5 h-5 text-success shrink-0" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                          )}
+                          <span className="text-sm font-medium text-foreground">
+                            {profile.name}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {isCompatible ? '✓' : '✗'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </Card>
+                
+                {/* Explicación */}
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                  💡 {analysis.isCompatible 
+                    ? 'Todos los perfiles son compatibles con este producto.' 
+                    : 'El producto tiene restricciones que afectan a uno o más perfiles.'}
+                </p>
+              </Card>
+            )}
+
+            <Card className="p-4 shadow-sm border">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                Restricciones Violadas
+              </h3>
+              
+              <div className="space-y-3">
+                {analysis.violations.map((violation, index) => (
+                  <div key={index} className="p-3 rounded-lg bg-muted/50 border border-border">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h4 className="font-medium text-foreground flex-1">{violation.restriction}</h4>
+                      <div className="flex gap-2 items-center flex-shrink-0">
+                        {/* Mostrar nivel de severidad real del perfil */}
+                        {getSeverityLevelBadge(violation.severityLevel)}
+                        {/* Mantener severidad de categoría para contexto */}
+                        <Badge className={`text-xs ${getSeverityColor(violation.severity)}`}>
+                          {violation.severity === 'high' ? 'Alto' : 
+                           violation.severity === 'medium' ? 'Medio' : 'Bajo'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{violation.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </>
         )}
 
         {/* Warnings */}
