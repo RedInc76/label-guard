@@ -122,10 +122,16 @@ export const Scanner = () => {
     } catch (error) {
       console.error('Error scanning:', error);
       
-      // Mensaje de error más específico
+      // Mensaje de error más específico según tipo
       let errorMessage = "Error al escanear";
       if (error instanceof Error) {
-        errorMessage = error.message;
+        if (error.message.includes('cámara')) {
+          errorMessage = 'No se pudo acceder a la cámara. Verifica los permisos en tu navegador.';
+        } else if (error.message.includes('NotFoundError')) {
+          errorMessage = 'No se detectó ninguna cámara en tu dispositivo.';
+        } else {
+          errorMessage = error.message;
+        }
       }
       
       toast({
@@ -139,6 +145,15 @@ export const Scanner = () => {
       setInstallProgress('');
     }
   };
+
+  // Limpiar escáner web al desmontar
+  useEffect(() => {
+    return () => {
+      if (!Capacitor.isNativePlatform()) {
+        CameraService.stopWebScanner();
+      }
+    };
+  }, []);
 
   const handleManualSearch = async () => {
     if (!manualCode.trim()) {
@@ -370,6 +385,11 @@ export const Scanner = () => {
 
         {/* Scan Button */}
         <Card className="p-6 text-center shadow-sm">
+          {/* Contenedor para escáner web */}
+          {isScanning && !Capacitor.isNativePlatform() && (
+            <div id="qr-reader" className="mb-4 rounded-lg overflow-hidden"></div>
+          )}
+          
           <div className="mb-4">
             <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center">
               <Camera className={`w-8 h-8 ${isScanning ? 'animate-pulse text-primary' : 'text-muted-foreground'}`} />
@@ -378,7 +398,7 @@ export const Scanner = () => {
           
           <Button 
             onClick={handleScan}
-            disabled={!Capacitor.isNativePlatform() || isScanning || isSearching || activeProfiles.length === 0}
+            disabled={isScanning || isSearching || activeProfiles.length === 0}
             size="lg"
             className="w-full mb-4"
           >
@@ -392,15 +412,16 @@ export const Scanner = () => {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Escaneando...
               </>
-            ) : !Capacitor.isNativePlatform() ? (
-              'Escaneo solo disponible en móvil'
             ) : (
               'Escanear Código de Barras'
             )}
           </Button>
           
           <p className="text-sm text-muted-foreground">
-            Apunta la cámara al código de barras del producto
+            {Capacitor.isNativePlatform() 
+              ? 'Apunta la cámara al código de barras del producto'
+              : 'Se abrirá tu webcam para escanear el código de barras'
+            }
           </p>
         </Card>
 

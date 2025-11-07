@@ -1,6 +1,9 @@
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { Capacitor } from '@capacitor/core';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 export class CameraService {
+  private static html5QrCode: Html5Qrcode | null = null;
   /**
    * Verifica si el módulo de Google Barcode Scanner está disponible
    */
@@ -47,10 +50,87 @@ export class CameraService {
   }
 
   /**
-   * Escanea un código de barras usando la cámara del dispositivo
-   * Usa Google ML Kit para detección precisa y en tiempo real
+   * Escanea un código de barras (universal - móvil o web)
    */
   static async scanBarcode(
+    onInstallProgress?: (progress: any) => void
+  ): Promise<string | null> {
+    // DETECTAR PLATAFORMA
+    if (Capacitor.isNativePlatform()) {
+      // MÓVIL: Usar Capacitor ML Kit
+      return this.scanBarcodeNative(onInstallProgress);
+    } else {
+      // WEB: Usar html5-qrcode
+      return this.scanBarcodeWeb();
+    }
+  }
+
+  /**
+   * Escanea código de barras en navegadores usando webcam
+   * Usa html5-qrcode para detección en web/PC
+   */
+  static async scanBarcodeWeb(): Promise<string | null> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Crear instancia si no existe
+        if (!this.html5QrCode) {
+          this.html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        const config = {
+          fps: 10,
+          qrbox: { width: 300, height: 150 },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+          ]
+        };
+
+        this.html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            console.log('Código detectado (web):', decodedText);
+            this.stopWebScanner();
+            resolve(decodedText);
+          },
+          (errorMessage) => {
+            // Error normal de escaneo, continuar intentando
+          }
+        ).catch((err) => {
+          console.error('Error starting web scanner:', err);
+          reject(new Error('No se pudo acceder a la cámara. Verifica los permisos.'));
+        });
+      } catch (error) {
+        console.error('Error in scanBarcodeWeb:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Detiene el escáner web
+   */
+  static async stopWebScanner(): Promise<void> {
+    if (this.html5QrCode) {
+      try {
+        await this.html5QrCode.stop();
+        this.html5QrCode.clear();
+      } catch (error) {
+        console.error('Error stopping web scanner:', error);
+      }
+    }
+  }
+
+  /**
+   * Escanea código de barras en dispositivos móviles
+   * Usa Google ML Kit para detección precisa y en tiempo real
+   */
+  private static async scanBarcodeNative(
     onInstallProgress?: (progress: any) => void
   ): Promise<string | null> {
     try {

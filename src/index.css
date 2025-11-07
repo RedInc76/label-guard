@@ -317,3 +317,25 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================
+   WEB BARCODE SCANNER - html5-qrcode
+   ============================================ */
+
+#qr-reader {
+  border: 2px solid hsl(var(--primary));
+  border-radius: 0.5rem;
+}
+
+#qr-reader video {
+  width: 100% !important;
+  border-radius: 0.5rem;
+}
+
+#qr-reader__dashboard {
+  display: none !important;
+}
+
+#qr-reader__dashboard_section {
+  display: none !important;
+}

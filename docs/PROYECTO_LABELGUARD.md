@@ -22,6 +22,96 @@
 
 ## Changelog
 
+### Versión 1.15.1 - Noviembre 2025
+
+**🌐 Nueva Funcionalidad: Escaneo Compatible con Web/PC**
+
+#### Nuevas Características
+- ✨ **Escaneo en navegadores**: Ahora funciona en PC/laptop con webcam
+- 🔄 **Scanner híbrido**: Detecta automáticamente móvil vs web
+- 📱 **Sin cambios en móvil**: Mantiene Google ML Kit para Android/iOS
+- 🎥 **Soporte webcam**: Usa HTML5 getUserMedia en navegadores
+
+#### Implementación Técnica
+- **Nueva librería**: `html5-qrcode@^2.3.8` para escaneo web
+- **Patrón adaptativo**: `CameraService` detecta plataforma y usa el escáner apropiado
+- **Formatos soportados (web)**: EAN-13, EAN-8, UPC-A, UPC-E, Code128, Code39
+- **Detección de plataforma**: `Capacitor.isNativePlatform()` decide qué método usar
+
+#### Mejoras UX
+- 💻 Botón de escaneo ahora habilitado en web
+- 📹 Vista previa de webcam durante escaneo
+- 🎯 Área de escaneo optimizada (300x150px)
+- ⚡ Detección rápida (10 FPS)
+- 🎨 Mensajes adaptativos según plataforma
+- ⚠️ Manejo mejorado de errores de cámara
+
+#### Archivos Modificados
+
+**Frontend:**
+- `src/services/cameraService.ts`: 
+  - Métodos `scanBarcodeWeb()` y `stopWebScanner()` agregados
+  - Método `scanBarcode()` ahora detecta plataforma y delega
+  - Método `scanBarcodeNative()` (código móvil existente renombrado)
+- `src/pages/Scanner.tsx`: 
+  - UI adaptativa con contenedor `#qr-reader` para web
+  - Eliminada restricción `!Capacitor.isNativePlatform()` del botón
+  - Cleanup automático con `useEffect` al desmontar
+  - Mensajes de error mejorados para problemas de cámara
+- `src/index.css`: Estilos para escáner web (`#qr-reader`)
+
+**Config:**
+- `src/config/app.ts`: Versión → 1.15.1
+- `capacitor.config.ts`: Versión → 1.15.1
+- `package.json`: Nueva dependencia `html5-qrcode@^2.3.8`
+
+**Documentación:**
+- `docs/PROYECTO_LABELGUARD.md`: Changelog v1.15.1 (esta sección)
+
+#### Compatibilidad Navegadores
+- ✅ Chrome 60+
+- ✅ Firefox 55+
+- ✅ Safari 11+
+- ✅ Edge 79+
+- ⚠️ Requiere HTTPS en producción (requisito de navegadores para `getUserMedia`)
+
+#### Limitaciones Conocidas
+- ⚠️ Web: Requiere cámara/webcam funcional
+- ⚠️ Web: Menos preciso que ML Kit en condiciones de poca luz
+- ⚠️ Web: Requiere permisos de cámara del navegador
+- ⚠️ Móvil sin cambios: Continúa usando ML Kit (máxima precisión)
+
+#### Impacto
+
+**Para usuarios:**
+- ✅ Pueden escanear productos desde su laptop/PC
+- ✅ Experiencia consistente en móvil y web
+- ✅ Sin necesidad de tomar fotos y subir manualmente
+- ✅ Mayor accesibilidad (no requiere smartphone)
+
+**Para el negocio:**
+- ✅ Mayor alcance (usuarios sin smartphone o con cámara dañada)
+- ✅ Uso en oficinas/tiendas con computadoras
+- ✅ Demo más fácil en presentaciones desde laptop
+- ✅ Base para futura integración con escáneres USB
+
+**Para desarrollo:**
+- ✅ Código limpio y mantenible
+- ✅ Patrón reutilizable para otras features
+- ✅ Sin afectar funcionalidad móvil existente
+- ✅ Testing simplificado en desarrollo
+
+#### Testing Recomendado
+1. ✅ **Móvil Android**: Verificar que ML Kit sigue funcionando
+2. ✅ **Móvil iOS**: Verificar que ML Kit sigue funcionando  
+3. ✅ **Chrome Desktop**: Probar escaneo con webcam
+4. ✅ **Firefox Desktop**: Probar escaneo con webcam
+5. ✅ **Safari Desktop**: Probar escaneo con webcam
+6. ⚠️ **Sin webcam**: Verificar mensaje de error apropiado
+7. ⚠️ **Permiso denegado**: Verificar instrucciones para habilitar
+
+---
+
 ### Versión 1.15.0 - Noviembre 2025
 
 **🆕 Nueva Funcionalidad: Tercera Foto - Tabla Nutricional (MVP)**
