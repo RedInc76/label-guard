@@ -187,6 +187,19 @@ export const Scanner = () => {
       return;
     }
 
+    // 🆕 VALIDACIÓN DE BARCODE
+    const { BarcodeValidationService } = await import('@/services/barcodeValidationService');
+    const validation = BarcodeValidationService.validateBarcode(manualCode.trim());
+    
+    if (!validation.isValid) {
+      toast({
+        title: "Código inválido",
+        description: validation.errors[0] || "El código ingresado no es válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Verificar rate limit
     const canScan = await ScanRateLimitService.canScan(user?.id || null, isPremium);
     
@@ -195,7 +208,8 @@ export const Scanner = () => {
       return;
     }
 
-    await searchProduct(manualCode.trim());
+    // Usar código normalizado
+    await searchProduct(validation.normalizedBarcode!);
     
     // Incrementar contador después de búsqueda exitosa
     await ScanRateLimitService.incrementScan(user?.id || null);
@@ -204,6 +218,27 @@ export const Scanner = () => {
   };
 
   const searchProduct = async (barcode: string) => {
+    // 🆕 VALIDACIÓN DE BARCODE
+    const { BarcodeValidationService } = await import('@/services/barcodeValidationService');
+    const validation = BarcodeValidationService.validateBarcode(barcode);
+    
+    if (!validation.isValid) {
+      toast({
+        title: "Código de barras inválido",
+        description: validation.errors.join('. '),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Mostrar warnings (no bloqueantes)
+    if (validation.warnings.length > 0) {
+      console.warn('[Scanner] ⚠️ Barcode warnings:', validation.warnings);
+    }
+    
+    // Usar código normalizado para búsquedas
+    const normalizedBarcode = validation.normalizedBarcode!;
+    
     // Validar que haya perfiles activos
     if (activeProfiles.length === 0) {
       toast({
@@ -220,7 +255,7 @@ export const Scanner = () => {
       
       // PASO 1: Buscar en AI Cache primero (datos más completos)
       const { AIProductCacheService } = await import('@/services/aiProductCacheService');
-      const cachedProduct = await AIProductCacheService.getByBarcode(barcode);
+      const cachedProduct = await AIProductCacheService.getByBarcode(normalizedBarcode);
       
       if (cachedProduct) {
         // Verificar si el caché es válido
@@ -235,7 +270,7 @@ export const Scanner = () => {
             });
             navigate('/photo-analysis', { 
               state: { 
-                barcode,
+                barcode: normalizedBarcode,
                 reason: 'profile_changed',
                 productName: cachedProduct.product_name
               } 
@@ -257,7 +292,7 @@ export const Scanner = () => {
         
         // Track cache hit (silencioso, sin toast)
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
-        await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, barcode);
+        await UsageAnalyticsService.trackCacheHit(cachedProduct.product_name, normalizedBarcode);
         
         navigate('/results', {
           state: { 
@@ -270,12 +305,12 @@ export const Scanner = () => {
       }
 
       // PASO 2: No en cache → Buscar en OpenFoodFacts API
-      const product = await OpenFoodFactsService.getProduct(barcode);
+      const product = await OpenFoodFactsService.getProduct(normalizedBarcode);
       
       if (product) {
         // ✅ LOG NUEVO
         console.log('[Scanner] ✅ Producto encontrado en OpenFoodFacts:', {
-          barcode,
+          barcode: normalizedBarcode,
           productName: product.product_name,
           hasIngredients: !!product.ingredients_text,
           ingredientsLength: product.ingredients_text?.length || 0
@@ -283,11 +318,11 @@ export const Scanner = () => {
         
         // Track OpenFoodFacts usage
         const { UsageAnalyticsService } = await import('@/services/usageAnalyticsService');
-        await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, barcode);
+        await UsageAnalyticsService.trackOpenFoodFacts(product.product_name, normalizedBarcode);
         
         // Log successful barcode scan
         const { loggingService } = await import('@/services/loggingService');
-        loggingService.logScan('openfood_api', product.product_name, barcode);
+        loggingService.logScan('openfood_api', product.product_name, normalizedBarcode);
         
         // Validar si los ingredientes son suficientes para análisis
         const hasInsufficientIngredients = !product.ingredients_text || product.ingredients_text.trim().length < 30;
@@ -301,7 +336,7 @@ export const Scanner = () => {
             });
             navigate('/photo-analysis', { 
               state: { 
-                barcode,
+                barcode: normalizedBarcode,
                 reason: 'insufficient_ingredients',
                 productName: product.product_name
               } 
@@ -343,7 +378,7 @@ export const Scanner = () => {
           description: "Analizaremos este producto con IA",
         });
         // Pasar el barcode al análisis por foto
-        navigate('/photo-analysis', { state: { barcode } });
+        navigate('/photo-analysis', { state: { barcode: normalizedBarcode } });
       } else {
         toast({
           title: "Producto no encontrado",
