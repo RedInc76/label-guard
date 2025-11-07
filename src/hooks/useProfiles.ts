@@ -26,10 +26,19 @@ export const useProfiles = () => {
 export const useActiveProfiles = () => {
   return useQuery({
     queryKey: ['profiles', 'active'],
-    queryFn: () => ProfileService.getActiveProfiles(),
-    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      console.log('[useActiveProfiles] 🔄 Cargando perfiles activos...');
+      const profiles = await ProfileService.getActiveProfiles();
+      console.log('[useActiveProfiles] ✅ Perfiles activos:', {
+        count: profiles.length,
+        profiles: profiles.map(p => ({ id: p.id, name: p.name }))
+      });
+      return profiles;
+    },
+    staleTime: 30 * 1000, // ⚡ CAMBIO: Cache válido solo 30 segundos (era 5 minutos)
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // ✅ CAMBIO: Refetch al volver a la pestaña
+    refetchOnMount: 'always', // ✅ NUEVO: Siempre refetch al montar componente
   });
 };
 
@@ -79,9 +88,13 @@ export const useToggleProfile = () => {
       }
     },
     // Siempre refetch después de mutar
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      queryClient.invalidateQueries({ queryKey: ['profiles', 'active'] });
+    onSuccess: () => {
+      // ✅ NUEVO: Forzar refetch inmediato (no solo invalidar)
+      queryClient.invalidateQueries({ queryKey: ['profiles'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'active'], refetchType: 'all' });
+      
+      // ✅ NUEVO: Logging para debug
+      console.log('[useToggleProfile] ✅ Perfil toggled, cache invalidado');
     },
   });
 };

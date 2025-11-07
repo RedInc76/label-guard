@@ -46,7 +46,17 @@ export const Scanner = () => {
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   
   // React Query: datos instantáneos desde cache
-  const { data: activeProfiles = [] } = useActiveProfiles();
+  const { data: activeProfiles = [], isLoading: isLoadingProfiles, isError: isErrorProfiles } = useActiveProfiles();
+
+  // 🐛 DEBUG: Log para detectar problemas de sincronización
+  useEffect(() => {
+    console.log('[Scanner] 📊 Estado de perfiles activos:', {
+      count: activeProfiles.length,
+      profiles: activeProfiles.map(p => ({ id: p.id, name: p.name })),
+      isLoading: isLoadingProfiles,
+      isError: isErrorProfiles
+    });
+  }, [activeProfiles, isLoadingProfiles, isErrorProfiles]);
 
   // Verificar rate limit al montar componente
   useEffect(() => {
@@ -385,12 +395,30 @@ export const Scanner = () => {
               onNavigateToProfiles={() => navigate('/profile')}
             />
 
+        {/* Loading state */}
+        {isLoadingProfiles && (
+          <Card className="p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Cargando perfiles...</span>
+            </div>
+          </Card>
+        )}
+
         {/* Warning if no active profiles */}
-        {activeProfiles.length === 0 && (
+        {!isLoadingProfiles && activeProfiles.length === 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              No hay perfiles activos. Ve a Perfiles y activa al menos uno para poder escanear.
+            <AlertDescription className="flex flex-col gap-2">
+              <span>No hay perfiles activos. Ve a Perfiles y activa al menos uno para poder escanear.</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/profile')}
+                className="w-fit"
+              >
+                Ir a Perfiles →
+              </Button>
             </AlertDescription>
           </Alert>
         )}

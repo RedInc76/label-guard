@@ -22,6 +22,48 @@
 
 ## Changelog
 
+### Versión 1.15.2 - Noviembre 2025
+
+**🐛 Corrección de Bug: Sincronización de Perfiles Activos**
+
+#### Problema Corregido
+- ❌ **Bug**: Scanner mostraba "No hay perfiles activos" aunque existían perfiles activos en la base de datos
+- 🔍 **Causa**: `useActiveProfiles()` tenía caché demasiado largo (5 minutos) y no refetcheaba al montar componente
+- ✅ **Solución**: Reducir `staleTime` a 30s, agregar `refetchOnMount: 'always'` y `refetchOnWindowFocus: true`
+
+#### Cambios Técnicos
+- **`src/hooks/useProfiles.ts`:**
+  - `useActiveProfiles()`: staleTime 5min → 30s
+  - `useActiveProfiles()`: Agregado `refetchOnMount: 'always'`
+  - `useActiveProfiles()`: Cambiado `refetchOnWindowFocus: false` → `true`
+  - `useToggleProfile()`: Agregado `refetchType: 'all'` para forzar refetch inmediato
+  - Logging mejorado para debugging
+
+- **`src/pages/Scanner.tsx`:**
+  - Agregado logging de estado de perfiles activos
+  - Mejorado UI de warning con botón directo a Perfiles
+  - Agregado estado de carga explícito
+
+#### Impacto
+- ✅ Sincronización inmediata entre páginas Perfiles ↔ Scanner
+- ✅ Datos siempre actualizados al navegar
+- ✅ Mejor UX con feedback visual de carga
+- ⚡ Ligero aumento en llamadas a Supabase (trade-off aceptable para UX)
+
+#### Archivos Modificados
+- `src/hooks/useProfiles.ts`: Configuración de cache de React Query
+- `src/pages/Scanner.tsx`: UI de feedback y logging
+- `src/config/app.ts`: Versión → 1.15.2
+- `capacitor.config.ts`: Versión → 1.15.2
+- `docs/PROYECTO_LABELGUARD.md`: Esta documentación
+
+#### Casos de Prueba Validados
+- ✅ **Caso A - Toggle desde Perfiles**: Activar un perfil → Navegar a Scanner → Badge muestra perfil activo
+- ✅ **Caso B - Alternar pestañas**: Desactivar perfiles en una pestaña → Volver a Scanner → Muestra warning
+- ✅ **Caso C - Hard refresh**: Perfiles activos se cargan correctamente tras Ctrl+R
+
+---
+
 ### Versión 1.15.1 - Noviembre 2025
 
 **🌐 Nueva Funcionalidad: Escaneo Compatible con Web/PC**
