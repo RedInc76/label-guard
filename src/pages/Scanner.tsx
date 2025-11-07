@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Search, Keyboard, AlertCircle, Loader2 } from 'lucide-react';
+import { Camera, Search, Keyboard, AlertCircle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,14 @@ export const Scanner = () => {
     resetAt: Date;
   }>({ remaining: 10, resetAt: new Date() });
   const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
+  // Validation state for manual input
+  const [validationState, setValidationState] = useState<{
+    isValid: boolean | null;
+    errors: string[];
+    warnings: string[];
+  }>({ isValid: null, errors: [], warnings: [] });
+  const [isValidating, setIsValidating] = useState(false);
   
   // React Query: datos instantáneos desde cache
   const { data: activeProfiles = [], isLoading: isLoadingProfiles, isError: isErrorProfiles } = useActiveProfiles();
@@ -176,6 +184,37 @@ export const Scanner = () => {
       }
     };
   }, []);
+
+  const handleManualCodeChange = (value: string) => {
+    setManualCode(value);
+    
+    // Resetear estado si está vacío
+    if (!value.trim()) {
+      setValidationState({ isValid: null, errors: [], warnings: [] });
+      setIsValidating(false);
+      return;
+    }
+    
+    // Validar solo si tiene al menos 8 caracteres
+    if (value.length >= 8) {
+      setIsValidating(true);
+      
+      // Importar y validar
+      import('@/services/barcodeValidationService').then(({ BarcodeValidationService }) => {
+        const validation = BarcodeValidationService.validateBarcode(value);
+        
+        setValidationState({
+          isValid: validation.isValid,
+          errors: validation.errors,
+          warnings: validation.warnings,
+        });
+        setIsValidating(false);
+      });
+    } else {
+      setValidationState({ isValid: null, errors: [], warnings: [] });
+      setIsValidating(false);
+    }
+  };
 
   const handleManualSearch = async () => {
     if (!manualCode.trim()) {
@@ -507,21 +546,72 @@ export const Scanner = () => {
             Ingreso Manual
           </h3>
           
-          <div className="flex gap-2">
-            <Input
-              placeholder="Ej: 1234567890123"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
-              disabled={isScanning || isSearching}
-            />
-            <Button 
-              onClick={handleManualSearch}
-              disabled={isScanning || isSearching || !manualCode.trim() || activeProfiles.length === 0}
-              size="icon"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Ej: 1234567890123"
+                  value={manualCode}
+                  onChange={(e) => handleManualCodeChange(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && validationState.isValid !== false && manualCode.trim()) {
+                      handleManualSearch();
+                    }
+                  }}
+                  disabled={isScanning || isSearching}
+                  className={`pr-10 transition-colors ${
+                    validationState.isValid === true 
+                      ? 'border-green-500 focus-visible:ring-green-500' 
+                      : validationState.isValid === false 
+                      ? 'border-destructive focus-visible:ring-destructive' 
+                      : ''
+                  }`}
+                />
+                {/* Icono de estado */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {isValidating && manualCode.length >= 8 && (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {!isValidating && validationState.isValid === true && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  )}
+                  {!isValidating && validationState.isValid === false && (
+                    <XCircle className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </div>
+              <Button 
+                onClick={handleManualSearch}
+                disabled={isScanning || isSearching || !manualCode.trim() || validationState.isValid === false || activeProfiles.length === 0}
+                size="icon"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Mensajes de error */}
+            {validationState.errors.length > 0 && (
+              <div className="space-y-1">
+                {validationState.errors.map((error, index) => (
+                  <p key={index} className="text-xs text-destructive flex items-start gap-1">
+                    <XCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span>{error}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+            
+            {/* Mensajes de advertencia */}
+            {validationState.warnings.length > 0 && validationState.isValid === true && (
+              <div className="space-y-1">
+                {validationState.warnings.map((warning, index) => (
+                  <p key={index} className="text-xs text-yellow-600 flex items-start gap-1">
+                    <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span>{warning}</span>
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         </Card>
 
