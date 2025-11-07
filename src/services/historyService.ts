@@ -107,7 +107,7 @@ export class HistoryService {
         nova_group: product.nova_group || null,
         ecoscore_grade: product.ecoscore_grade || null,
       })
-      .select()
+      .select('id')
       .single();
       
       if (error) {
@@ -169,7 +169,7 @@ export class HistoryService {
 
       const { data, error } = await supabase
         .from('scan_history')
-        .select('*')
+        .select('id, product_name, brands, image_url, is_compatible, score, violations, warnings, analysis_type, created_at, nutriscore_grade, nova_group, front_photo_url, back_photo_url')
         .gte('created_at', ninetyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -222,7 +222,7 @@ export class HistoryService {
       // Obtener todos los escaneos del período
       const { data: scans } = await supabase
         .from('scan_history')
-        .select('*')
+        .select('created_at, is_compatible, score, violations, warnings, nutriscore_grade, nova_group, product_name, analysis_type')
         .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false });

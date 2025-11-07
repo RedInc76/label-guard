@@ -9,7 +9,7 @@ export const queryClient = new QueryClient({
     queries: {
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: typeof window === 'undefined' ? false : !window.navigator.userAgent.match(/Mobile|Android|iPhone/i),
       networkMode: 'online',
     },
   },
