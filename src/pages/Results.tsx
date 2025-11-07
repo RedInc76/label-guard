@@ -40,6 +40,30 @@ const cleanOCRText = (text: string): string => {
   return cleaned.trim();
 };
 
+// Helper para verificar si un perfil es compatible basado en violaciones
+const checkProfileCompatibility = (profile: Profile, violations: AnalysisResult['violations']): boolean => {
+  if (violations.length === 0) return true; // Sin violaciones = compatible
+  
+  // Obtener IDs de restricciones del perfil
+  const profileRestrictionIds = profile.restrictions
+    .filter(r => r.enabled)
+    .map(r => r.id.toLowerCase());
+  
+  // Verificar si alguna violación pertenece a este perfil
+  const hasViolation = violations.some(violation => {
+    // La violación contiene el nombre de la restricción
+    // Necesitamos comparar contra las restricciones del perfil
+    const violationName = violation.restriction.toLowerCase();
+    
+    // Buscar si alguna restricción del perfil coincide con la violación
+    return profile.restrictions
+      .filter(r => r.enabled)
+      .some(r => r.name.toLowerCase().includes(violationName) || violationName.includes(r.name.toLowerCase()));
+  });
+  
+  return !hasViolation; // Compatible si NO tiene violaciones
+};
+
 // Helper para obtener color de fondo y texto del Nutriscore
 const getNutriscoreColor = (grade: string): { bg: string; text: string; border: string } => {
   const upperGrade = grade.toUpperCase();
@@ -307,6 +331,48 @@ export const Results = () => {
             </span>
           </p>
         </Card>
+
+        {/* Compatibilidad individual por perfil */}
+        {activeProfiles.length > 1 && (
+          <Card className="p-4 border">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              Compatibilidad por Perfil
+            </h3>
+            <div className="space-y-2">
+              {activeProfiles.map((profile) => {
+                const isCompatible = checkProfileCompatibility(profile, analysis.violations);
+                return (
+                  <div 
+                    key={profile.id} 
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isCompatible ? (
+                        <CheckCircle className="w-5 h-5 text-success shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                      )}
+                      <span className="text-sm font-medium text-foreground">
+                        {profile.name}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {isCompatible ? '✓' : '✗'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Explicación */}
+            <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+              💡 {analysis.isCompatible 
+                ? 'Todos los perfiles son compatibles con este producto.' 
+                : 'El producto tiene restricciones que afectan a uno o más perfiles.'}
+            </p>
+          </Card>
+        )}
 
         {/* Product Info */}
         <Card className="p-4 shadow-sm border">

@@ -22,6 +22,48 @@
 
 ## Changelog
 
+### Versión 1.14.9 - Noviembre 2025
+
+**✨ Mejora UX - Compatibilidad Individual por Perfil**
+
+#### Nueva Funcionalidad
+
+**Compatibilidad individual por perfil en resultados**
+- ✅ **Objetivo**: Mostrar qué perfil específico es compatible o incompatible con el producto escaneado
+- ✅ **Implementación**: Nuevo card en pantalla de resultados que muestra cada perfil activo con su estado de compatibilidad (✓ o ✗)
+- ✅ **Visibilidad**: Solo se muestra cuando hay 2 o más perfiles activos
+- ✅ **Sin cambios en lógica**: El análisis sigue siendo combinado (todos los perfiles), solo se agrega visualización individual
+
+#### Mejoras Técnicas
+
+**Arquitectura**
+- 🔧 Nuevo helper `checkProfileCompatibility` en `src/pages/Results.tsx`
+- 🔧 Lógica de presentación: Cruza violaciones detectadas contra restricciones de cada perfil
+- 🔧 Componente renderizado condicionalmente basado en cantidad de perfiles activos
+
+**UX mejorada**
+- 🎯 **Claridad inmediata**: Al escanear un producto incompatible, se ve exactamente qué perfil causó el rechazo
+- 💡 **Decisiones informadas**: El usuario puede decidir comprar el producto si solo afecta a un perfil específico
+- 👀 **Visual intuitivo**: Iconos ✓ (CheckCircle verde) y ✗ (XCircle rojo) junto a nombres de perfiles
+- 📊 **Mensaje contextual**: Explicación dinámica según si todos son compatibles o solo algunos
+
+#### Ejemplo de Uso
+```
+Compatibilidad por Perfil
+✓ Juan - Compatible
+✗ María - No compatible
+✓ Pedro - Compatible
+
+💡 El producto tiene restricciones que afectan a uno o más perfiles.
+```
+
+#### Impacto
+- **Usuario final**: Entiende rápidamente a quién afecta el producto sin revisar todas las violaciones
+- **Caso de uso**: Familia con múltiples restricciones puede decidir si comprar basándose en quién consumirá el producto
+- **Eficiencia**: Sin análisis adicional, solo presentación inteligente de datos existentes
+
+---
+
 ### Versión 1.14.8 - Noviembre 2025
 
 **✨ Mejora UX - Iconos Visuales en Restricciones**
